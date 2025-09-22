@@ -1,5 +1,13 @@
+.env
+
 myenv/
 venv/
 env/
 ENV/
 .venv/
+
+__pycache__
+
+.direnv
+.pg-data
+.pg-sock

@@ -1,0 +1,9 @@
+<div class="message">
+  <small class="text-muted d-block">{{ message.created_at|date:"M d, Y H:i" }}</small>
+  <div class="prompt mt-3">
+    <strong>User query</strong> {{ message.query|linebreaks }}
+  </div>
+  <div class="response mt-3">
+    <strong>Response</strong> {{ message.response|linebreaks }}
+  </div>
+</div>

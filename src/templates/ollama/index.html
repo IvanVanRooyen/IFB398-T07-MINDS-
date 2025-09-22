@@ -1,0 +1,48 @@
+{% extends './base.html' %}
+{% block content %}
+
+<div class="row">
+  <div class="col-md-8 mx-auto">
+    <h1 class="mb-4 fw-bold">AI Search</h1>
+
+    <div class="search-container p-3 mb-4" id="conversations">
+      {% for message in messages %}
+        {% include './message.html' %}
+      {% empty %}
+        <div class="text-center text-muted">
+          <p>no messages</p>
+        </div>
+      {% endfor %}
+    </div>
+
+    <form hx-post="{% url 'send_query' %}"
+        hx-target="#conversations"
+        hx-swap="afterbegin"
+        hx-on="htmx:afterRequest: if(event.detail.successful) this.reset()">
+      {% csrf_token %}
+
+      <div class="mb-3">
+        <label for="{{ form.query.id_for_label }}" class="form-label">*</label>
+        {{ form.query }}
+      </div>
+
+      <div class="d-flex justify-content-between">
+        <button type="submit" class="btn btn-primary send-btn">
+          search
+        </button>
+        <span class="loading spinner-border spinner-border-sm"></span>
+        <span class="loading">processing query...</span>
+
+        <button type="button"
+            class="btn btn-outline-danger"
+            hx-post="{% url 'clear_conversations' %}"
+            hx-target="#conversations"
+            hx-confirm="are you sure?">
+          clear 
+        </button>
+      </div>
+
+
+  </div>
+</div>
+{% endblock %}
