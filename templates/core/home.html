@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Orefox KMS — Proof of Concept</h1>
+<p>This is the bare minimum scaffold: Django + GeoDjango + HTMX, PostGIS DB, MinIO storage.</p>
+
+<h2>Projects</h2>
+<table>
+  <tr><th>Name</th><th>Mode</th><th>Commodity</th></tr>
+  {% for p in projects %}
+  <tr><td>{{ p.name }}</td><td>{{ p.get_mode_display }}</td><td>{{ p.commodity }}</td></tr>
+  {% empty %}<tr><td colspan="3">No projects yet — add one in <a href="/admin/">Admin</a>.</td></tr>{% endfor %}
+</table>
+
+<h2>Recent Documents</h2>
+<table>
+  <tr><th>Title</th><th>Year</th><th>Type</th><th>Project</th><th>Link</th></tr>
+  {% for d in docs %}
+  <tr>
+    <td>{{ d.title }}</td><td>{{ d.year }}</td><td>{{ d.doc_type }}</td>
+    <td>{{ d.project }}</td><td>{% if d.file %}<a href="{{ d.file.url }}" target="_blank">download</a>{% endif %}</td>
+  </tr>
+  {% empty %}<tr><td colspan="5">No documents yet — go to <a href="/upload/">Upload</a>.</td></tr>{% endfor %}
+</table>
+{% endblock %}
