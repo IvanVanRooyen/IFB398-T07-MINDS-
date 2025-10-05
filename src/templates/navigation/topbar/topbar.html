@@ -1,0 +1,25 @@
+<div class="h-[4em] w-full border-b border-b-gray-200 shadow-md flex flex-row items-center justify-between px-2">
+    <div class="flex flex-row items-center">
+        <a href="/" class="font-medium text-2xl flex flex-row mx-4">
+            <!-- + a logo -->
+            <div>ORE</div>
+            <div class="font-black">FOX</div>
+        </a>
+        <div class="mx-4 text-sm">
+            <!-- navigation links ... -->
+            <ul class="flex flex-row space-x-4">
+                {% for item in nav_items %}
+                    <button class="nav-button {% if request.path == item.href %} border-b-2 border-b-blue-300 {% else %} border-b-2 border-b-transparent hover:border-b-2 hover:border-b-blue-300 hover:opacity-50 transition-all duration-250 ease-in {% endif %}"
+                            hx-get="{{ item.href }}"
+                            hx-target="#main-content"
+                            hx-push-url="true"
+                            hx-swap="innerHTML">{{ item.name }}</button>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="flex flex-row items-center justify-between">
+        <input type="text" class="rounded-lg p-1 border-2 border-gray-200" />
+        <div class="border-2 border-gray-200 rounded-full mx-4 h-8 w-8"></div>
+    </div>
+</div>

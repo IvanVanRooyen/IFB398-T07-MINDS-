@@ -1,28 +1,26 @@
 {% load django_htmx %}
-{% load static tailwind_tags %}
+{% load django_vite %}
 
 <!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title>OreFox - Knowledge Management</title>
-            {% htmx_script %}
-            {% tailwind_css %}
-        <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border-bottom: 1px solid #ddd; padding: 0.5rem; text-align: left; }
-    .error { color: #b00020; }
-        </style>
+        <title>{{ page.title }}| OREFOX</title>
+
+        {% htmx_script %}
+
+        {% vite_hmr_client %}
+        {% vite_asset 'static/js/main.js' %}
     </head>
     <body hx-headers='{"x-csrftoken": "{{ csrf_token }}"}'>
-        {% include "./navigation/layout.html" %}
-        <!-- <nav><a href="/">Home</a> · <a href="/admin/">Admin</a> · <a href="/upload/">Upload</a></nav> -->
-        <!-- <hr /> -->
+        <div>{% include "./navigation/layout.html" %}</div>
         {% if messages %}
             {% for m in messages %}<div>{{ m }}</div>{% endfor %}
         {% endif %}
-        {% block content %}{% endblock %}
+        <!-- !! -->
+        <div id="main-content">
+            {% block content %}{% endblock %}
+        </div>
     </body>
 </html>

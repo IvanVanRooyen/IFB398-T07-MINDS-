@@ -4,3 +4,6 @@
 .pg-sock
 .venv
 __pycache__
+
+staticfiles
+node_modules

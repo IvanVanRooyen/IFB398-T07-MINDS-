@@ -44,7 +44,8 @@
             ];
 
           buildInputs = with pkgs; [
-            nodejs
+            # nodejs
+            bun
 
             pkg-config
             openssl.dev
