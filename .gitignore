@@ -1,0 +1,6 @@
+.env
+.direnv
+.pg-data
+.pg-sock
+.venv
+__pycache__
