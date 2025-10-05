@@ -2,12 +2,12 @@
 
 ## some quick notes on how this branch currently works
 
-apologies if it is a little unclear - this explanation was very quickly thrown together at 5.50am.
+apologies if this is a little unclear as i threw this together very quickly at like 6am.
  
-i have not had time to exported the dependencies to a `requirements.txt` yet, but python packages should be in `src/pyproject.toml` under `[dependencies]`; i find life is significantly streamlined by using `uv` to manage and run everything:
+i have not had time to export the python dependencies to a `requirements.txt` yet, but  packages should be in `src/pyproject.toml` under `[dependencies]` and you can just `pip install` them; however i find python package management to be streamlined using `uv` to manage and run everything:
 
 - package + environment management with [`uv`](https://docs.astral.sh/uv/getting-started/installation/) - after installation:
-  ```
+  ```bash
   # install python 3.13 + dependencies into `src/.venv`:
   cd src
   uv sync
@@ -19,7 +19,7 @@ i have not had time to exported the dependencies to a `requirements.txt` yet, bu
 
 i am using [`bun`](https://bun.com/) for node package management - after installing `bun` (or whatever tool - `npm`, `deno`, `pnpm`, `yarn`, ...):
 
-```
+```bash
 # install node dependencies 
 bun install
 
@@ -28,12 +28,12 @@ bun run dev
 ```
   
 for the time being, development requires two terminal windows - one for the django backend, the other for the node frontend:
-```
+```bash
 bun run dev # frontend
 
 # ...
 
-uv run ./manage.py runserver # frontend
+uv run ./manage.py runserver # backend
 ```
 
 `bun run build` bundles the frontend for production and `uv run ./manage.py collectstatic` pulls the bundled js + css into `src/staticfiles`.
