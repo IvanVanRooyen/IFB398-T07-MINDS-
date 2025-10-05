@@ -1,6 +1,47 @@
-# Orefox KMS Sandbox (Proof of Concept)
+# Orefox KMS 
 
-**A Knowledge Management System (KMS) prototype for the mining & exploration industry.**
+## some quick notes on how this branch currently works
+
+apologies if it is a little unclear - this explanation was very quickly thrown together at 5.50am.
+ 
+i have not had time to exported the dependencies to a `requirements.txt` yet, but python packages should be in `src/pyproject.toml` under `[dependencies]`; i find life is significantly streamlined by using `uv` to manage and run everything:
+
+- package + environment management with [`uv`](https://docs.astral.sh/uv/getting-started/installation/) - after installation:
+  ```
+  # install python 3.13 + dependencies into `src/.venv`:
+  cd src
+  uv sync
+  
+  uv run ./manage.py runserver
+  ```
+  
+- instead of calling `python [command]` directly, run through `uv run [command]`, e.g `uv run ./manage.py runserver`.
+
+i am using [`bun`](https://bun.com/) for node package management - after installing `bun` (or whatever tool - `npm`, `deno`, `pnpm`, `yarn`, ...):
+
+```
+# install node dependencies 
+bun install
+
+# run vite's development server
+bun run dev
+```
+  
+for the time being, development requires two terminal windows - one for the django backend, the other for the node frontend:
+```
+bun run dev # frontend
+
+# ...
+
+uv run ./manage.py runserver # frontend
+```
+
+`bun run build` bundles the frontend for production and `uv run ./manage.py collectstatic` pulls the bundled js + css into `src/staticfiles`.
+django will use this when `DJANGO_DEBUG` is set to `False` in either `.env` or in `config/settings.py`.  
+
+> original readme content below 
+
+---
 
 This proof-of-concept demonstrates how documents (e.g., PDFs of exploration reports) and geospatial datasets (projects, tenements) can be centrally stored, tagged, and accessed via a web interface with geospatial intelligence.
 
@@ -46,7 +87,7 @@ This proof-of-concept demonstrates how documents (e.g., PDFs of exploration repo
 ├── .env.example              # Example environment variables (copy to .env)
 
 ├── docker-compose.yml        # Defines services: db, minio, create-bucket, web
-
+https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
 ├── infra/
 
 │   └── web/
@@ -169,7 +210,7 @@ Rebuild the web image after changing infra/web/Dockerfile or requirements.txt:
 ```bash
 docker compose build --no-cache web
 ```
-
+](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
 **Apply model changes:**
 
 ```bash
