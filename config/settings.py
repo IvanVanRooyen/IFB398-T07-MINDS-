@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.gis",
+    "django_htmx",
     "core",
 ]
 
@@ -29,6 +30,7 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+    "django_htmx.middleware.HtmxMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -55,7 +57,7 @@ DATABASES = {
         "ENGINE": "django.contrib.gis.db.backends.postgis",
         "NAME": env("DB_NAME"),
         "USER": env("DB_USER"),
-        "PASSWORD": env("DB_PASS"),
+        # "PASSWORD": env("DB_PASS"),
         "HOST": env("DB_HOST"),
         "PORT": env("DB_PORT"),
     }
@@ -65,9 +67,9 @@ STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 # MinIO storage
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-AWS_S3_ENDPOINT_URL = f"http://{env('MINIO_ENDPOINT')}"
-AWS_ACCESS_KEY_ID = env("MINIO_ROOT_USER")
-AWS_SECRET_ACCESS_KEY = env("MINIO_ROOT_PASSWORD")
-AWS_STORAGE_BUCKET_NAME = env("MINIO_BUCKET")
-AWS_S3_USE_SSL = env.bool("MINIO_USE_SSL", default=False)
+# DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+# AWS_S3_ENDPOINT_URL = f"http://{env('MINIO_ENDPOINT')}"
+# AWS_ACCESS_KEY_ID = env("MINIO_ROOT_USER")
+# AWS_SECRET_ACCESS_KEY = env("MINIO_ROOT_PASSWORD")
+# AWS_STORAGE_BUCKET_NAME = env("MINIO_BUCKET")
+# AWS_S3_USE_SSL = env.bool("MINIO_USE_SSL", default=False)

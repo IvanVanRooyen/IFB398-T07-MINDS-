@@ -20,11 +20,13 @@ def home(request):
         "core/home.html",
         {
             "projects": Process.objects.all()[:10],
-            # "docs": Document.objects.order_by("-created_at")[:10],
+            "docs": Document.objects.order_by("-created_at")[:10],
         },
     )
 
+
 # ---------- Helpers ----------
+
 
 def _get_model(app_label: str, model_name: str):
     """
@@ -36,9 +38,11 @@ def _get_model(app_label: str, model_name: str):
         return None
 
 
-def _count_model(app_label: str, model_name: str) -> int:
+def _count_model(app_label: str, model_name: str, where_clause: str = None) -> int:
     mdl = _get_model(app_label, model_name)
-    return mdl.objects.count() if mdl else 0
+
+
+    return 0 if not mdl.objects.count() else mdl.objects.count()
 
 
 def _paginate(queryset, request, per_page: int = 20):
@@ -49,12 +53,13 @@ def _paginate(queryset, request, per_page: int = 20):
 
 # ---------- Landing / Dashboard ----------
 
+
 @require_GET
 def home(request):
     """
     Simple landing that shows recent Projects & Documents (as per your snippet).
     """
-    projects = ProjectOp.objects.order_by("-created_at")[:10]
+    projects = Process.objects.order_by("-created_at")[:10]
     docs = Document.objects.order_by("-created_at")[:10]
     return render(
         request,
@@ -69,11 +74,11 @@ def dashboard(request):
     Dashboard cards + quick links. Works even if domain models aren’t ready yet.
     """
     metrics = {
-        "project_count": ProjectOp.objects.count(),
+        "project_count": Process.objects.count(),
         "document_count": Document.objects.count(),
-        "prospect_count": _count_model("core", "Prospect"),     # optional model
-        "drillhole_count": _count_model("core", "Drillhole"),   # optional model
-        "tenement_count": _count_model("core", "Tenement"),     # optional model
+        "prospect_count": _count_model("core", "Prospect"),  # optional model
+        "drillhole_count": _count_model("core", "Drillhole"),  # optional model
+        "tenement_count": _count_model("core", "Tenement"),  # optional model
     }
     recent_docs = Document.objects.order_by("-created_at")[:8]
     return render(
@@ -87,7 +92,7 @@ def dashboard(request):
 @require_GET
 def stats_partial(request):
     ctx = {
-        "project_count": ProjectOp.objects.count(),
+        "project_count": Process.objects.count(),
         "document_count": Document.objects.count(),
         "prospect_count": _count_model("core", "Prospect"),
         "drillhole_count": _count_model("core", "Drillhole"),
@@ -99,7 +104,8 @@ def stats_partial(request):
 
 # ---------- Documents ----------
 
-@login_required
+
+# @login_required
 @require_http_methods(["GET", "POST"])
 def upload_doc(request):
     """
@@ -114,9 +120,12 @@ def upload_doc(request):
                 # Important: call sha256_file on the uploaded file *before* saving
                 doc.checksum_sha256 = sha256_file(doc.file)
 
-            if doc.checksum_sha256 and Document.objects.filter(
-                checksum_sha256=doc.checksum_sha256
-            ).exists():
+            if (
+                doc.checksum_sha256
+                and Document.objects.filter(
+                    checksum_sha256=doc.checksum_sha256
+                ).exists()
+            ):
                 # Duplicate detected — re-render with error + keep their form state
                 docs = Document.objects.order_by("-created_at")[:20]
                 return render(
@@ -164,10 +173,11 @@ def document_detail(request, pk: int):
 
 # ---------- Projects / Domain pages (safe even if models are missing) ----------
 
+
 @require_GET
 def prospects(request):
     Prospect = _get_model("core", "Prospect")
-    qs = Prospect.objects.all().order_by("-id") if Prospect else []
+    qs = Prospect.objects.all().order_by("-created_at") if Prospect else []
     page = _paginate(qs, request) if Prospect else None
     return render(
         request,
@@ -179,7 +189,7 @@ def prospects(request):
 @require_GET
 def drillholes(request):
     Drillhole = _get_model("core", "Drillhole")
-    qs = Drillhole.objects.all().order_by("-id") if Drillhole else []
+    qs = Drillhole.objects.all().order_by("-created_at") if Drillhole else []
     page = _paginate(qs, request) if Drillhole else None
     return render(
         request,
@@ -191,7 +201,7 @@ def drillholes(request):
 @require_GET
 def tenements(request):
     Tenement = _get_model("core", "Tenement")
-    qs = Tenement.objects.all().order_by("-id") if Tenement else []
+    qs = Tenement.objects.all().order_by("-created_at") if Tenement else []
     page = _paginate(qs, request) if Tenement else None
     return render(
         request,
@@ -201,6 +211,7 @@ def tenements(request):
 
 
 # ---------- AI / Map / Utilities ----------
+
 
 @require_GET
 def ai_insights(request):
@@ -213,7 +224,7 @@ def ai_insights(request):
         "core/ai_insights.html",
         {
             "recent_docs": Document.objects.order_by("-created_at")[:12],
-            "recent_projects": ProjectOp.objects.order_by("-created_at")[:8],
+            "recent_projects": Process.objects.order_by("-created_at")[:8],
         },
     )
 
