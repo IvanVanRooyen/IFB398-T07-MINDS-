@@ -1,7 +1,23 @@
 FROM python:3.11-slim
 
-RUN apt-get update && apt-get install -y     binutils libproj-dev gdal-bin postgresql-client     build-essential libpq-dev curl     && rm -rf /var/lib/apt/lists/*
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    libpq-dev \
+    gdal-bin \
+    libgdal-dev \
+    proj-bin \
+    libproj-dev \
+    libgeos-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r /app/requirements.txt
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+
+EXPOSE 8000
+CMD ["bash", "-lc", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]

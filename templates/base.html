@@ -1,21 +1,15 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Orefox KMS PoC</title>
-  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
-  <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border-bottom: 1px solid #ddd; padding: 0.5rem; text-align: left; }
-    .error { color: #b00020; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OreFox KMS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <nav><a href="/">Home</a> · <a href="/admin/">Admin</a> · <a href="/upload/">Upload</a></nav>
-  <hr/>
-  {% if messages %}{% for m in messages %}<div>{{ m }}</div>{% endfor %}{% endif %}
-  {% block content %}{% endblock %}
+<body class="bg-gray-100 text-gray-900">
+  
+  <main class="p-6">
+    {% block content %}{% endblock %}
+  </main>
 </body>
 </html>
