@@ -103,20 +103,23 @@ cd IFB398-T07-MINDS
 ### 2. Create a .env file or copy from .env.example
 
 ```bash
-POSTGRES_DB=orefox
-POSTGRES_USER=orefox
-POSTGRES_PASSWORD=orefoxpw
-POSTGRES_HOST=db
-POSTGRES_PORT=5432
-
-DJANGO_SECRET_KEY=dev-please-change
 DJANGO_DEBUG=1
-DJANGO_ALLOWED_HOSTS=127.0.0.1,localhost
+SECRET_KEY=your-long-random-string
 
-MINIO_ROOT_USER=minioadmin
-MINIO_ROOT_PASSWORD=minioadmin
+POSTGRES_DB=orefox
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+DB_NAME=orefox
+DB_USER=postgres
+DB_PASS=postgres
+DB_HOST=db
+DB_PORT=5432
+
+MINIO_ROOT_USER=minio
+MINIO_ROOT_PASSWORD=minio12345
 MINIO_BUCKET=documents
-MINIO_ENDPOINT=http://minio:9000
+MINIO_ENDPOINT=minio:9000
+MINIO_USE_SSL=0
 ```
 
 ### 3. Build and start the stack
