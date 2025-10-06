@@ -1,6 +1,23 @@
 #!/usr/bin/env nix-shell
 #! nix-shell -i python3 -p python313Packages.psycopg2-binary python313Packages.types-psycopg2 python313Packages.faker
 
+"""
+
+The shebang above will probably have to be changed to run this script:
+
+    ```
+    #!/usr/bin/env python 
+    ```
+
+May have to install `Faker` via `pip`:
+    ```
+    $: pip install Faker
+    ```
+
+Also change the `conn` variable connect string below (on line 29) to whatever your database is
+set up with (https://www.psycopg.org/docs/usage.html)
+"""
+
 import datetime
 import random
 
@@ -11,8 +28,6 @@ fk = Faker()
 
 conn = psycopg2.connect("dbname=orefox user=postgres")
 cur = conn.cursor()
-# id | title | file | tags | timestamp | doc_type | confidentiality | checksum_sha256 | created_at | updated_at
-# created_by_id | organisation_id | process_id
 
 
 def make_org(cursor):
@@ -29,7 +44,7 @@ def make_org(cursor):
         ) VALUES (
             %s, %s, %s, %s, %s
         )""",
-        (id, org_name, mode, created_at, updated_at)
+        (id, org_name, mode, created_at, updated_at),
     )
 
     return id
@@ -71,16 +86,17 @@ def make_doc(cursor):
             %s, %s, %s, %s,
             %s, %s
         )""",
-        (id,
-        title,
-        'file_examplefilename',
-        'file_exampledoctrype',
-        tags,
-        checksum_sha256,
-        created_at,
-        updated_at,
-        organisation,
-        "internal",
+        (
+            id,
+            title,
+            "file_examplefilename",
+            "file_exampledoctrype",
+            tags,
+            checksum_sha256,
+            created_at,
+            updated_at,
+            organisation,
+            "internal",
         ),
     )
 
