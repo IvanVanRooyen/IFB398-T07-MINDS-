@@ -8,10 +8,14 @@ This proof-of-concept demonstrates how documents (e.g., PDFs of exploration repo
 
 ## Features
 
-- **Django + GeoDjango + HTMX**
-  - Web application with interactive templates.
-  - GeoDjango adds spatial fields and admin map widgets.
-  - HTMX makes forms/pages reactive without a full SPA.
+- **Interactive Web Dashboard (Tailwind CSS + HTMX)**
+  - Clean, responsive interface styled with Tailwind CSS via CDN.
+  - Sidebar navigation for all modules (Dashboard, Documents, Prospects, Drillholes, Tenements, AI Insights, Admin).
+  - Upload page supports document submissions and metadata tagging.
+
+- **Django + GeoDjango**
+  - Handles ORM, migrations, authentication, and admin interface.
+  - GeoDjango adds support for spatial fields (POINT, POLYGON) for exploration data
 
 - **PostgreSQL + PostGIS**
   - Relational DB with geospatial support.
@@ -22,7 +26,7 @@ This proof-of-concept demonstrates how documents (e.g., PDFs of exploration repo
   - Stores PDFs and other file uploads outside the database.
 
 - **Docker Compose**
-  - One command to start the entire stack.
+  - Runs the database, object storage, and Django app in isolated containers.
   - Encapsulates dependencies and ensures consistency across machines.
 
 ---
@@ -81,7 +85,7 @@ This proof-of-concept demonstrates how documents (e.g., PDFs of exploration repo
 
 ├── base.html             # Shared HTML layout
 
-├── core/home.html        # Homepage: lists projects & documents
+├── core/dashboard.html   # Dashboard with metrics + sidebar
 
 └── core/upload.html      # Document upload form
 
@@ -118,24 +122,22 @@ MINIO_ENDPOINT=http://minio:9000
 ### 3. Build and start the stack
 
 ```bash
-docker compose build web
-docker compose up -d db minio create-bucket
+docker compose up --build
 ```
 
-### 4. Run migrations & create an admin user
+This launches:
+
+- PostgreSQL + PostGIS
+- MinIO (object storage + console)
+- Django web app (accessible on port 8000)
+
+### 4. Create an admin user
 
 ```bash
-docker compose run --rm web bash -lc "python manage.py makemigrations && python manage.py migrate"
-docker compose run --rm web bash -lc "python manage.py createsuperuser"
+docker compose exec web bash -lc "python manage.py createsuperuser"
 ```
 
 Follow the prompts for username/email/password.
-
-### 5. Start the web app
-
-```bash
-docker compose up -d web
-```
 
 ### Access the Services
 
@@ -188,3 +190,11 @@ docker compose logs -f db
 ```bash
 docker compose exec db psql -U $POSTGRES_USER -d $POSTGRES_DB
 ```
+
+## Notes
+
+- No local Python setup required — everything runs inside Docker.
+- Tailwind is loaded via Play CDN — no Node.js or build pipeline needed.
+- All environment variables must come from .env (never hard-code secrets).
+- Make migrations before pushing if you alter models.
+- Commit templates & static files (e.g., base.html, dashboard UI) for shared frontend consistency.

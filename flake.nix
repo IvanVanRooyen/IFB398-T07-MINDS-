@@ -47,6 +47,9 @@
             # nodejs
             bun
 
+            ruff
+            pyright
+
             pkg-config
             openssl.dev
 
@@ -75,6 +78,16 @@
               echo "unix_socket_directories = '$PWD/.pg-sock'" >> .pg-data/postgresql.conf
               echo "port = 5432" >> .pg-data/postgresql.conf
             fi
+            
+            UV_RUN_SCRIPT="$UV_PROJECT/.venv/util/manage-py"
+            if [ ! -f "$UV_RUN_SCRIPT" ]; then  
+              mkdir -p "$UV_PROJECT/.venv/util"
+
+              printf '#!/usr/bin/env bash\nuv run %s/manage.py "$@"\n' "$(pwd)" > "$UV_RUN_SCRIPT"
+              chmod +x "$UV_RUN_SCRIPT"
+            fi
+
+            PATH+=:$UV_PROJECT/.venv/util
 
             echo "===================================================================="
             echo "in shell"
