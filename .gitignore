@@ -1,0 +1,9 @@
+.env
+.direnv
+.pg-data
+.pg-sock
+.venv
+__pycache__
+
+staticfiles
+node_modules
