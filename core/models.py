@@ -18,7 +18,7 @@ class ChoiceValidationMixin:
         for field in self._meta.fields:
             if field.choices:
                 field_value = getattr(self, field.name)
-                valid_choices = [choice[0] for choice in field.choice]
+                valid_choices = [choice[0] for choice in field.choices]
                 if field_value not in valid_choices:
                     raise ValidationError(
                         {
@@ -65,8 +65,8 @@ class Organisation(ValidatedChoiceModel):
     name = models.CharField(max_length=32, null=True)
     mode = models.CharField(choices=Mode, default=Mode.EXPLORATION)
 
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         constraints = [
@@ -75,6 +75,9 @@ class Organisation(ValidatedChoiceModel):
                 name="valid_organisation_mode",
             )
         ]
+
+    def __str__(self):
+        return f"{self.name} ({self.mode})" if self.name else f"Organisation ({self.mode})"
 
     def __repr__(self):
         return f"Organisation(id={self.id},name={self.name},mode={self.mode})"
@@ -90,14 +93,14 @@ class Process(ValidatedChoiceModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True, null=False)
     name = models.CharField(max_length=64, null=True)
-    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, null=True, blank=True)
     mode = models.CharField(choices=ProcessType, default=ProcessType.PROJECT)
 
     geom = models.MultiPolygonField(srid=4326, null=True, blank=True)
     commodity = models.CharField(max_length=64, blank=True, null=True)
 
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         constraints = [
@@ -106,6 +109,9 @@ class Process(ValidatedChoiceModel):
                 name="valid_process_mode",
             )
         ]
+
+    def __str__(self):
+        return self.name if self.name else f"Process {self.id}"
 
     def __repr__(self):
         return (
@@ -121,8 +127,8 @@ class Prospect(models.Model):
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     process = models.ForeignKey(Process, on_delete=models.CASCADE)
 
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __repr__(self):
         return (
@@ -137,8 +143,8 @@ class Tenement(models.Model):
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     process = models.ForeignKey(Process, on_delete=models.CASCADE)
 
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __repr__(self):
         return (
@@ -153,8 +159,8 @@ class Drillhole(models.Model):
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     process = models.ForeignKey(Process, on_delete=models.CASCADE)
 
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __repr__(self):
         return (
@@ -173,9 +179,9 @@ class Document(models.Model):
 
     # filename = models.FileField(upload_to="docs/")
     file = models.FileField(upload_to="docs/")
-    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
-    process = models.ForeignKey(Process, null=True, on_delete=models.SET_NULL)
-    tags = ArrayField(models.IntegerField(blank=True, default=list))
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, null=True, blank=True)
+    process = models.ForeignKey(Process, null=True, on_delete=models.SET_NULL, blank=True)
+    tags = ArrayField(models.IntegerField(), default=list, blank=True)
 
     timestamp = models.DateField(null=True)
     doc_type = models.CharField(max_length=64, blank=True)
@@ -185,8 +191,30 @@ class Document(models.Model):
     )
 
     checksum_sha256 = models.CharField(max_length=64, db_index=True, blank=True)
-    created_at = models.DateTimeField()
-    updated_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        # Compute SHA-256 checksum if file exists and checksum not already set
+        if self.file and not self.checksum_sha256:
+            from .utils import sha256_file
+            self.checksum_sha256 = sha256_file(self.file)
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        # Delete the file from storage (MinIO) before deleting the database record
+        if self.file:
+            try:
+                self.file.delete(save=False)
+            except Exception as e:
+                # Log the error but continue with deletion
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Failed to delete file {self.file.name} from storage: {e}")
+        super().delete(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
 
     def __repr__(self):
         return (

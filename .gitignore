@@ -33,3 +33,6 @@ htmlcov/
 .coverage
 .pytest_cache/
 .tox/
+
+# Obviously delete this before any submissions 
+CLAUDE.md

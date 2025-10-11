@@ -7,6 +7,7 @@ urlpatterns = [
     path("drillholes/", views.drillholes, name="drillholes"),
     path("tenements/", views.tenements, name="tenements"),
     path("documents/", views.documents, name="documents"),
+    path("documents/<uuid:pk>/delete/", views.delete_document, name="delete_document"),
     path("ai-insights/", views.ai_insights, name="ai_insights"),
 
     path("upload/", views.upload_doc, name="upload"),
