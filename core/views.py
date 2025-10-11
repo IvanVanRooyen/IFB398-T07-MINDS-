@@ -3,11 +3,16 @@ from __future__ import annotations
 
 from django.apps import apps
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_http_methods
+
+from core.ai.report_service import generate_project_report
+from .ai.granite_client import GraniteClient
+
 
 from .forms import DocumentForm
 from .models import Document, Process
@@ -278,3 +283,22 @@ def healthcheck(request):
     Lightweight container health endpoint (used by k8s/docker healthchecks later).
     """
     return JsonResponse({"status": "ok"})
+
+
+@require_GET
+def project_report(request, process_id: str):
+    # Validate the project exists early
+    if not Process.objects.filter(pk=process_id).exists():
+        raise Http404("Project not found")
+
+    md = generate_project_report(process_id)
+
+    # Choose JSON if requested
+    if request.GET.get("format") == "json":
+        return JsonResponse({"markdown": md})
+
+    # Minimal HTML wrapper
+    return HttpResponse(
+        f"<html><body><pre style='white-space:pre-wrap'>{md}</pre></body></html>",
+        content_type="text/html",
+    )
