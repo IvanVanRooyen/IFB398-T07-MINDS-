@@ -6,26 +6,20 @@ from django.contrib.gis.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-
+from django.core.validators import FileExtensionValidator
 
 class ChoiceValidationMixin:
-    """
-    Automatically handle validation of choice fields
-    """
-
     def clean(self):
         super().clean()
         for field in self._meta.fields:
-            if field.choices:
+            if getattr(field, "choices", None):
                 field_value = getattr(self, field.name)
-                valid_choices = [choice[0] for choice in field.choice]
+                if field_value in (None, ""):
+                    continue
+                valid_choices = [choice[0] for choice in field.choices]
                 if field_value not in valid_choices:
-                    raise ValidationError(
-                        {
-                            field.name: f"invalid value for {field.name}"
-                            f"(expected one of {valid_choices})"
-                        }
-                    )
+                    raise ValidationError({field.name: f"invalid value for {field.name} (expected one of {valid_choices})"})
+
 
 
 class AutoCleanMixin:
@@ -168,18 +162,46 @@ class User(models.Model):
 
 
 class Document(models.Model):
+    DOC_TYPES = [
+        ("REPORT", "Report"),
+        ("MAP", "Map"),
+        ("IMAGE", "Image"),
+        ("TABLE", "Table (CSV/XLSX)"),
+        ("OTHER", "Other"),
+    ]
+    CONF_LEVELS = [
+        ("public", "Public"),
+        ("internal", "Internal"),
+        ("confidential", "Confidential"),
+        ("restricted", "Restricted"),
+    ]
+
     id = models.UUIDField(default=uuid.uuid4, unique=True, null=False, primary_key=True)
     title = models.CharField(max_length=64)
 
-    # filename = models.FileField(upload_to="docs/")
-    file = models.FileField(upload_to="docs/")
+    file = models.FileField(
+        upload_to="docs/",
+        validators=[FileExtensionValidator(allowed_extensions=[
+            # Not sure if we want to change these file types later?
+            "pdf", "doc", "docx", "csv", "xlsx", "xls", 
+            "tif", "tiff", "png", "jpg", "jpeg", "zip"
+        ])]
+    )
+
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     process = models.ForeignKey(Process, null=True, on_delete=models.SET_NULL)
+
     tags = ArrayField(models.IntegerField(blank=True, default=list))
 
     timestamp = models.DateField(null=True)
-    doc_type = models.CharField(max_length=64, blank=True)
-    confidentiality = models.CharField(max_length=64, default="internal")
+
+    
+    commodity = models.CharField(max_length=64, blank=True, null=True)
+    author = models.CharField(max_length=128, blank=True, null=True)
+
+    doc_type = models.CharField(max_length=64, choices=DOC_TYPES, blank=False, default="REPORT")
+    confidentiality = models.CharField(max_length=64, choices=CONF_LEVELS, default="internal")
+
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+", null=True
     )
@@ -188,15 +210,20 @@ class Document(models.Model):
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
 
-    def __repr__(self):
-        return (
-            f"Document(id={self.id},title={self.title},filepath={self.file},"
-            f"organisation={self.organisation},process={self.process},"
-            f"doc_type={self.doc_type},confidentiality={self.confidentiality},"
-            f"checksum_sha256={self.checksum_sha256},created_by={self.created_by},"
-            f"created_at={self.created_at},"
-        )
-
+    class Meta:
+        indexes = [
+            models.Index(fields=["doc_type"]),
+            models.Index(fields=["confidentiality"]),
+            models.Index(fields=["timestamp"]),
+            models.Index(fields=["checksum_sha256"]),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["checksum_sha256"],
+                name="unique_document_checksum",
+                condition=models.Q(checksum_sha256__gt="")
+            )
+        ]
 
 # class ProjectOp(models.Model):
 #     MODE = (("EXP","Exploration"), ("MIN","Mining"))
