@@ -66,10 +66,21 @@ DATABASES = {
 STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-# MinIO storage
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-AWS_S3_ENDPOINT_URL = f"http://{env('MINIO_ENDPOINT')}"
-AWS_ACCESS_KEY_ID = env("MINIO_ROOT_USER")
-AWS_SECRET_ACCESS_KEY = env("MINIO_ROOT_PASSWORD")
-AWS_STORAGE_BUCKET_NAME = env("MINIO_BUCKET")
-AWS_S3_USE_SSL = env.bool("MINIO_USE_SSL", default=False)
+# MinIO storage configuration (Django 5.x STORAGES format)
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        "OPTIONS": {
+            "access_key": env("MINIO_ROOT_USER"),
+            "secret_key": env("MINIO_ROOT_PASSWORD"),
+            "bucket_name": env("MINIO_BUCKET"),
+            "endpoint_url": f"http://{env('MINIO_ENDPOINT')}",
+            "use_ssl": env.bool("MINIO_USE_SSL", default=False),
+            "file_overwrite": False,
+            "default_acl": None,
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}

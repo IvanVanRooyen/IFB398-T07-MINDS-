@@ -84,14 +84,20 @@
       </div>
       <ul class="divide-y">
         {% for d in docs %}
-          <li class="p-4 flex items-center justify-between">
-            <div class="min-w-0">
+          <li class="p-4 flex items-center justify-between gap-4" id="doc-{{ d.id }}">
+            <div class="min-w-0 flex-1">
               <div class="truncate font-medium">{{ d.title }}</div>
               <div class="text-xs text-gray-500">{{ d.created_at|date:"Y-m-d H:i" }}</div>
             </div>
-            {% if d.file %}
-              <a class="text-cyan-600 text-sm hover:underline" href="{{ d.file.url }}" target="_blank">View</a>
-            {% endif %}
+            <div class="flex items-center gap-2">
+              {% if d.file %}
+                <a class="text-cyan-600 text-sm hover:underline px-2 py-1" href="{{ d.file.url }}" target="_blank">View</a>
+              {% endif %}
+              <form method="post" action="{% url 'delete_document' d.id %}" class="inline" onsubmit="return confirmDelete(event, '{{ d.title }}', '{{ d.id }}')">
+                {% csrf_token %}
+                <button type="submit" class="text-red-600 text-sm hover:underline px-2 py-1">Delete</button>
+              </form>
+            </div>
           </li>
         {% empty %}
           <li class="p-4 text-gray-500">No documents yet.</li>
@@ -145,5 +151,21 @@
     // Simple submit feedback
     form.addEventListener('submit', () => { spin.classList.remove('hidden'); });
   })();
+
+  // Delete confirmation and animation
+  function confirmDelete(event, title, docId) {
+    if (!confirm(`Are you sure you want to delete "${title}"?\n\nThis will also delete the file from storage.`)) {
+      event.preventDefault();
+      return false;
+    }
+
+    // Add loading state to the button
+    const form = event.target;
+    const button = form.querySelector('button[type="submit"]');
+    button.textContent = 'Deleting...';
+    button.disabled = true;
+
+    return true;
+  }
 </script>
 {% endblock %}

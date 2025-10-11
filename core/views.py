@@ -171,6 +171,41 @@ def document_detail(request, pk: int):
     return render(request, "core/document_detail.html", {"doc": doc})
 
 
+@require_http_methods(["POST", "DELETE"])
+def delete_document(request, pk):
+    """
+    Delete a document and its associated file from storage (MinIO).
+    """
+    doc = get_object_or_404(Document, pk=pk)
+
+    # Store title for success message
+    doc_title = doc.title
+
+    try:
+        # The delete() method on the model will handle file deletion from MinIO
+        doc.delete()
+
+        # Return JSON response for HTMX/AJAX requests
+        if request.headers.get('HX-Request'):
+            return JsonResponse({
+                "success": True,
+                "message": f"Document '{doc_title}' deleted successfully."
+            })
+
+        # Redirect for regular form submissions
+        return redirect("upload")
+
+    except Exception as e:
+        if request.headers.get('HX-Request'):
+            return JsonResponse({
+                "success": False,
+                "message": f"Error deleting document: {str(e)}"
+            }, status=500)
+
+        # For regular requests, redirect with error (would need messages framework)
+        return redirect("upload")
+
+
 # ---------- Projects / Domain pages (safe even if models are missing) ----------
 
 
