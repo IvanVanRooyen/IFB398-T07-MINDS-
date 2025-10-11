@@ -73,3 +73,19 @@ AWS_ACCESS_KEY_ID = env("MINIO_ROOT_USER")
 AWS_SECRET_ACCESS_KEY = env("MINIO_ROOT_PASSWORD")
 AWS_STORAGE_BUCKET_NAME = env("MINIO_BUCKET")
 AWS_S3_USE_SSL = env.bool("MINIO_USE_SSL", default=False)
+
+# Upload document constraints
+MAX_UPLOAD_MB = 100
+ALLOWED_CONTENT_TYPES = {
+    # documents
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    # tables
+    "text/csv",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    # images (not sure if needed)
+    "image/tiff", "image/tif",
+    "image/png", "image/jpeg",
+}
