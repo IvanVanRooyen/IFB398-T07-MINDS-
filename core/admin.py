@@ -23,7 +23,7 @@ class ProcessAdmin(GISModelAdmin):
 
 @djadmin.register(Document)
 class DocumentAdmin(djadmin.ModelAdmin):
-    list_display = ("title", "timestamp", "doc_type", "confidentiality", "process", "created_by", "approved_by")
+    list_display = ("title", "timestamp", "doc_type", "confidentiality", "process", "created_by") # removed approved_by -> not in model
     list_filter = ("doc_type", "confidentiality", "organisation")
     search_fields = ("title", "checksum_sha256")
     readonly_fields = ("checksum_sha256", "created_at", "updated_at")

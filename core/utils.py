@@ -4,15 +4,22 @@ from django.contrib.gis.db import models
 
 
 def sha256_file(django_file) -> str:
-    pos = django_file.tell()
+    pos = django_file.tell()  # remember current position
     django_file.seek(0)
 
     h = hashlib.sha256()
 
-    for chunk in iter(lambda: django_file.read(8192), b""):
-        h.update(chunk)
-    django_file.seek(pos)
+    # Use chunks() if available (IMPORTANT for uploaded files)
+    if hasattr(django_file, "chunks"):
+        for chunk in django_file.chunks():
+            if chunk:
+                h.update(chunk)
+    else:
+        # fallback for non-uploaded file objects
+        for chunk in iter(lambda: django_file.read(8192), b""):
+            h.update(chunk)
 
+    django_file.seek(pos)  # restore pointer
     return h.hexdigest()
 
 

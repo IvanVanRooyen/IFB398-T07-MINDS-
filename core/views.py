@@ -13,6 +13,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 from core.ai.report_service import generate_project_report
 from .ai.granite_client import GraniteClient
 
+import logging
 
 from .forms import DocumentForm
 from .models import Document, Process
@@ -98,6 +99,7 @@ def stats_partial(request):
 
 # ---------- Documents ----------
 
+log = logging.getLogger(__name__)
 
 # @login_required
 @require_http_methods(["GET", "POST"])
@@ -107,19 +109,20 @@ def upload_doc(request):
     """
     if request.method == "POST":
         form = DocumentForm(request.POST, request.FILES)
+        log.debug("FILES keys: %s", list(request.FILES.keys()))  # debug: ensure 'file' is present
         if form.is_valid():
-            doc: Document = form.save(commit=False)
-            doc.created_by = request.user
+            doc = form.save(commit=False)
+            # Only set if user is authenticated (created_by is nullable)
+            if request.user.is_authenticated:
+                doc.created_by = request.user
+
             if doc.file:
                 # Important: call sha256_file on the uploaded file *before* saving
                 doc.checksum_sha256 = sha256_file(doc.file)
 
-            if (
-                doc.checksum_sha256
-                and Document.objects.filter(
-                    checksum_sha256=doc.checksum_sha256
-                ).exists()
-            ):
+            if doc.checksum_sha256 and Document.objects.filter(
+                checksum_sha256=doc.checksum_sha256
+            ).exists():
                 # Duplicate detected — re-render with error + keep their form state
                 docs = Document.objects.order_by("-created_at")[:20]
                 return render(
@@ -133,11 +136,21 @@ def upload_doc(request):
                 )
 
             doc.save()
-            form.save_m2m()
+            # form.save_m2m()
             return redirect("upload")
-    else:
-        form = DocumentForm()
-
+        else:
+            # Show validation errors + keep the recent docs list
+            # Show *why* it failed
+            log.warning("Upload invalid: %s", form.errors)
+            docs = Document.objects.order_by("created_at")[:20]
+            return render(
+                request,
+                "core/upload.html",
+                {"form": form, "docs": docs, "error": "Please correct the errors below."},
+            )
+    
+    # GET
+    form = DocumentForm()
     docs = Document.objects.order_by("-created_at")[:20]
     return render(request, "core/upload.html", {"form": form, "docs": docs})
 
@@ -145,22 +158,31 @@ def upload_doc(request):
 @require_GET
 def documents(request):
     """
-    Document library with search + pagination.
+    Document library with search + tag + pagination.
     """
     q = request.GET.get("q", "").strip()
+    tag = request.GET.get("tag")
     qs = Document.objects.all().order_by("-created_at")
     if q:
         qs = qs.filter(
             Q(title__icontains=q)
-            | Q(description__icontains=q)
-            | Q(project__name__icontains=q)
+            | Q(doc_type__icontains=q)
+            | Q(confidentiality__icontains=q)
+            | Q(process__name__icontains=q)
+            | Q(organisation__name__icontains=q)
         )
+    if tag:
+        try: 
+            qs = qs.filter(tags__contains=[int(tag)])
+        except (TypeError, ValueError):
+            pass
+
     page = _paginate(qs, request, per_page=24)
     return render(request, "core/documents.html", {"page": page, "q": q})
 
 
 @require_GET
-def document_detail(request, pk: int):
+def document_detail(request, pk):
     doc = get_object_or_404(Document, pk=pk)
     return render(request, "core/document_detail.html", {"doc": doc})
 

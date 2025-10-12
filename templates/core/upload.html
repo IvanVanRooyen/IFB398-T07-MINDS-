@@ -26,9 +26,9 @@
       <a href="{% url 'documents' %}" class="text-cyan-600 hover:underline">View library →</a>
     </div>
 
-    {% if error %}
+    {% if form.non_field_errors %}
       <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
-        {{ error }}
+        {{ form.non_field_errors }}
       </div>
     {% endif %}
 
@@ -36,20 +36,41 @@
     <div class="bg-white rounded-xl shadow overflow-hidden">
       <form method="post" enctype="multipart/form-data" class="p-6" id="uploadForm">
         {% csrf_token %}
+        {% if form.errors %}
+          <pre class="text-xs bg-yellow-50 border p-2 rounded overflow-auto">{{ form.errors }}</pre>
+        {% endif %}
 
         <!-- Fields (project / title / description / file) -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium mb-1">Project</label>
-            {{ form.project }}
+            <label class="block text-sm font-medium mb-1">Title</label>
+            {{ form.title }} {{ form.title.errors }}
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Title</label>
-            {{ form.title }}
+            <label class="block text-sm font-medium mb-1">Organisation</label>
+            {{ form.organisation }} {{ form.organisation.errors }}
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Process</label>
+            {{ form.process }} {{ form.process.errors }}
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Document Type</label>
+            {{ form.doc_type }} {{ form.doc_type.errors }}
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Date</label>
+            {{ form.timestamp }} 
+            <small class="text-xs text-gray-500">Use date picker or enter YYYY-MM-DD.</small>
+            {{ form.timestamp.errors }}
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Confidentiality</label>
+            {{ form.confidentiality }} {{ form.confidentiality.errors }}
           </div>
           <div class="md:col-span-2">
-            <label class="block text-sm font-medium mb-1">Description</label>
-            {{ form.description }}
+            <label class="block text-sm font-medium mb-1">Tags</label>
+            {{ form.tags }} {{ form.tags.errors }}
           </div>
         </div>
 
