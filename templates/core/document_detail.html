@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white shadow-md hidden md:flex flex-col">
+    <div class="p-6 border-b">
+      <h2 class="text-xl font-semibold text-cyan-600">OreFox KMS</h2>
+    </div>
+    <nav class="flex-1 p-4 space-y-2">
+      <a href="{% url 'dashboard' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🏠 <span>Dashboard</span>
+      </a>
+      <a href="{% url 'documents' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium bg-cyan-100">
+        📄 <span>Documents</span>
+      </a>
+      <a href="{% url 'prospects' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        💎 <span>Prospects</span>
+      </a>
+      <a href="{% url 'drillholes' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🧱 <span>Drillholes</span>
+      </a>
+      <a href="{% url 'tenements' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🗺️ <span>Tenements</span>
+      </a>
+      <a href="{% url 'ai_insights' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🤖 <span>AI Insights</span>
+      </a>
+      <a href="{% url 'map_view' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🗺️ <span>Map</span>
+      </a>
+    </nav>
+    <div class="p-4 border-t">
+      <a href="/admin/" class="block text-center px-4 py-2 text-sm font-semibold text-white bg-cyan-600 rounded-lg hover:bg-cyan-700">
+        ⚙️ Admin Panel
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6 bg-gray-50">
+
+    <!-- Breadcrumb -->
+    <div class="mb-4 text-sm text-gray-600">
+      <a href="{% url 'documents' %}" class="hover:text-cyan-600">Documents</a>
+      <span class="mx-2">/</span>
+      <span class="text-gray-900">{{ doc.title }}</span>
+    </div>
+
+    <!-- Document Card -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden max-w-4xl">
+
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-cyan-600 to-blue-600 text-white p-6">
+        <h1 class="text-3xl font-bold mb-2">{{ doc.title }}</h1>
+        <p class="text-cyan-100">{{ doc.doc_type|default:"Document" }}</p>
+      </div>
+
+      <!-- Metadata -->
+      <div class="p-6 border-b">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p class="text-sm text-gray-500">Document Type</p>
+            <p class="font-medium">{{ doc.doc_type|default:"Not specified" }}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Date</p>
+            <p class="font-medium">{{ doc.timestamp|date:"M d, Y"|default:"Not specified" }}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Confidentiality</p>
+            <p class="font-medium">
+              <span class="px-3 py-1 rounded-full bg-cyan-100 text-cyan-700 text-sm">
+                {{ doc.confidentiality|default:"internal" }}
+              </span>
+            </p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Project</p>
+            <p class="font-medium">{{ doc.process.name|default:"Not linked" }}</p>
+          </div>
+          {% if doc.organisation %}
+          <div>
+            <p class="text-sm text-gray-500">Organisation</p>
+            <p class="font-medium">{{ doc.organisation.name }}</p>
+          </div>
+          {% endif %}
+          <div>
+            <p class="text-sm text-gray-500">Uploaded</p>
+            <p class="font-medium">{{ doc.created_at|date:"M d, Y H:i" }}</p>
+          </div>
+          {% if doc.created_by %}
+          <div>
+            <p class="text-sm text-gray-500">Uploaded By</p>
+            <p class="font-medium">{{ doc.created_by.username }}</p>
+          </div>
+          {% endif %}
+          <div>
+            <p class="text-sm text-gray-500">Checksum (SHA-256)</p>
+            <p class="font-mono text-xs text-gray-600 break-all">{{ doc.checksum_sha256|default:"N/A" }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tags -->
+      {% if doc.tags %}
+      <div class="p-6 border-b">
+        <p class="text-sm text-gray-500 mb-2">Tags</p>
+        <div class="flex flex-wrap gap-2">
+          {% for tag in doc.tags %}
+            <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">Tag {{ tag }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Actions -->
+      <div class="p-6 bg-gray-50">
+        <div class="flex gap-3">
+          {% if doc.file %}
+            <a href="{{ doc.file.url }}" target="_blank" class="flex-1 text-center px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 font-semibold">
+              📄 Open File
+            </a>
+            <a href="{{ doc.file.url }}" download class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-white font-semibold">
+              ⬇️ Download
+            </a>
+          {% else %}
+            <p class="text-gray-500">No file attached</p>
+          {% endif %}
+        </div>
+
+        <div class="mt-4 flex gap-3">
+          <a href="{% url 'documents' %}" class="text-cyan-600 hover:underline">
+            ← Back to Documents
+          </a>
+          {% if doc.process %}
+            <a href="{% url 'project_report' doc.process.id %}" class="text-cyan-600 hover:underline">
+              🤖 Generate AI Report for {{ doc.process.name }}
+            </a>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+{% endblock %}

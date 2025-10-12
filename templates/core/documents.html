@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white shadow-md hidden md:flex flex-col">
+    <div class="p-6 border-b">
+      <h2 class="text-xl font-semibold text-cyan-600">OreFox KMS</h2>
+    </div>
+    <nav class="flex-1 p-4 space-y-2">
+      <a href="{% url 'dashboard' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🏠 <span>Dashboard</span>
+      </a>
+      <a href="{% url 'documents' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium bg-cyan-100">
+        📄 <span>Documents</span>
+      </a>
+      <a href="{% url 'prospects' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        💎 <span>Prospects</span>
+      </a>
+      <a href="{% url 'drillholes' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🧱 <span>Drillholes</span>
+      </a>
+      <a href="{% url 'tenements' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🗺️ <span>Tenements</span>
+      </a>
+      <a href="{% url 'ai_insights' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🤖 <span>AI Insights</span>
+      </a>
+      <a href="{% url 'map_view' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🗺️ <span>Map</span>
+      </a>
+    </nav>
+    <div class="p-4 border-t">
+      <a href="/admin/" class="block text-center px-4 py-2 text-sm font-semibold text-white bg-cyan-600 rounded-lg hover:bg-cyan-700">
+        ⚙️ Admin Panel
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6 bg-gray-50">
+
+    <!-- Header -->
+    <div class="mb-6 flex items-center justify-between">
+      <h1 class="text-3xl font-bold">Document Library</h1>
+      <a href="{% url 'upload' %}" class="bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-6 py-2 rounded-lg">
+        + Upload Document
+      </a>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="mb-6">
+      <form method="get" action="{% url 'documents' %}" class="max-w-2xl">
+        <div class="flex gap-2">
+          <input
+            type="text"
+            name="q"
+            value="{{ q }}"
+            placeholder="Search documents by title or process..."
+            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+          />
+          <button type="submit" class="px-6 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700">
+            Search
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Documents Grid -->
+    {% if page.object_list %}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for doc in page.object_list %}
+          <div class="bg-white rounded-xl shadow hover:shadow-lg transition p-6">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-lg truncate">{{ doc.title }}</h3>
+                <p class="text-sm text-gray-500">{{ doc.doc_type|default:"Document" }}</p>
+              </div>
+              <span class="ml-2 px-2 py-1 text-xs rounded-full bg-cyan-100 text-cyan-700">
+                {{ doc.confidentiality|default:"internal" }}
+              </span>
+            </div>
+
+            <div class="text-sm text-gray-600 mb-4">
+              <p>📅 {{ doc.timestamp|date:"M d, Y"|default:"No date" }}</p>
+              {% if doc.process %}
+                <p>📁 {{ doc.process.name }}</p>
+              {% endif %}
+            </div>
+
+            <div class="flex gap-2">
+              {% if doc.file %}
+                <a href="{{ doc.file.url }}" target="_blank" class="flex-1 text-center px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 text-sm">
+                  View File
+                </a>
+              {% endif %}
+              <a href="{% url 'document_detail' doc.id %}" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm">
+                Details
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if page.has_other_pages %}
+        <div class="mt-8 flex justify-center gap-2">
+          {% if page.has_previous %}
+            <a href="?page={{ page.previous_page_number }}{% if q %}&q={{ q }}{% endif %}" class="px-4 py-2 border rounded-lg hover:bg-gray-50">
+              Previous
+            </a>
+          {% endif %}
+
+          <span class="px-4 py-2 bg-cyan-100 text-cyan-700 rounded-lg">
+            Page {{ page.number }} of {{ page.paginator.num_pages }}
+          </span>
+
+          {% if page.has_next %}
+            <a href="?page={{ page.next_page_number }}{% if q %}&q={{ q }}{% endif %}" class="px-4 py-2 border rounded-lg hover:bg-gray-50">
+              Next
+            </a>
+          {% endif %}
+        </div>
+      {% endif %}
+
+    {% else %}
+      <div class="text-center py-16">
+        <p class="text-gray-500 text-lg mb-4">No documents found</p>
+        {% if q %}
+          <p class="text-gray-400 mb-4">Try a different search term</p>
+          <a href="{% url 'documents' %}" class="text-cyan-600 hover:underline">Clear search</a>
+        {% else %}
+          <a href="{% url 'upload' %}" class="text-cyan-600 hover:underline">Upload your first document</a>
+        {% endif %}
+      </div>
+    {% endif %}
+
+  </main>
+</div>
+{% endblock %}

@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white shadow-md hidden md:flex flex-col">
+    <div class="p-6 border-b">
+      <h2 class="text-xl font-semibold text-cyan-600">OreFox KMS</h2>
+    </div>
+    <nav class="flex-1 p-4 space-y-2">
+      <a href="{% url 'dashboard' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🏠 <span>Dashboard</span>
+      </a>
+      <a href="{% url 'documents' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        📄 <span>Documents</span>
+      </a>
+      <a href="{% url 'prospects' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        💎 <span>Prospects</span>
+      </a>
+      <a href="{% url 'drillholes' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🧱 <span>Drillholes</span>
+      </a>
+      <a href="{% url 'tenements' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🗺️ <span>Tenements</span>
+      </a>
+      <a href="{% url 'ai_insights' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium bg-cyan-100">
+        🤖 <span>AI Insights</span>
+      </a>
+      <a href="{% url 'map_view' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🗺️ <span>Map</span>
+      </a>
+    </nav>
+    <div class="p-4 border-t">
+      <a href="/admin/" class="block text-center px-4 py-2 text-sm font-semibold text-white bg-cyan-600 rounded-lg hover:bg-cyan-700">
+        ⚙️ Admin Panel
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6 bg-gray-50">
+
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold">🤖 AI Insights</h1>
+      <p class="text-gray-600 mt-2">AI-powered analysis and report generation</p>
+    </div>
+
+    <!-- Feature Cards -->
+    <div class="grid md:grid-cols-2 gap-6 mb-8">
+
+      <!-- Project Report Generation -->
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center text-2xl">
+            📊
+          </div>
+          <div>
+            <h2 class="text-xl font-semibold">Project Reports</h2>
+            <p class="text-sm text-gray-600">Generate comprehensive reports</p>
+          </div>
+        </div>
+        <p class="text-gray-700 mb-4">
+          Automatically generate detailed project reports using AI analysis of documents and data.
+        </p>
+        <div class="flex gap-2">
+          <button class="flex-1 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700">
+            Generate Report
+          </button>
+        </div>
+      </div>
+
+      <!-- Document Analysis -->
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-2xl">
+            🔍
+          </div>
+          <div>
+            <h2 class="text-xl font-semibold">Document Analysis</h2>
+            <p class="text-sm text-gray-600">Extract key insights</p>
+          </div>
+        </div>
+        <p class="text-gray-700 mb-4">
+          Analyze documents to extract commodity information, dates, and key findings.
+        </p>
+        <div class="flex gap-2">
+          <button class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+            Analyze Documents
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Recent Projects for Report Generation -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+      <div class="bg-gradient-to-r from-cyan-600 to-blue-600 text-white p-4">
+        <h2 class="text-xl font-semibold">Generate Reports for Projects</h2>
+      </div>
+
+      {% if recent_projects %}
+        <div class="divide-y">
+          {% for project in recent_projects %}
+            <div class="p-4 hover:bg-gray-50 flex items-center justify-between">
+              <div class="flex-1">
+                <h3 class="font-semibold text-gray-900">{{ project.name }}</h3>
+                <p class="text-sm text-gray-600">{{ project.mode }} • {{ project.commodity|default:"No commodity" }}</p>
+              </div>
+              <a href="{% url 'project_report' project.id %}"
+                 class="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 text-sm whitespace-nowrap">
+                Generate Report →
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="p-8 text-center text-gray-500">
+          <p class="mb-2">No projects available</p>
+          <p class="text-sm">Create a project in the admin panel to generate reports</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Recent Documents -->
+    <div class="mt-8 bg-white rounded-xl shadow-lg overflow-hidden">
+      <div class="p-4 border-b">
+        <h2 class="text-lg font-semibold">Recent Documents for Analysis</h2>
+      </div>
+
+      {% if recent_docs %}
+        <div class="divide-y">
+          {% for doc in recent_docs %}
+            <div class="p-4 hover:bg-gray-50 flex items-center justify-between">
+              <div class="flex-1">
+                <h3 class="font-medium text-gray-900">{{ doc.title }}</h3>
+                <p class="text-sm text-gray-600">{{ doc.doc_type|default:"Document" }} • {{ doc.created_at|date:"M d, Y" }}</p>
+              </div>
+              <div class="flex gap-2">
+                {% if doc.file %}
+                  <a href="{{ doc.file.url }}" target="_blank" class="px-3 py-1 text-cyan-600 hover:underline text-sm">
+                    View
+                  </a>
+                {% endif %}
+                <button class="px-3 py-1 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 text-sm">
+                  Analyze
+                </button>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="p-8 text-center text-gray-500">
+          <p>No documents available for analysis</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- AI Configuration Status -->
+    <div class="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-6">
+      <div class="flex items-start gap-3">
+        <div class="text-2xl">ℹ️</div>
+        <div>
+          <h3 class="font-semibold text-blue-900 mb-2">AI Configuration</h3>
+          <p class="text-sm text-blue-800 mb-2">
+            This system uses the Granite AI model for report generation and document analysis.
+          </p>
+          <p class="text-sm text-blue-700">
+            Current backend: <code class="bg-blue-100 px-2 py-1 rounded">{{ GRANITE_BACKEND|default:"ollama" }}</code>
+          </p>
+          <p class="text-sm text-blue-600 mt-2">
+            If reports fail to generate, ensure Ollama is running locally.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+{% endblock %}

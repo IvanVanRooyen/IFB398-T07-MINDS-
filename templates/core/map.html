@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white shadow-md hidden md:flex flex-col">
+    <div class="p-6 border-b">
+      <h2 class="text-xl font-semibold text-cyan-600">OreFox KMS</h2>
+    </div>
+    <nav class="flex-1 p-4 space-y-2">
+      <a href="{% url 'dashboard' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🏠 <span>Dashboard</span>
+      </a>
+      <a href="{% url 'documents' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        📄 <span>Documents</span>
+      </a>
+      <a href="{% url 'prospects' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        💎 <span>Prospects</span>
+      </a>
+      <a href="{% url 'drillholes' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🧱 <span>Drillholes</span>
+      </a>
+      <a href="{% url 'tenements' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🗺️ <span>Tenements</span>
+      </a>
+      <a href="{% url 'ai_insights' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🤖 <span>AI Insights</span>
+      </a>
+      <a href="{% url 'map_view' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium bg-cyan-100">
+        🗺️ <span>Map</span>
+      </a>
+    </nav>
+    <div class="p-4 border-t">
+      <a href="/admin/" class="block text-center px-4 py-2 text-sm font-semibold text-white bg-cyan-600 rounded-lg hover:bg-cyan-700">
+        ⚙️ Admin Panel
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6 bg-gray-50">
+
+    <div class="mb-4">
+      <h1 class="text-3xl font-bold">🗺️ Map View</h1>
+      <p class="text-gray-600 mt-2">Geospatial visualization of projects and tenements</p>
+    </div>
+
+    <!-- Map Container -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+      <div id="map" class="w-full" style="height: 600px; background: linear-gradient(to bottom, #e0f2fe, #bae6fd);">
+        <div class="flex items-center justify-center h-full">
+          <div class="text-center p-8">
+            <p class="text-xl font-semibold text-gray-700 mb-4">🗺️ Map Integration Placeholder</p>
+            <p class="text-gray-600 mb-4">This is where the interactive map will be displayed</p>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-xl mx-auto text-left">
+              <p class="text-sm text-blue-900 font-semibold mb-2">Map functionality TBC</p>
+            </div>
+            <div class="mt-6">
+              <a href="{% url 'dashboard' %}" class="text-cyan-600 hover:underline">
+                ← Back to Dashboard
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Map Controls (Future) -->
+    <div class="mt-6 grid md:grid-cols-3 gap-4">
+      <div class="bg-white rounded-lg shadow p-4">
+        <h3 class="font-semibold mb-2">📍 Layers</h3>
+        <div class="space-y-2 text-sm text-gray-600">
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked class="rounded" />
+            <span>Projects</span>
+          </label>
+          <label class="flex items-center gap-2">
+            <input type="checkbox" checked class="rounded" />
+            <span>Tenements</span>
+          </label>
+          <label class="flex items-center gap-2">
+            <input type="checkbox" class="rounded" />
+            <span>Drillholes</span>
+          </label>
+          <label class="flex items-center gap-2">
+            <input type="checkbox" class="rounded" />
+            <span>Prospects</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow p-4">
+        <h3 class="font-semibold mb-2">🎨 Base Map</h3>
+        <select class="w-full border rounded px-3 py-2 text-sm">
+          <option>OpenStreetMap</option>
+          <option>Satellite</option>
+          <option>Topographic</option>
+          <option>Terrain</option>
+        </select>
+      </div>
+
+      <div class="bg-white rounded-lg shadow p-4">
+        <h3 class="font-semibold mb-2">🔍 Search</h3>
+        <input type="text" placeholder="Search locations..." class="w-full border rounded px-3 py-2 text-sm" />
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}

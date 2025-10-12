@@ -7,10 +7,12 @@
   <aside class="w-64 bg-white rounded-xl shadow hidden md:block">
     <nav class="p-6 space-y-2">
       <a href="{% url 'dashboard' %}" class="block px-3 py-2 rounded hover:bg-cyan-50">🏠 Dashboard</a>
-      <a href="{% url 'upload' %}" class="block px-3 py-2 rounded hover:bg-cyan-50">📚 All Documents</a>
-      <a href="#" class="block px-3 py-2 rounded hover:bg-cyan-50">💎 Prospects</a>
-      <a href="#" class="block px-3 py-2 rounded hover:bg-cyan-50">🧱 Drillholes</a>
-      <a href="#" class="block px-3 py-2 rounded hover:bg-cyan-50">🗺️ Tenements</a>
+      <a href="{% url 'documents' %}" class="block px-3 py-2 rounded hover:bg-cyan-50">📚 All Documents</a>
+      <a href="{% url 'prospects' %}" class="block px-3 py-2 rounded hover:bg-cyan-50">💎 Prospects</a>
+      <a href="{% url 'drillholes' %}" class="block px-3 py-2 rounded hover:bg-cyan-50">🧱 Drillholes</a>
+      <a href="{% url 'tenements' %}" class="block px-3 py-2 rounded hover:bg-cyan-50">🗺️ Tenements</a>
+      <a href="{% url 'ai_insights' %}" class="block px-3 py-2 rounded hover:bg-cyan-50">🤖 AI Insights</a>
+      <a href="{% url 'map_view' %}" class="block px-3 py-2 rounded hover:bg-cyan-50">🗺️ Map</a>
       <a href="/admin/" class="block px-3 py-2 rounded hover:bg-cyan-50">⚙️ Admin</a>
     </nav>
   </aside>
@@ -119,8 +121,16 @@
 
     if (!input) return;
 
-    // Click-through on drop zone
-    dz.addEventListener('click', () => input.click());
+    // Prevent file input clicks from bubbling up to drop zone
+    input.addEventListener('click', (e) => e.stopPropagation());
+
+    // Click-through on drop zone (only when clicking the zone itself, not the input)
+    dz.addEventListener('click', (e) => {
+      // Don't trigger if clicking directly on the file input
+      if (e.target !== input) {
+        input.click();
+      }
+    });
 
     // Highlight on dragover
     ['dragenter', 'dragover'].forEach(evt =>

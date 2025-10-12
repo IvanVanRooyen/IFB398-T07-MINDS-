@@ -34,5 +34,5 @@ htmlcov/
 .pytest_cache/
 .tox/
 
-# Obviously delete this before any submissions 
+# Delete before any submissions
 CLAUDE.md

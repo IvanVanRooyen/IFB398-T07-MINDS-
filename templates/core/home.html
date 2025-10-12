@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-cyan-50 to-blue-100">
+
+  <!-- Hero Section -->
+  <div class="max-w-7xl mx-auto px-6 py-16">
+    <div class="text-center mb-12">
+      <h1 class="text-5xl font-bold text-gray-900 mb-4">OreFox KMS</h1>
+      <p class="text-xl text-gray-600 mb-8">Knowledge Management System for Mining & Exploration</p>
+      <div class="flex gap-4 justify-center">
+        <a href="{% url 'dashboard' %}" class="bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-8 py-3 rounded-lg transition">
+          Go to Dashboard
+        </a>
+        <a href="{% url 'upload' %}" class="bg-white hover:bg-gray-50 text-cyan-600 font-semibold px-8 py-3 rounded-lg border-2 border-cyan-600 transition">
+          Upload Documents
+        </a>
+      </div>
+    </div>
+
+    <!-- Recent Activity Grid -->
+    <div class="grid md:grid-cols-2 gap-8 mt-16">
+
+      <!-- Recent Projects -->
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="bg-cyan-600 text-white p-4">
+          <h2 class="text-xl font-semibold">📁 Recent Projects</h2>
+        </div>
+        <ul class="divide-y">
+          {% for project in projects %}
+            <li class="p-4 hover:bg-gray-50">
+              <div class="font-medium text-gray-900">{{ project.name }}</div>
+              <div class="text-sm text-gray-500">{{ project.mode }} • {{ project.commodity|default:"No commodity" }}</div>
+            </li>
+          {% empty %}
+            <li class="p-4 text-gray-500 text-center">No projects yet</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <!-- Recent Documents -->
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="bg-cyan-600 text-white p-4">
+          <h2 class="text-xl font-semibold">📄 Recent Documents</h2>
+        </div>
+        <ul class="divide-y">
+          {% for doc in docs %}
+            <li class="p-4 hover:bg-gray-50">
+              <div class="font-medium text-gray-900 truncate">{{ doc.title }}</div>
+              <div class="text-sm text-gray-500">{{ doc.created_at|date:"M d, Y" }}</div>
+            </li>
+          {% empty %}
+            <li class="p-4 text-gray-500 text-center">No documents yet</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

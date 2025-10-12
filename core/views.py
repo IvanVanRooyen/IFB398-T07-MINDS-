@@ -19,17 +19,6 @@ from .models import Document, Process
 from .utils import sha256_file
 
 
-def home(request):
-    return render(
-        request,
-        "core/home.html",
-        {
-            "projects": Process.objects.all()[:10],
-            "docs": Document.objects.order_by("-created_at")[:10],
-        },
-    )
-
-
 # ---------- Helpers ----------
 
 
