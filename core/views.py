@@ -15,9 +15,11 @@ from .ai.granite_client import GraniteClient
 
 import logging
 
-from .forms import DocumentForm
+from .forms import DocumentForm, DocumentSearchForm
 from .models import Document, Process
 from .utils import sha256_file
+
+from .tagging import TAG_LABEL
 
 
 # ---------- Helpers ----------
@@ -35,9 +37,9 @@ def _get_model(app_label: str, model_name: str):
 
 def _count_model(app_label: str, model_name: str, where_clause: str = None) -> int:
     mdl = _get_model(app_label, model_name)
-
-
-    return 0 if not mdl.objects.count() else mdl.objects.count()
+    if mdl is None:
+        return 0
+    return mdl.objects.count()
 
 
 def _paginate(queryset, request, per_page: int = 20):
@@ -160,31 +162,88 @@ def documents(request):
     """
     Document library with search + tag + pagination.
     """
-    q = request.GET.get("q", "").strip()
-    tag = request.GET.get("tag")
-    qs = Document.objects.all().order_by("-created_at")
-    if q:
-        qs = qs.filter(
-            Q(title__icontains=q)
-            | Q(doc_type__icontains=q)
-            | Q(confidentiality__icontains=q)
-            | Q(process__name__icontains=q)
-            | Q(organisation__name__icontains=q)
-        )
-    if tag:
-        try: 
-            qs = qs.filter(tags__contains=[int(tag)])
-        except (TypeError, ValueError):
-            pass
+    # Build doc_type choices from whatever is actually in the DB
+    existing_types = (
+        Document.objects
+        .exclude(doc_type="")
+        .exclude(doc_type__isnull=True)
+        .values_list("doc_type", flat=True)
+        .distinct()
+        .order_by("doc_type")
+    )
 
+    type_choices = [("", "All types")] + [(t, t) for t in existing_types]
+
+    form = DocumentSearchForm(request.GET or None, doc_type_choices=type_choices)
+    qs = Document.objects.select_related("process", "organisation").order_by("-created_at")
+
+    q_value = ""
+    if form.is_valid():
+
+        # Full-text : title, doc_type, confidentiality, project name, org
+        q = form.cleaned_data.get("q", "").strip()
+
+        if q:
+            qs = qs.filter(
+                Q(title__icontains=q)
+                | Q(doc_type__icontains=q)
+                | Q(confidentiality__icontains=q)
+                | Q(process__name__icontains=q)
+                | Q(organisation__name__icontains=q)
+            )
+
+        # Project
+        process = form.cleaned_data.get("process")
+        if process:
+            qs = qs.filter(process=process)
+ 
+        # Date range (inclusive, on the document's own date)
+        date_from = form.cleaned_data.get("date_from")
+        if date_from:
+            qs = qs.filter(timestamp__gte=date_from)
+ 
+        date_to = form.cleaned_data.get("date_to")
+        if date_to:
+            qs = qs.filter(timestamp__lte=date_to)
+ 
+        # Metadata
+        doc_type = form.cleaned_data.get("doc_type")
+        if doc_type:
+            qs = qs.filter(doc_type__iexact=doc_type)
+ 
+        confidentiality = form.cleaned_data.get("confidentiality")
+        if confidentiality:
+            qs = qs.filter(confidentiality__iexact=confidentiality)
+ 
+        tag = form.cleaned_data.get("tag")
+        if tag:
+            try:
+                qs = qs.filter(tags__contains=[int(tag)])
+            except (TypeError, ValueError):
+                pass
+ 
+    filters_active = any(request.GET.get(f) for f in
+                         ["q", "process", "date_from", "date_to", "doc_type", "confidentiality", "tag"])
+    
     page = _paginate(qs, request, per_page=24)
-    return render(request, "core/documents.html", {"page": page, "q": q})
+
+    return render(request, "core/documents.html", {
+        "form": form,
+        "page": page,
+        "q": q_value,
+        "filters_active": filters_active,
+    })
 
 
 @require_GET
 def document_detail(request, pk):
     doc = get_object_or_404(Document, pk=pk)
-    return render(request, "core/document_detail.html", {"doc": doc})
+    # Resolve tag integers to their human-readable labels
+    tag_labels = [TAG_LABEL.get(t, f"Tag {t}") for t in (doc.tags or [])]
+    return render(request, "core/document_detail.html", {
+        "doc": doc,
+        "tag_labels": tag_labels,
+        })
 
 
 @require_http_methods(["POST", "DELETE"])
