@@ -17,7 +17,7 @@ import logging
 
 from .forms import DocumentForm, DocumentSearchForm
 from .models import Document, Process
-from .utils import sha256_file
+from .utils import sha256_file, extract_text
 
 from .tagging import TAG_LABEL
 
@@ -121,6 +121,7 @@ def upload_doc(request):
             if doc.file:
                 # Important: call sha256_file on the uploaded file *before* saving
                 doc.checksum_sha256 = sha256_file(doc.file)
+                doc.extracted_text = extract_text(doc.file)
 
             if doc.checksum_sha256 and Document.objects.filter(
                 checksum_sha256=doc.checksum_sha256
@@ -190,6 +191,7 @@ def documents(request):
                 | Q(confidentiality__icontains=q)
                 | Q(process__name__icontains=q)
                 | Q(organisation__name__icontains=q)
+                | Q(extracted_text__icontains=q)
             )
 
         # Project

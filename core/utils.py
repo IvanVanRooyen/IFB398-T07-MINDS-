@@ -1,4 +1,6 @@
 import hashlib
+import pdfplumber
+import logging
 
 from django.contrib.gis.db import models
 
@@ -22,7 +24,29 @@ def sha256_file(django_file) -> str:
     django_file.seek(pos)  # restore pointer
     return h.hexdigest()
 
+log = logging.getLogger(__name__)
 
+def extract_text(file_field) -> str:
+    """
+    Extract plain text from a pdf file.
+    """
+    try:
+        name = getattr(file_field, "name", "") or ""
+        if not name.lower().endswith(".pdf"):
+            return ""
+        
+        # read the file into memory
+        file_field.seek(0)
+        raw = file_field.read()
+        file_field.seek(0) # reset so the file saves correctly
+
+        import io
+        with pdfplumber.open(io.BytesIO(raw)) as pdf:
+            pages = [page.extract_text() or "" for page in pdf.pages]
+        return "\n".join(pages)
+    except Exception as e:
+        log.warning("Text extraction failed for %s: %s", file_field.name, e)
+        return ""
 
 # class AutoConstraintMeta(type(models.Model)):
 #     """
