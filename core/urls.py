@@ -15,4 +15,10 @@ urlpatterns = [
 
     path("upload/", views.upload_doc, name="upload"),
     path("ai/report/<uuid:process_id>/", views.project_report, name="project_report"),
+
+    # GeoJSON API endpoints for the map viewer
+    path("api/geojson/projects/", views.geojson_projects, name="geojson_projects"),
+    path("api/geojson/tenements/", views.geojson_tenements, name="geojson_tenements"),
+    path("api/geojson/prospects/", views.geojson_prospects, name="geojson_prospects"),
+    path("api/geojson/drillholes/", views.geojson_drillholes, name="geojson_drillholes"),
 ]

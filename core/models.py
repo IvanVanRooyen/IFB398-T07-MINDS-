@@ -52,14 +52,6 @@ class ValidatedChoiceModel(ChoiceValidationMixin, AutoCleanMixin, models.Model):
         abstract = True
 
 
-# def choice_constraint(field: str, choices: list[str], constraint: str = None):
-#     valid_values = [choice[0] for choice in choices]
-#     name = constraint or f"valid_{field}"
-#     return models.CheckConstraint(
-#         check=models.Q(**{f"{field}__in": valid_values}), name=name
-#     )
-
-
 # class Organisation(models.Model):
 class Organisation(ValidatedChoiceModel):
     class Mode(models.TextChoices):
@@ -132,6 +124,9 @@ class Prospect(models.Model):
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     process = models.ForeignKey(Process, on_delete=models.CASCADE)
 
+    # Geospatial field - prospect location (point) or area (polygon)
+    geom = models.PointField(srid=4326, null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -147,6 +142,9 @@ class Tenement(models.Model):
     name = models.CharField(max_length=64, null=False)
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     process = models.ForeignKey(Process, on_delete=models.CASCADE)
+
+    # Geospatial field - tenement boundaries (mining lease/exploration license)
+    geom = models.MultiPolygonField(srid=4326, null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -164,6 +162,14 @@ class Drillhole(models.Model):
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     process = models.ForeignKey(Process, on_delete=models.CASCADE)
 
+    # Geospatial field - drillhole collar location (apparently collar is the term the industry uses for the exact drillhole location)
+    collar_location = models.PointField(srid=4326, null=True, blank=True)
+
+    # Drillhole survey data
+    depth = models.FloatField(null=True, blank=True, help_text="Total depth in meters")
+    azimuth = models.FloatField(null=True, blank=True, help_text="Bearing (0-360 degrees)") # Directional angle thing
+    dip = models.FloatField(null=True, blank=True, help_text="Dip angle (-90 to 90 degrees, negative = downward)")
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -180,7 +186,6 @@ class Document(models.Model):
 
     # filename = models.FileField(upload_to="docs/")
     file = models.FileField(upload_to="docs/")
-    extracted_text = models.TextField(blank=True, default="")
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, null=True, blank=True)
     process = models.ForeignKey(Process, null=True, on_delete=models.SET_NULL, blank=True)
     tags = ArrayField(models.IntegerField(), default=list, blank=True)

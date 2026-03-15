@@ -344,7 +344,7 @@ def ai_insights(request):
 @require_GET
 def map_view(request):
     """
-    Simple map page that you can wire to Leaflet / PostGIS endpoints.
+    Simple map page that we should consider wiring to Leaflet / PostGIS endpoints.
     """
     return render(request, "core/map.html")
 
@@ -374,3 +374,108 @@ def project_report(request, process_id: str):
         f"<html><body><pre style='white-space:pre-wrap'>{md}</pre></body></html>",
         content_type="text/html",
     )
+
+# ---------- GeoJSON API Endpoints for Map Viewer ----------
+
+
+@require_GET
+def geojson_projects(request):
+    """
+    GeoJSON endpoint for Process (projects/operations) with spatial data
+    Returns all processes with geometry for da map
+    """
+    from django.core.serializers import serialize
+    from .models import Process
+
+    # Only include processes with geometry
+    processes = Process.objects.filter(geom__isnull=False).select_related('organisation')
+
+    if not processes.exists():
+        return JsonResponse({"type": "FeatureCollection", "features": []})
+
+    # Use GeoDjangos built in serialiser (lets us take coordinates and translate into GeoJSOn text for geodata)
+    geojson_data = serialize(
+        'geojson',
+        processes,
+        geometry_field='geom',
+        fields=('name', 'mode', 'commodity', 'organisation')
+    )
+
+    # Parse and return as JSON (serialise returns a string )
+    import json
+    return JsonResponse(json.loads(geojson_data), safe=False)
+
+
+@require_GET
+def geojson_tenements(request):
+    """
+    GeoJSON endpoint for Tenement boundaries.
+    Returns all tenements with geometry for map visualisation
+    """
+    from django.core.serializers import serialize
+    from .models import Tenement
+
+    tenements = Tenement.objects.filter(geom__isnull=False).select_related('organisation', 'process')
+
+    if not tenements.exists():
+        return JsonResponse({"type": "FeatureCollection", "features": []})
+
+    geojson_data = serialize(
+        'geojson',
+        tenements,
+        geometry_field='geom',
+        fields=('name', 'organisation', 'process')
+    )
+
+    import json
+    return JsonResponse(json.loads(geojson_data), safe=False)
+
+
+@require_GET
+def geojson_prospects(request):
+    """
+    GeoJSON endpoint for Prospect locations
+    Returns all prospects with geometry 
+    """
+    from django.core.serializers import serialize
+    from .models import Prospect
+
+    prospects = Prospect.objects.filter(geom__isnull=False).select_related('organisation', 'process')
+
+    if not prospects.exists():
+        return JsonResponse({"type": "FeatureCollection", "features": []})
+
+    geojson_data = serialize(
+        'geojson',
+        prospects,
+        geometry_field='geom',
+        fields=('name', 'organisation', 'process')
+    )
+
+    import json
+    return JsonResponse(json.loads(geojson_data), safe=False)
+
+
+@require_GET
+def geojson_drillholes(request):
+    """
+    GeoJSON endpoint for Drillhole collar locations.
+    Returns all drillholes with collar locations 
+    """
+    from django.core.serializers import serialize
+    from .models import Drillhole
+
+    drillholes = Drillhole.objects.filter(collar_location__isnull=False).select_related('organisation', 'process')
+
+    if not drillholes.exists():
+        return JsonResponse({"type": "FeatureCollection", "features": []})
+
+    geojson_data = serialize(
+        'geojson',
+        drillholes,
+        geometry_field='collar_location',
+        fields=('name', 'depth', 'azimuth', 'dip', 'organisation', 'process')
+    )
+
+    import json
+    return JsonResponse(json.loads(geojson_data), safe=False)

@@ -42,68 +42,313 @@
 
     <div class="mb-4">
       <h1 class="text-3xl font-bold">🗺️ Map View</h1>
-      <p class="text-gray-600 mt-2">Geospatial visualization of projects and tenements</p>
+      <p class="text-gray-600 mt-2">Geospatial visualisation of projects, tenements, prospects, and drillholes</p>
     </div>
 
     <!-- Map Container -->
     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-      <div id="map" class="w-full" style="height: 600px; background: linear-gradient(to bottom, #e0f2fe, #bae6fd);">
-        <div class="flex items-center justify-center h-full">
-          <div class="text-center p-8">
-            <p class="text-xl font-semibold text-gray-700 mb-4">🗺️ Map Integration Placeholder</p>
-            <p class="text-gray-600 mb-4">This is where the interactive map will be displayed</p>
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-xl mx-auto text-left">
-              <p class="text-sm text-blue-900 font-semibold mb-2">Map functionality TBC</p>
-            </div>
-            <div class="mt-6">
-              <a href="{% url 'dashboard' %}" class="text-cyan-600 hover:underline">
-                ← Back to Dashboard
-              </a>
-            </div>
+      <div id="map" class="w-full" style="height: 600px;"></div>
+    </div>
+
+    <!-- Map Controls -->
+    <div class="mt-6 grid md:grid-cols-3 gap-4">
+      <div class="bg-white rounded-lg shadow p-4">
+        <h3 class="font-semibold mb-3">📍 Layers</h3>
+        <div class="space-y-2 text-sm text-gray-700">
+          <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+            <input type="checkbox" id="toggle-projects" checked class="rounded" />
+            <span>Projects/Operations</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+            <input type="checkbox" id="toggle-tenements" checked class="rounded" />
+            <span>Tenements</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+            <input type="checkbox" id="toggle-prospects" checked class="rounded" />
+            <span>Prospects</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+            <input type="checkbox" id="toggle-drillholes" checked class="rounded" />
+            <span>Drillholes</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow p-4">
+        <h3 class="font-semibold mb-3">ℹ️ Map Info</h3>
+        <div class="text-sm text-gray-600 space-y-1">
+          <p>Click features for details</p>
+          <p>Scroll to zoom</p>
+          <p>Drag to pan</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow p-4">
+        <h3 class="font-semibold mb-3">🎨 Legend</h3>
+        <div class="text-sm text-gray-700 space-y-2">
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-4 bg-cyan-600 rounded"></div>
+            <span>Projects</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-4 bg-purple-600 rounded"></div>
+            <span>Tenements</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-4 bg-red-600 rounded-full"></div>
+            <span>Prospects</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-4 bg-blue-600 rounded-full"></div>
+            <span>Drillholes</span>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Map Controls (Future) -->
-    <div class="mt-6 grid md:grid-cols-3 gap-4">
-      <div class="bg-white rounded-lg shadow p-4">
-        <h3 class="font-semibold mb-2">📍 Layers</h3>
-        <div class="space-y-2 text-sm text-gray-600">
-          <label class="flex items-center gap-2">
-            <input type="checkbox" checked class="rounded" />
-            <span>Projects</span>
-          </label>
-          <label class="flex items-center gap-2">
-            <input type="checkbox" checked class="rounded" />
-            <span>Tenements</span>
-          </label>
-          <label class="flex items-center gap-2">
-            <input type="checkbox" class="rounded" />
-            <span>Drillholes</span>
-          </label>
-          <label class="flex items-center gap-2">
-            <input type="checkbox" class="rounded" />
-            <span>Prospects</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-lg shadow p-4">
-        <h3 class="font-semibold mb-2">🎨 Base Map</h3>
-        <select class="w-full border rounded px-3 py-2 text-sm">
-          <option>OpenStreetMap</option>
-          <option>Satellite</option>
-          <option>Topographic</option>
-          <option>Terrain</option>
-        </select>
-      </div>
-
-      <div class="bg-white rounded-lg shadow p-4">
-        <h3 class="font-semibold mb-2">🔍 Search</h3>
-        <input type="text" placeholder="Search locations..." class="w-full border rounded px-3 py-2 text-sm" />
-      </div>
-    </div>
   </main>
 </div>
+
+<!-- MapLibre GL JS -->
+<!-- these are some pretty great free map endpoints I found  -->
+
+<link href='https://unpkg.com/maplibre-gl@5.5.0/dist/maplibre-gl.css' rel='stylesheet' /> 
+<script src='https://unpkg.com/maplibre-gl@5.5.0/dist/maplibre-gl.js'></script>
+
+<script>
+// Initialise the MapLibre map
+const map = new maplibregl.Map({
+    container: 'map',
+    style: {
+        version: 8,
+        sources: {
+            'satellite': {
+                type: 'raster',
+                tiles: [
+                    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+                ],
+                tileSize: 256,
+                attribution: '© Esri, Maxar, Earthstar Geographics'
+            },
+            'labels': {
+                type: 'raster',
+                tiles: [
+                    'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'
+                ],
+                tileSize: 256,
+                attribution: '© Esri'
+            }
+        },
+        layers: [
+            {
+                id: 'satellite-layer',
+                type: 'raster',
+                source: 'satellite',
+                minzoom: 0,
+                maxzoom: 22
+            },
+            {
+                id: 'labels-layer',
+                type: 'raster',
+                source: 'labels',
+                minzoom: 0,
+                maxzoom: 22
+            }
+        ]
+    },
+    center: [133.7751, -25.2744], // Australia center
+    zoom: 4
+});
+
+// Add navigation controls
+map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+// Wait for map to load before trying adding layers
+map.on('load', () => {
+    // Add Projects layer 
+    map.addSource('projects-source', {
+        type: 'geojson',
+        data: "{% url 'geojson_projects' %}"
+    });
+
+    // Projects fill layer
+    map.addLayer({
+        id: 'projects-fill',
+        type: 'fill',
+        source: 'projects-source',
+        paint: {
+            'fill-color': '#0e7490', // Cyan
+            'fill-opacity': 0.3
+        }
+    });
+
+    // Projects outline layer
+    map.addLayer({
+        id: 'projects-outline',
+        type: 'line',
+        source: 'projects-source',
+        paint: {
+            'line-color': '#0e7490',
+            'line-width': 2
+        }
+    });
+
+    // Add Tenements layer (MultiPolygon)
+    map.addSource('tenements-source', {
+        type: 'geojson',
+        data: "{% url 'geojson_tenements' %}"
+    });
+
+    // Tenements fill layer
+    map.addLayer({
+        id: 'tenements-fill',
+        type: 'fill',
+        source: 'tenements-source',
+        paint: {
+            'fill-color': '#9333ea', // Purple
+            'fill-opacity': 0.25
+        }
+    });
+
+    // Tenements outline layer
+    map.addLayer({
+        id: 'tenements-outline',
+        type: 'line',
+        source: 'tenements-source',
+        paint: {
+            'line-color': '#9333ea',
+            'line-width': 2,
+            'line-dasharray': [2, 2]
+        }
+    });
+
+    // Add Prospects layer (Point)
+    map.addSource('prospects-source', {
+        type: 'geojson',
+        data: "{% url 'geojson_prospects' %}"
+    });
+
+    map.addLayer({
+        id: 'prospects-layer',
+        type: 'circle',
+        source: 'prospects-source',
+        paint: {
+            'circle-radius': 8,
+            'circle-color': '#dc2626', // Red
+            'circle-stroke-width': 2,
+            'circle-stroke-color': '#ffffff'
+        }
+    });
+
+    // Add Drillholes layer (Point)
+    map.addSource('drillholes-source', {
+        type: 'geojson',
+        data: "{% url 'geojson_drillholes' %}"
+    });
+
+    map.addLayer({
+        id: 'drillholes-layer',
+        type: 'circle',
+        source: 'drillholes-source',
+        paint: {
+            'circle-radius': 5,
+            'circle-color': '#2563eb', // Blue
+            'circle-stroke-width': 1,
+            'circle-stroke-color': '#ffffff'
+        }
+    });
+
+    // Layer toggle handlers
+    document.getElementById('toggle-projects').addEventListener('change', (e) => {
+        const visibility = e.target.checked ? 'visible' : 'none';
+        map.setLayoutProperty('projects-fill', 'visibility', visibility);
+        map.setLayoutProperty('projects-outline', 'visibility', visibility);
+    });
+
+    document.getElementById('toggle-tenements').addEventListener('change', (e) => {
+        const visibility = e.target.checked ? 'visible' : 'none';
+        map.setLayoutProperty('tenements-fill', 'visibility', visibility);
+        map.setLayoutProperty('tenements-outline', 'visibility', visibility);
+    });
+
+    document.getElementById('toggle-prospects').addEventListener('change', (e) => {
+        const visibility = e.target.checked ? 'visible' : 'none';
+        map.setLayoutProperty('prospects-layer', 'visibility', visibility);
+    });
+
+    document.getElementById('toggle-drillholes').addEventListener('change', (e) => {
+        const visibility = e.target.checked ? 'visible' : 'none';
+        map.setLayoutProperty('drillholes-layer', 'visibility', visibility);
+    });
+
+    // Click handlers for popups - Projects
+    map.on('click', 'projects-fill', (e) => {
+        const props = e.features[0].properties;
+        new maplibregl.Popup()
+            .setLngLat(e.lngLat)
+            .setHTML(`
+                <div style="font-family: sans-serif;">
+                    <h3 style="font-weight: bold; margin-bottom: 8px;">Project: ${props.name || 'Unnamed'}</h3>
+                    <p style="margin: 4px 0;"><strong>Type:</strong> ${props.mode || 'N/A'}</p>
+                    <p style="margin: 4px 0;"><strong>Commodity:</strong> ${props.commodity || 'N/A'}</p>
+                </div>
+            `)
+            .addTo(map);
+    });
+
+    // Click handlers for popups - Tenements
+    map.on('click', 'tenements-fill', (e) => {
+        const props = e.features[0].properties;
+        new maplibregl.Popup()
+            .setLngLat(e.lngLat)
+            .setHTML(`
+                <div style="font-family: sans-serif;">
+                    <h3 style="font-weight: bold; margin-bottom: 8px;">Tenement: ${props.name || 'Unnamed'}</h3>
+                </div>
+            `)
+            .addTo(map);
+    });
+
+    // Click handlers for popups - Prospects
+    map.on('click', 'prospects-layer', (e) => {
+        const props = e.features[0].properties;
+        new maplibregl.Popup()
+            .setLngLat(e.lngLat)
+            .setHTML(`
+                <div style="font-family: sans-serif;">
+                    <h3 style="font-weight: bold; margin-bottom: 8px;">Prospect: ${props.name || 'Unnamed'}</h3>
+                </div>
+            `)
+            .addTo(map);
+    });
+
+    // Click handlers for popups - Drillholes
+    map.on('click', 'drillholes-layer', (e) => {
+        const props = e.features[0].properties;
+        new maplibregl.Popup()
+            .setLngLat(e.lngLat)
+            .setHTML(`
+                <div style="font-family: sans-serif;">
+                    <h3 style="font-weight: bold; margin-bottom: 8px;">Drillhole: ${props.name || 'Unnamed'}</h3>
+                    <p style="margin: 4px 0;"><strong>Depth:</strong> ${props.depth ? props.depth + 'm' : 'N/A'}</p>
+                    <p style="margin: 4px 0;"><strong>Azimuth:</strong> ${props.azimuth ? props.azimuth + '°' : 'N/A'}</p>
+                    <p style="margin: 4px 0;"><strong>Dip:</strong> ${props.dip ? props.dip + '°' : 'N/A'}</p>
+                </div>
+            `)
+            .addTo(map);
+    });
+
+    // Change the cursor when hovering
+    map.on('mouseenter', 'projects-fill', () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', 'projects-fill', () => { map.getCanvas().style.cursor = ''; });
+
+    map.on('mouseenter', 'tenements-fill', () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', 'tenements-fill', () => { map.getCanvas().style.cursor = ''; });
+
+    map.on('mouseenter', 'prospects-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', 'prospects-layer', () => { map.getCanvas().style.cursor = ''; });
+
+    map.on('mouseenter', 'drillholes-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', 'drillholes-layer', () => { map.getCanvas().style.cursor = ''; });
+});
+</script>
 {% endblock %}

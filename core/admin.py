@@ -23,26 +23,26 @@ class ProcessAdmin(GISModelAdmin):
 
 @djadmin.register(Document)
 class DocumentAdmin(djadmin.ModelAdmin):
-    list_display = ("title", "timestamp", "doc_type", "confidentiality", "process", "created_by") # removed approved_by -> not in model
+    list_display = ("title", "timestamp", "doc_type", "confidentiality", "process", "created_by")
     list_filter = ("doc_type", "confidentiality", "organisation")
     search_fields = ("title", "checksum_sha256")
     readonly_fields = ("checksum_sha256", "created_at", "updated_at")
 
 @djadmin.register(Prospect)
-class ProspectAdmin(djadmin.ModelAdmin):
+class ProspectAdmin(GISModelAdmin):  # Changed to GISModelAdmin for map widget (also did the same for Tenement & Drillhole)
     list_display = ("name", "organisation", "process", "created_at")
     list_filter = ("organisation",)
     search_fields = ("name",)
 
 @djadmin.register(Tenement)
-class TenementAdmin(djadmin.ModelAdmin):
+class TenementAdmin(GISModelAdmin):  
     list_display = ("name", "organisation", "process", "created_at")
     list_filter = ("organisation",)
     search_fields = ("name",)
 
 @djadmin.register(Drillhole)
-class DrillholeAdmin(djadmin.ModelAdmin):
-    list_display = ("name", "organisation", "process", "created_at")
+class DrillholeAdmin(GISModelAdmin):  
+    list_display = ("name", "organisation", "process", "depth", "created_at")
     list_filter = ("organisation",)
     search_fields = ("name",)
 
