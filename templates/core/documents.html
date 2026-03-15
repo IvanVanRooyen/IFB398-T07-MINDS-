@@ -50,18 +50,63 @@
 
     <!-- Search Bar -->
     <div class="mb-6">
-      <form method="get" action="{% url 'documents' %}" class="max-w-2xl">
-        <div class="flex gap-2">
-          <input
-            type="text"
-            name="q"
-            value="{{ q }}"
-            placeholder="Search documents by title or process..."
-            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-          />
-          <button type="submit" class="px-6 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700">
-            Search
+      <!-- ── Search panel ─────────────────────────────────────────────────── -->
+      <form method="get" action="{% url 'documents' %}" class="bg-white rounded-xl shadow p-5 mb-6">
+  
+        <!-- Row 1: keyword (full width) -->
+        <div class="mb-4">
+          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Keyword</label>
+          {{ form.q }}
+        </div>
+  
+        <!-- Row 2: project | date from | date to -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Project</label>
+            {{ form.process }}
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Date from</label>
+            {{ form.date_from }}
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Date to</label>
+            {{ form.date_to }}
+          </div>
+        </div>
+  
+        <!-- Row 3: doc type | confidentiality | tag -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Document type</label>
+            {{ form.doc_type }}
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Confidentiality</label>
+            {{ form.confidentiality }}
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Tag</label>
+            {{ form.tag }}
+          </div>
+        </div>
+  
+        <!-- Date validation error -->
+        {% if form.non_field_errors %}
+          <p class="mb-4 text-sm text-red-600">{{ form.non_field_errors.0 }}</p>
+        {% endif %}
+  
+        <!-- Actions -->
+        <div class="flex items-center gap-3">
+          <button type="submit" class="px-6 py-2 bg-cyan-600 text-white font-semibold rounded-lg hover:bg-cyan-700">
+            🔍 Search
           </button>
+          {% if filters_active %}
+            <a href="{% url 'documents' %}" class="px-4 py-2 border border-gray-300 text-gray-500 rounded-lg hover:bg-gray-50 text-sm">
+              ✕ Clear
+            </a>
+            <span class="text-sm text-gray-400">{{ total }} result{{ total|pluralize }}</span>
+          {% endif %}
         </div>
       </form>
     </div>

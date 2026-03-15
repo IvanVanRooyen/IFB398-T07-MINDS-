@@ -75,6 +75,8 @@ STORAGES = {
             "secret_key": env("MINIO_ROOT_PASSWORD"),
             "bucket_name": env("MINIO_BUCKET"),
             "endpoint_url": f"http://{env('MINIO_ENDPOINT')}",
+            "url_protocol": "http:",
+            "custom_domain": f"{env('MINIO_EXTERNAL_ENDPOINT', default='localhost:9000')}/{env('MINIO_BUCKET')}",
             "use_ssl": env.bool("MINIO_USE_SSL", default=False),
             "file_overwrite": False,
             "default_acl": None,

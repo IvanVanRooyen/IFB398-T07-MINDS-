@@ -103,12 +103,12 @@
       </div>
 
       <!-- Tags -->
-      {% if doc.tags %}
+      {% if tag_labels %}
       <div class="p-6 border-b">
         <p class="text-sm text-gray-500 mb-2">Tags</p>
         <div class="flex flex-wrap gap-2">
-          {% for tag in doc.tags %}
-            <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">Tag {{ tag }}</span>
+          {% for label in tag_labels %}
+            <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">{{ label }}</span>
           {% endfor %}
         </div>
       </div>

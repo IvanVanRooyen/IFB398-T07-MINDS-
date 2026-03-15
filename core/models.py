@@ -180,6 +180,7 @@ class Document(models.Model):
 
     # filename = models.FileField(upload_to="docs/")
     file = models.FileField(upload_to="docs/")
+    extracted_text = models.TextField(blank=True, default="")
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, null=True, blank=True)
     process = models.ForeignKey(Process, null=True, on_delete=models.SET_NULL, blank=True)
     tags = ArrayField(models.IntegerField(), default=list, blank=True)
