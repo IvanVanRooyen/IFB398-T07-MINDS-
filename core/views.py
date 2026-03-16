@@ -1,5 +1,6 @@
 # core/views.py
 from __future__ import annotations
+from pydoc import doc
 
 from django.apps import apps
 from django.contrib.auth.decorators import login_required
@@ -117,11 +118,14 @@ def upload_doc(request):
             # Only set if user is authenticated (created_by is nullable)
             if request.user.is_authenticated:
                 doc.created_by = request.user
+            
+            # Give extracted text a safe default in case extraction fails, to avoid null issues in search
+            doc.extracted_text = ""
 
             if doc.file:
                 # Important: call sha256_file on the uploaded file *before* saving
                 doc.checksum_sha256 = sha256_file(doc.file)
-                doc.extracted_text = extract_text(doc.file)
+                doc.extracted_text = extract_text(doc.file) or ""
 
             if doc.checksum_sha256 and Document.objects.filter(
                 checksum_sha256=doc.checksum_sha256
@@ -138,6 +142,21 @@ def upload_doc(request):
                     },
                 )
 
+            doc.extracted_text = doc.extracted_text or ""
+
+            #Debug
+            print("BEFORE SAVE extracted_text:", repr(doc.extracted_text))
+            print("BEFORE SAVE type:", type(doc.extracted_text))
+            print("BEFORE SAVE dict:", {
+                "title": doc.title,
+                "doc_type": doc.doc_type,
+                "confidentiality": doc.confidentiality,
+                "organisation_id": doc.organisation_id,
+                "process_id": doc.process_id,
+                "created_by_id": doc.created_by_id,
+                "extracted_text": repr(doc.extracted_text),
+            })
+
             doc.save()
             # form.save_m2m()
             return redirect("upload")
@@ -145,7 +164,7 @@ def upload_doc(request):
             # Show validation errors + keep the recent docs list
             # Show *why* it failed
             log.warning("Upload invalid: %s", form.errors)
-            docs = Document.objects.order_by("created_at")[:20]
+            docs = Document.objects.order_by("-created_at")[:20]
             return render(
                 request,
                 "core/upload.html",

@@ -16,18 +16,39 @@ def _fmt_dt(dt):
     except Exception:
         return str(dt)
 
+def _fmt_user(user):
+    if not user:
+        return ""
+    # Prefer username if available
+    return getattr(user, "username", str(user))
+
 def fetch_process_bundle(process_id: str) -> dict:
     """
     Fetch the project (Process) and a small slice of related documents.
-    Keep it light for now; you can expand the queryset/joins later.
+    Keep it light for now; schema-aligned version.
     """
     proc = Process.objects.select_related("organisation").get(pk=process_id)
+
     docs: QuerySet[Document] = (
         Document.objects
         .filter(process=proc)
+        .select_related("created_by", "organisation", "process")
         .order_by("-timestamp", "-created_at")[:50]
-        .only("id","title","timestamp","doc_type","commodity","author","confidentiality","file","created_at","checksum_sha256")
+        .only(
+            "id",
+            "title",
+            "timestamp",
+            "doc_type",
+            "confidentiality",
+            "file",
+            "created_at",
+            "checksum_sha256",
+            "created_by__username",
+            "organisation__name",
+            "process__name",
+        )
     )
+
     return {
         "process": proc,
         "docs": list(docs),
@@ -39,21 +60,30 @@ def build_structured_context(bundle: dict) -> str:
     """
     p: Process = bundle["process"]
     lines = []
-    lines.append(f"PROCESS")
+    lines.append("PROCESS")
     lines.append(f"  id: {p.id}")
     lines.append(f"  name: {p.name or ''}")
     lines.append(f"  mode: {p.mode}")
     lines.append(f"  commodity: {p.commodity or ''}")
+    lines.append(f"  organisation: {p.organisation.name if p.organisation else ''}")
     lines.append("")
+
     lines.append("DOCUMENTS (latest up to 50)")
     for d in bundle["docs"]:
         lines.append(
             "  - {"
-            f"id: {d.id}, title: {d.title!r}, date: {d.timestamp}, type: {d.doc_type}, "
-            f"commodity: {d.commodity or ''}, author: {d.author or ''}, "
-            f"conf: {d.confidentiality}, created_at: {_fmt_dt(d.created_at)}"
+            f"id: {d.id}, "
+            f"title: {d.title!r}, "
+            f"date: {d.timestamp or ''}, "
+            f"type: {d.doc_type or ''}, "
+            f"uploaded_by: {_fmt_user(d.created_by)}, "
+            f"conf: {d.confidentiality or ''}, "
+            f"created_at: {_fmt_dt(d.created_at)}, "
+            f"file: {getattr(d.file, 'name', '')}, "
+            f"checksum: {d.checksum_sha256 or ''}"
             "}"
         )
+
     return "\n".join(lines)
 
 REPORT_SYSTEM_INSTRUCTIONS = """You are a technical writer generating concise mining/exploration project reports.

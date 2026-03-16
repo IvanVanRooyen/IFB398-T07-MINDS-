@@ -39,6 +39,10 @@ class AutoCleanMixin:
     """
 
     def save(self, *args, **kwargs):
+    # Ensure extracted_text is never NULL
+        if self.extracted_text is None:
+            self.extracted_text = ""
+
         self.full_clean()
         super().save(*args, **kwargs)
 
@@ -198,6 +202,7 @@ class Document(models.Model):
     )
 
     checksum_sha256 = models.CharField(max_length=64, db_index=True, blank=True)
+    extracted_text = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
