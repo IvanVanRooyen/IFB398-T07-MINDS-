@@ -10,6 +10,8 @@ from django.db.models import Q
 from django.http import Http404, HttpResponse, JsonResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_http_methods
+from django.shortcuts import render, redirect
+from django.contrib import messages
 
 from core.ai.report_service import generate_project_report
 from .ai.granite_client import GraniteClient
@@ -498,3 +500,40 @@ def geojson_drillholes(request):
 
     import json
     return JsonResponse(json.loads(geojson_data), safe=False)
+
+# ---------- AI Report Generation & Document Analysis Pages ----------
+def report_list_page(request):
+    return render(request, "core/report_list.html", {
+        "recent_reports": [],
+        "recent_projects": [],
+    })
+
+
+def generate_report(request):
+    if request.method == "POST":
+        messages.success(request, "Report generation started.")
+    return redirect("report_list")
+
+
+def report_detail(request, report_id):
+    return render(request, "core/report_detail.html", {
+        "report_id": report_id,
+    })
+
+
+def document_analysis_page(request):
+    return render(request, "core/document_analysis.html", {
+        "recent_docs": [],
+    })
+
+
+def analyze_document(request, pk):
+    if request.method == "POST":
+        messages.success(request, f"Analysis started for document {pk}.")
+    return redirect("ai_insights")
+
+
+def document_analysis_detail(request, pk):
+    return render(request, "core/document_analysis_detail.html", {
+        "doc_id": pk,
+    })

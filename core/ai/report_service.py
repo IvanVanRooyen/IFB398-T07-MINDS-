@@ -43,6 +43,7 @@ def fetch_process_bundle(process_id: str) -> dict:
             "file",
             "created_at",
             "checksum_sha256",
+            "extracted_text",
             "created_by__username",
             "organisation__name",
             "process__name",
@@ -70,6 +71,8 @@ def build_structured_context(bundle: dict) -> str:
 
     lines.append("DOCUMENTS (latest up to 50)")
     for d in bundle["docs"]:
+        snippet = (d.extracted_text or "")[:1000].replace("\n", " ").strip()
+
         lines.append(
             "  - {"
             f"id: {d.id}, "
@@ -80,7 +83,8 @@ def build_structured_context(bundle: dict) -> str:
             f"conf: {d.confidentiality or ''}, "
             f"created_at: {_fmt_dt(d.created_at)}, "
             f"file: {getattr(d.file, 'name', '')}, "
-            f"checksum: {d.checksum_sha256 or ''}"
+            f"checksum: {d.checksum_sha256 or ''}, "
+            f"text_snippet: {snippet!r}"
             "}"
         )
 
