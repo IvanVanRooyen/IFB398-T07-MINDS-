@@ -7,6 +7,7 @@ from django.utils.timezone import localtime
 
 from ..models import Process, Document
 from .granite_client import GraniteClient
+from .retrieval import retrieve_context
 
 def _fmt_dt(dt):
     if not dt:
@@ -94,16 +95,26 @@ def generate_project_report(process_id: str) -> str:
     Orchestrates: fetch → structure → call Granite → return Markdown.
     """
     bundle = fetch_process_bundle(process_id)
-    ctx = build_structured_context(bundle)
-    prompt = build_prompt(ctx)
+    p = bundle["process"]
+
+    # Structured metadata context
+    metadata_ctx = build_structured_context(bundle)
+
+    # Retrieved document content chunks
+    content_ctx = retrieve_context(
+        query=f"{p.name or ''} {p.commodity or ''}".strip().strip,
+        process=p,
+        max_chunks=8
+    )
+
+    full_context = f"{metadata_ctx}\n\nDOCUMENT CONTENT EXCERPTS:\n{content_ctx}"
+    prompt = build_prompt(full_context)
 
     client = GraniteClient()
     try:
         text = client.complete(prompt)
-    except Exception as e:
-        # Fall back to a plain template if model is offline
-        p = bundle["process"]
-        return f"""# {p.name or "Project"} — Auto Report (Fallback)
+    except Exception:
+      return f"""# {p.name or "Project"} - Auto Report (Fallback)
 
 Granite unavailable. Minimal context below:
 
@@ -113,4 +124,4 @@ Granite unavailable. Minimal context below:
 
 You can retry when the model service is reachable.
 """
-    return text
+

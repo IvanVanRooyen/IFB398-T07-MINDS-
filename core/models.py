@@ -186,6 +186,7 @@ class Document(models.Model):
 
     # filename = models.FileField(upload_to="docs/")
     file = models.FileField(upload_to="docs/")
+    extracted_text = models.TextField(blank=True, default="")
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, null=True, blank=True)
     process = models.ForeignKey(Process, null=True, on_delete=models.SET_NULL, blank=True)
     tags = ArrayField(models.IntegerField(), default=list, blank=True)
@@ -231,6 +232,40 @@ class Document(models.Model):
             f"checksum_sha256={self.checksum_sha256},created_by={self.created_by},"
             f"created_at={self.created_at},"
         )
+
+class DocumentChunk(models.Model):
+    """
+    Stores document text split into overlapping chucnks for RAG retrival.
+    Metadata fields are copied from the parent doc for fast filtering.
+    """
+
+    document = models.ForeignKey(
+        Document,
+        on_delete=models.CASCADE,
+        related_name="chunks",
+    )
+    chunk_index = models.PositiveIntegerField()
+    text = models.TextField()
+
+    # copy from parent doc for fast filter
+    process = models.ForeignKey(
+        Process,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+    )
+    doc_type = models.CharField(max_length=64, blank=True)
+    timestamp = models.DateField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["document", "chunk_index"]
+        indexes = [
+            models.Index(fields=["process"]),
+            models.Index(fields=["doc_type"]),
+            models.Index(fields=["timestamp"]),
+        ]
+    
+    def __str__(self):
+        return f"{self.document.title} - chunk {self.chunk_index}"
 
 
 # USER PROFILE & PERMISSIONS ---------------------------------
