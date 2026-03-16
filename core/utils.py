@@ -47,6 +47,30 @@ def extract_text(file_field) -> str:
     except Exception as e:
         log.warning("Text extraction failed for %s: %s", file_field.name, e)
         return ""
+    
+def chunk_text(text: str, chunk_size: int = 500, overlap: int = 50) -> list[str]:
+    """
+    Split text into overlapping chunks for RAG retrieval
+
+    chunk_size: number of words per chunk
+    overlap: words repeated at the start of the next chunk so sentences split accross a 
+             boundary are not lost.
+    """
+    if not text or not text.strip():
+        return []
+    
+    words = text.split()
+    chunks = []
+    start = 0
+
+    while start < len(words):
+        end = start + chunk_size
+        chunk = " ".join(words[start:end])
+        if chunk.strip():
+            chunks.append(chunk)
+        start += chunk_size - overlap
+    
+    return chunks
 
 # class AutoConstraintMeta(type(models.Model)):
 #     """

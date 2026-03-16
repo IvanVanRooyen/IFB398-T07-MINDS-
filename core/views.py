@@ -17,7 +17,7 @@ import logging
 
 from .forms import DocumentForm, DocumentSearchForm
 from .models import Document, Process
-from .utils import sha256_file, extract_text
+from .utils import sha256_file, extract_text, chunk_text
 
 from .tagging import TAG_LABEL
 
@@ -140,6 +140,22 @@ def upload_doc(request):
 
             doc.save()
             # form.save_m2m()
+            # Build text chunks for RAG retrieval
+            if doc.extracted_text:
+                from .models import DocumentChunk
+                chunks = chunk_text(doc.extracted_text)
+                DocumentChunk.objects.bulk_create([
+                    DocumentChunk(
+                    document=doc,
+                    chunk_index=i,
+                    text=chunk,
+                    process=doc.process,
+                    doc_type=doc.doc_type,
+                    timestamp=doc.timestamp,
+                    )
+                    for i, chunk in enumerate(chunks)
+                ])
+                
             return redirect("upload")
         else:
             # Show validation errors + keep the recent docs list
