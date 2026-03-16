@@ -86,6 +86,8 @@ def fake_sha256():
 
 
 class Command(BaseCommand):
+    APP_LABEL = "core"
+
     def add_arguments(self, parser):
         parser.add_argument("--flush", action="store_true", dest="flush", default=False)
 
@@ -117,8 +119,6 @@ class Command(BaseCommand):
         self.stdout.write(f"deleted: {group_count} groups")
 
         self.stdout.write(self.style.WARNING("flushed app data\n"))
-
-    APP_LABEL = "core"
 
     def _create_groups(self):
         from django.db.models import Q
@@ -381,6 +381,7 @@ class Command(BaseCommand):
 
         if options["flush"]:
             self._flush()
+            return
 
         groups = self._create_groups()
         orgs = self._create_organisations()
