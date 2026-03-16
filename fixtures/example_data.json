@@ -1,0 +1,1719 @@
+[
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "Viewers",
+      "permissions": [
+        ["view_approvalworkflow", "core", "approvalworkflow"],
+        ["view_auditlog", "core", "auditlog"],
+        ["view_document", "core", "document"],
+        ["view_documentview", "core", "documentview"],
+        ["view_drillhole", "core", "drillhole"],
+        ["view_organisation", "core", "organisation"],
+        ["view_process", "core", "process"],
+        ["view_prospect", "core", "prospect"],
+        ["view_tenement", "core", "tenement"],
+        ["view_user", "core", "user"],
+        ["view_userprofile", "core", "userprofile"]
+      ]
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "Editors",
+      "permissions": [
+        ["add_approvalworkflow", "core", "approvalworkflow"],
+        ["change_approvalworkflow", "core", "approvalworkflow"],
+        ["view_approvalworkflow", "core", "approvalworkflow"],
+        ["add_auditlog", "core", "auditlog"],
+        ["change_auditlog", "core", "auditlog"],
+        ["view_auditlog", "core", "auditlog"],
+        ["add_document", "core", "document"],
+        ["change_document", "core", "document"],
+        ["view_document", "core", "document"],
+        ["add_documentview", "core", "documentview"],
+        ["change_documentview", "core", "documentview"],
+        ["view_documentview", "core", "documentview"],
+        ["add_drillhole", "core", "drillhole"],
+        ["change_drillhole", "core", "drillhole"],
+        ["view_drillhole", "core", "drillhole"],
+        ["add_organisation", "core", "organisation"],
+        ["change_organisation", "core", "organisation"],
+        ["view_organisation", "core", "organisation"],
+        ["add_process", "core", "process"],
+        ["change_process", "core", "process"],
+        ["view_process", "core", "process"],
+        ["add_prospect", "core", "prospect"],
+        ["change_prospect", "core", "prospect"],
+        ["view_prospect", "core", "prospect"],
+        ["add_tenement", "core", "tenement"],
+        ["change_tenement", "core", "tenement"],
+        ["view_tenement", "core", "tenement"],
+        ["add_user", "core", "user"],
+        ["change_user", "core", "user"],
+        ["view_user", "core", "user"],
+        ["add_userprofile", "core", "userprofile"],
+        ["change_userprofile", "core", "userprofile"],
+        ["view_userprofile", "core", "userprofile"]
+      ]
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "Managers",
+      "permissions": [
+        ["add_approvalworkflow", "core", "approvalworkflow"],
+        ["change_approvalworkflow", "core", "approvalworkflow"],
+        ["delete_approvalworkflow", "core", "approvalworkflow"],
+        ["view_approvalworkflow", "core", "approvalworkflow"],
+        ["add_auditlog", "core", "auditlog"],
+        ["change_auditlog", "core", "auditlog"],
+        ["delete_auditlog", "core", "auditlog"],
+        ["view_auditlog", "core", "auditlog"],
+        ["add_document", "core", "document"],
+        ["change_document", "core", "document"],
+        ["delete_document", "core", "document"],
+        ["view_document", "core", "document"],
+        ["add_documentview", "core", "documentview"],
+        ["change_documentview", "core", "documentview"],
+        ["delete_documentview", "core", "documentview"],
+        ["view_documentview", "core", "documentview"],
+        ["add_drillhole", "core", "drillhole"],
+        ["change_drillhole", "core", "drillhole"],
+        ["delete_drillhole", "core", "drillhole"],
+        ["view_drillhole", "core", "drillhole"],
+        ["add_organisation", "core", "organisation"],
+        ["change_organisation", "core", "organisation"],
+        ["delete_organisation", "core", "organisation"],
+        ["view_organisation", "core", "organisation"],
+        ["add_process", "core", "process"],
+        ["change_process", "core", "process"],
+        ["delete_process", "core", "process"],
+        ["view_process", "core", "process"],
+        ["add_prospect", "core", "prospect"],
+        ["change_prospect", "core", "prospect"],
+        ["delete_prospect", "core", "prospect"],
+        ["view_prospect", "core", "prospect"],
+        ["add_tenement", "core", "tenement"],
+        ["change_tenement", "core", "tenement"],
+        ["delete_tenement", "core", "tenement"],
+        ["view_tenement", "core", "tenement"],
+        ["add_user", "core", "user"],
+        ["change_user", "core", "user"],
+        ["delete_user", "core", "user"],
+        ["view_user", "core", "user"],
+        ["add_userprofile", "core", "userprofile"],
+        ["change_userprofile", "core", "userprofile"],
+        ["delete_userprofile", "core", "userprofile"],
+        ["view_userprofile", "core", "userprofile"]
+      ]
+    }
+  },
+  {
+    "model": "core.organisation",
+    "pk": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+    "fields": {
+      "name": "Love-West",
+      "mode": "EXPLORATION",
+      "created_at": "2026-03-15T19:40:16.451Z",
+      "updated_at": "2026-03-15T19:40:16.451Z"
+    }
+  },
+  {
+    "model": "core.organisation",
+    "pk": "0be77c43-71f4-455b-a314-03ce34ea7508",
+    "fields": {
+      "name": "Nelson-Cortez",
+      "mode": "MINING",
+      "created_at": "2026-03-15T19:40:16.449Z",
+      "updated_at": "2026-03-15T19:40:16.449Z"
+    }
+  },
+  {
+    "model": "core.organisation",
+    "pk": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+    "fields": {
+      "name": "White-Anderson",
+      "mode": "MINING",
+      "created_at": "2026-03-15T19:40:16.447Z",
+      "updated_at": "2026-03-15T19:40:16.447Z"
+    }
+  },
+  {
+    "model": "core.process",
+    "pk": "1b9a37fc-4b8d-4841-8017-6f6869159da9",
+    "fields": {
+      "name": "West Susan Project",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "mode": "OPERATION",
+      "geom": "SRID=4326;MULTIPOLYGON (((141.92153085756848 -27.873782233074163, 142.0215308575685 -27.873782233074163, 142.0215308575685 -27.77378223307416, 141.92153085756848 -27.77378223307416, 141.92153085756848 -27.873782233074163)))",
+      "commodity": "Gold",
+      "created_at": "2026-03-15T19:40:17.955Z",
+      "updated_at": "2026-03-15T19:40:17.955Z"
+    }
+  },
+  {
+    "model": "core.process",
+    "pk": "3b8ca855-02ae-41a5-a77e-8fde02595fd5",
+    "fields": {
+      "name": "Jasonville Project",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "mode": "PROJECT",
+      "geom": "SRID=4326;MULTIPOLYGON (((115.19559877359008 -21.767362078416657, 115.29559877359007 -21.767362078416657, 115.29559877359007 -21.667362078416655, 115.19559877359008 -21.667362078416655, 115.19559877359008 -21.767362078416657)))",
+      "commodity": "Gold",
+      "created_at": "2026-03-15T19:40:17.946Z",
+      "updated_at": "2026-03-15T19:40:17.946Z"
+    }
+  },
+  {
+    "model": "core.process",
+    "pk": "65493bde-9097-4a27-bfc3-2cc3fb5e2cb2",
+    "fields": {
+      "name": "Yeseniamouth Mine",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "mode": "OPERATION",
+      "geom": "SRID=4326;MULTIPOLYGON (((143.63059164024543 -29.208528754606977, 143.73059164024545 -29.208528754606977, 143.73059164024545 -29.108528754606976, 143.63059164024543 -29.108528754606976, 143.63059164024543 -29.208528754606977)))",
+      "commodity": "Copper",
+      "created_at": "2026-03-15T19:40:17.956Z",
+      "updated_at": "2026-03-15T19:40:17.956Z"
+    }
+  },
+  {
+    "model": "core.process",
+    "pk": "722c378a-8a52-4106-bf9c-1ecd4955d101",
+    "fields": {
+      "name": "Grahamburgh Prospect",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "mode": "PROJECT",
+      "geom": "SRID=4326;MULTIPOLYGON (((120.7029517775237 -28.396800267050985, 120.80295177752369 -28.396800267050985, 120.80295177752369 -28.296800267050983, 120.7029517775237 -28.296800267050983, 120.7029517775237 -28.396800267050985)))",
+      "commodity": "Copper",
+      "created_at": "2026-03-15T19:40:17.944Z",
+      "updated_at": "2026-03-15T19:40:17.944Z"
+    }
+  },
+  {
+    "model": "core.process",
+    "pk": "8eb59c8c-0ce1-4c7d-a52b-d13ddb971857",
+    "fields": {
+      "name": "Bairdstad Project",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "mode": "PROJECT",
+      "geom": "SRID=4326;MULTIPOLYGON (((120.2566600810902 -27.023281560086144, 120.3566600810902 -27.023281560086144, 120.3566600810902 -26.923281560086142, 120.2566600810902 -26.923281560086142, 120.2566600810902 -27.023281560086144)))",
+      "commodity": "Coal",
+      "created_at": "2026-03-15T19:40:17.949Z",
+      "updated_at": "2026-03-15T19:40:17.949Z"
+    }
+  },
+  {
+    "model": "core.process",
+    "pk": "9341d628-35b5-43d5-8a4c-ec07184bb6a8",
+    "fields": {
+      "name": "Davismouth Project",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "mode": "OPERATION",
+      "geom": "SRID=4326;MULTIPOLYGON (((139.86047779510253 -22.79430688234488, 139.96047779510255 -22.79430688234488, 139.96047779510255 -22.69430688234488, 139.86047779510253 -22.69430688234488, 139.86047779510253 -22.79430688234488)))",
+      "commodity": "Zinc",
+      "created_at": "2026-03-15T19:40:17.951Z",
+      "updated_at": "2026-03-15T19:40:17.951Z"
+    }
+  },
+  {
+    "model": "core.process",
+    "pk": "a2442f5f-0126-4448-b7ad-ed9ac334dadf",
+    "fields": {
+      "name": "Nolanside Mine",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "mode": "OPERATION",
+      "geom": "SRID=4326;MULTIPOLYGON (((131.32286462917867 -23.16088930955291, 131.4228646291787 -23.16088930955291, 131.4228646291787 -23.06088930955291, 131.32286462917867 -23.06088930955291, 131.32286462917867 -23.16088930955291)))",
+      "commodity": "Coal",
+      "created_at": "2026-03-15T19:40:17.953Z",
+      "updated_at": "2026-03-15T19:40:17.953Z"
+    }
+  },
+  {
+    "model": "core.process",
+    "pk": "aa330529-053a-43af-b219-8c01dd11b11b",
+    "fields": {
+      "name": "South Aprilberg Project",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "mode": "OPERATION",
+      "geom": "SRID=4326;MULTIPOLYGON (((124.21835733926314 -30.542449354125313, 124.31835733926313 -30.542449354125313, 124.31835733926313 -30.442449354125312, 124.21835733926314 -30.442449354125312, 124.21835733926314 -30.542449354125313)))",
+      "commodity": "Nickel",
+      "created_at": "2026-03-15T19:40:17.948Z",
+      "updated_at": "2026-03-15T19:40:17.948Z"
+    }
+  },
+  {
+    "model": "core.process",
+    "pk": "fba170cb-f62b-4517-9bb0-ee2dc1b8eb52",
+    "fields": {
+      "name": "West Ronniemouth Mine",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "mode": "PROJECT",
+      "geom": "SRID=4326;MULTIPOLYGON (((135.6221022211874 -22.614435252961282, 135.7221022211874 -22.614435252961282, 135.7221022211874 -22.51443525296128, 135.6221022211874 -22.51443525296128, 135.6221022211874 -22.614435252961282)))",
+      "commodity": "Gold",
+      "created_at": "2026-03-15T19:40:17.958Z",
+      "updated_at": "2026-03-15T19:40:17.958Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "0050c2eb-871e-4582-9767-8870d5ce94d9",
+    "fields": {
+      "name": "DH-SOUTHAP-004",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "aa330529-053a-43af-b219-8c01dd11b11b",
+      "collar_location": "SRID=4326;POINT (130.6837547096447 -21.828914837695866)",
+      "depth": 158.86,
+      "azimuth": 341.7,
+      "dip": -44.03,
+      "created_at": "2026-03-15T19:40:17.969Z",
+      "updated_at": "2026-03-15T19:40:17.969Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "03375319-9f47-488e-ba60-2d7604e81839",
+    "fields": {
+      "name": "DH-NOLANSID-001",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "a2442f5f-0126-4448-b7ad-ed9ac334dadf",
+      "collar_location": "SRID=4326;POINT (127.13197716079489 -18.873809078137796)",
+      "depth": 763.92,
+      "azimuth": 152.12,
+      "dip": -83.54,
+      "created_at": "2026-03-15T19:40:17.976Z",
+      "updated_at": "2026-03-15T19:40:17.976Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "0a3d7c3b-e295-43d5-9e5d-c7dbd1baa4b6",
+    "fields": {
+      "name": "DH-GRAHAMBU-001",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "722c378a-8a52-4106-bf9c-1ecd4955d101",
+      "collar_location": "SRID=4326;POINT (143.76368630078926 -18.280513816311494)",
+      "depth": 547.75,
+      "azimuth": 341.11,
+      "dip": -70.4,
+      "created_at": "2026-03-15T19:40:17.959Z",
+      "updated_at": "2026-03-15T19:40:17.959Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "10ed5608-71f2-43de-aff8-9ef16a8b67e7",
+    "fields": {
+      "name": "DH-GRAHAMBU-004",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "722c378a-8a52-4106-bf9c-1ecd4955d101",
+      "collar_location": "SRID=4326;POINT (141.74623549445676 -22.280980403830302)",
+      "depth": 668.2,
+      "azimuth": 202.86,
+      "dip": -83.55,
+      "created_at": "2026-03-15T19:40:17.962Z",
+      "updated_at": "2026-03-15T19:40:17.962Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "123681b2-859c-471b-8bb6-26429cfce89d",
+    "fields": {
+      "name": "DH-WESTSUS-004",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "1b9a37fc-4b8d-4841-8017-6f6869159da9",
+      "collar_location": "SRID=4326;POINT (128.53979927472815 -28.6356357851111)",
+      "depth": 92.42,
+      "azimuth": 228.77,
+      "dip": -86.47,
+      "created_at": "2026-03-15T19:40:17.983Z",
+      "updated_at": "2026-03-15T19:40:17.983Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "1930b018-dd0d-42cd-809f-0340c9e25585",
+    "fields": {
+      "name": "DH-BAIRDSTA-002",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "8eb59c8c-0ce1-4c7d-a52b-d13ddb971857",
+      "collar_location": "SRID=4326;POINT (148.67340069462438 -24.482981458935782)",
+      "depth": 128.3,
+      "azimuth": 148.59,
+      "dip": -6.24,
+      "created_at": "2026-03-15T19:40:17.970Z",
+      "updated_at": "2026-03-15T19:40:17.970Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "193f7b0f-dfac-4e17-ba68-11c53e30491a",
+    "fields": {
+      "name": "DH-JASONVIL-003",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "3b8ca855-02ae-41a5-a77e-8fde02595fd5",
+      "collar_location": "SRID=4326;POINT (145.81704915156797 -28.504751135224176)",
+      "depth": 409.59,
+      "azimuth": 322.62,
+      "dip": -8.01,
+      "created_at": "2026-03-15T19:40:17.964Z",
+      "updated_at": "2026-03-15T19:40:17.964Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "1ca708a3-b91e-4be4-9c4e-49fc36f72b3e",
+    "fields": {
+      "name": "DH-DAVISMOU-003",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "9341d628-35b5-43d5-8a4c-ec07184bb6a8",
+      "collar_location": "SRID=4326;POINT (116.87933208426348 -31.28596695553405)",
+      "depth": 156.16,
+      "azimuth": 222.92,
+      "dip": -68.42,
+      "created_at": "2026-03-15T19:40:17.974Z",
+      "updated_at": "2026-03-15T19:40:17.974Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "22ac6248-88d7-42ae-afba-87c7927913fd",
+    "fields": {
+      "name": "DH-WESTSUS-001",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "1b9a37fc-4b8d-4841-8017-6f6869159da9",
+      "collar_location": "SRID=4326;POINT (121.24093536528997 -20.887527313357253)",
+      "depth": 624.33,
+      "azimuth": 180.87,
+      "dip": -53.08,
+      "created_at": "2026-03-15T19:40:17.980Z",
+      "updated_at": "2026-03-15T19:40:17.980Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "2c81b626-6abd-40d9-98d4-298a31d222bc",
+    "fields": {
+      "name": "DH-NOLANSID-004",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "a2442f5f-0126-4448-b7ad-ed9ac334dadf",
+      "collar_location": "SRID=4326;POINT (134.61644440865498 -32.71654033039846)",
+      "depth": 782.54,
+      "azimuth": 138.68,
+      "dip": -82.0,
+      "created_at": "2026-03-15T19:40:17.979Z",
+      "updated_at": "2026-03-15T19:40:17.979Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "3136595f-5d76-4ac9-bb15-6ed935f8a74e",
+    "fields": {
+      "name": "DH-BAIRDSTA-004",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "8eb59c8c-0ce1-4c7d-a52b-d13ddb971857",
+      "collar_location": "SRID=4326;POINT (129.70451721435592 -31.24782069163444)",
+      "depth": 708.68,
+      "azimuth": 260.71,
+      "dip": -45.45,
+      "created_at": "2026-03-15T19:40:17.972Z",
+      "updated_at": "2026-03-15T19:40:17.972Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "34a264c8-bf5d-4b4a-9e7d-e71084d719fb",
+    "fields": {
+      "name": "DH-SOUTHAP-003",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "aa330529-053a-43af-b219-8c01dd11b11b",
+      "collar_location": "SRID=4326;POINT (145.70776461183655 -32.506888303056506)",
+      "depth": 214.7,
+      "azimuth": 107.37,
+      "dip": -89.35,
+      "created_at": "2026-03-15T19:40:17.968Z",
+      "updated_at": "2026-03-15T19:40:17.968Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "371c082d-f1f3-45fa-a043-96c7ffc3eb41",
+    "fields": {
+      "name": "DH-SOUTHAP-001",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "aa330529-053a-43af-b219-8c01dd11b11b",
+      "collar_location": "SRID=4326;POINT (136.99346694527802 -22.214552212652922)",
+      "depth": 390.7,
+      "azimuth": 203.89,
+      "dip": -14.06,
+      "created_at": "2026-03-15T19:40:17.966Z",
+      "updated_at": "2026-03-15T19:40:17.966Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "375e25fd-e24d-4335-9206-5cc5fdf44ffd",
+    "fields": {
+      "name": "DH-GRAHAMBU-003",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "722c378a-8a52-4106-bf9c-1ecd4955d101",
+      "collar_location": "SRID=4326;POINT (137.53952291239915 -24.152815367438933)",
+      "depth": 588.29,
+      "azimuth": 187.55,
+      "dip": -32.09,
+      "created_at": "2026-03-15T19:40:17.961Z",
+      "updated_at": "2026-03-15T19:40:17.961Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "4bf73ffa-daec-4103-8361-0476a2327f5a",
+    "fields": {
+      "name": "DH-BAIRDSTA-003",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "8eb59c8c-0ce1-4c7d-a52b-d13ddb971857",
+      "collar_location": "SRID=4326;POINT (140.80588931760556 -30.671987402554418)",
+      "depth": 111.3,
+      "azimuth": 168.71,
+      "dip": -5.31,
+      "created_at": "2026-03-15T19:40:17.971Z",
+      "updated_at": "2026-03-15T19:40:17.971Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "4ef53d11-d3b0-4ac7-a0a6-ee83aef82894",
+    "fields": {
+      "name": "DH-YESENIAM-002",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "65493bde-9097-4a27-bfc3-2cc3fb5e2cb2",
+      "collar_location": "SRID=4326;POINT (134.29142299494384 -22.799091920853932)",
+      "depth": 215.99,
+      "azimuth": 216.94,
+      "dip": -36.57,
+      "created_at": "2026-03-15T19:40:17.985Z",
+      "updated_at": "2026-03-15T19:40:17.985Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "55ae7e42-1019-45ed-b3a8-f08a67c79adb",
+    "fields": {
+      "name": "DH-WESTRON-001",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "fba170cb-f62b-4517-9bb0-ee2dc1b8eb52",
+      "collar_location": "SRID=4326;POINT (143.22487154705067 -20.887886949877053)",
+      "depth": 387.89,
+      "azimuth": 268.48,
+      "dip": -76.75,
+      "created_at": "2026-03-15T19:40:17.988Z",
+      "updated_at": "2026-03-15T19:40:17.988Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "61e86433-a340-4dae-8e1c-4247e8b5a2b8",
+    "fields": {
+      "name": "DH-JASONVIL-004",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "3b8ca855-02ae-41a5-a77e-8fde02595fd5",
+      "collar_location": "SRID=4326;POINT (137.67469429921871 -30.407534001146878)",
+      "depth": 428.63,
+      "azimuth": 355.53,
+      "dip": -90.0,
+      "created_at": "2026-03-15T19:40:17.965Z",
+      "updated_at": "2026-03-15T19:40:17.965Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "68dcbf03-efb1-4e72-a97a-b9c602ab90c3",
+    "fields": {
+      "name": "DH-WESTSUS-002",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "1b9a37fc-4b8d-4841-8017-6f6869159da9",
+      "collar_location": "SRID=4326;POINT (132.64558959461345 -24.1145283210029)",
+      "depth": 247.35,
+      "azimuth": 99.0,
+      "dip": -22.39,
+      "created_at": "2026-03-15T19:40:17.981Z",
+      "updated_at": "2026-03-15T19:40:17.981Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "74306ae2-64c5-4675-b05e-319a0fd568f9",
+    "fields": {
+      "name": "DH-SOUTHAP-002",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "aa330529-053a-43af-b219-8c01dd11b11b",
+      "collar_location": "SRID=4326;POINT (149.5082665734443 -18.61531745921955)",
+      "depth": 459.23,
+      "azimuth": 115.76,
+      "dip": -32.3,
+      "created_at": "2026-03-15T19:40:17.967Z",
+      "updated_at": "2026-03-15T19:40:17.967Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "7cd0331a-ee83-4b94-91b7-c81eeffe5df4",
+    "fields": {
+      "name": "DH-WESTRON-003",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "fba170cb-f62b-4517-9bb0-ee2dc1b8eb52",
+      "collar_location": "SRID=4326;POINT (136.0435362988088 -33.381973919482434)",
+      "depth": 637.06,
+      "azimuth": 23.2,
+      "dip": -7.9,
+      "created_at": "2026-03-15T19:40:17.990Z",
+      "updated_at": "2026-03-15T19:40:17.990Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "803a40d0-94ce-46c3-bdd3-ce17ed1094d6",
+    "fields": {
+      "name": "DH-DAVISMOU-002",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "9341d628-35b5-43d5-8a4c-ec07184bb6a8",
+      "collar_location": "SRID=4326;POINT (132.24921535731315 -34.59098379756798)",
+      "depth": 224.21,
+      "azimuth": 63.45,
+      "dip": -2.35,
+      "created_at": "2026-03-15T19:40:17.974Z",
+      "updated_at": "2026-03-15T19:40:17.974Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "9eddef52-b63b-49f3-a0f2-08614c23e8f6",
+    "fields": {
+      "name": "DH-WESTRON-004",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "fba170cb-f62b-4517-9bb0-ee2dc1b8eb52",
+      "collar_location": "SRID=4326;POINT (119.39114898947135 -20.794848272264666)",
+      "depth": 551.3,
+      "azimuth": 346.44,
+      "dip": -85.92,
+      "created_at": "2026-03-15T19:40:17.991Z",
+      "updated_at": "2026-03-15T19:40:17.991Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "a3646cab-a6cc-432f-b142-79dd1edcea0d",
+    "fields": {
+      "name": "DH-WESTSUS-003",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "1b9a37fc-4b8d-4841-8017-6f6869159da9",
+      "collar_location": "SRID=4326;POINT (124.5348733359441 -19.889086377199714)",
+      "depth": 633.54,
+      "azimuth": 83.19,
+      "dip": -47.96,
+      "created_at": "2026-03-15T19:40:17.982Z",
+      "updated_at": "2026-03-15T19:40:17.982Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "b840af07-d6e8-47b3-8201-ed7425be874b",
+    "fields": {
+      "name": "DH-DAVISMOU-001",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "9341d628-35b5-43d5-8a4c-ec07184bb6a8",
+      "collar_location": "SRID=4326;POINT (119.93643339082122 -27.808067651089587)",
+      "depth": 295.84,
+      "azimuth": 83.33,
+      "dip": -44.63,
+      "created_at": "2026-03-15T19:40:17.973Z",
+      "updated_at": "2026-03-15T19:40:17.973Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "bba10160-7c61-4477-a22d-a8e26910f5ac",
+    "fields": {
+      "name": "DH-DAVISMOU-004",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "9341d628-35b5-43d5-8a4c-ec07184bb6a8",
+      "collar_location": "SRID=4326;POINT (148.96730550328985 -29.36622096974417)",
+      "depth": 758.97,
+      "azimuth": 58.36,
+      "dip": -82.34,
+      "created_at": "2026-03-15T19:40:17.975Z",
+      "updated_at": "2026-03-15T19:40:17.975Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "bbc90378-3892-44f1-9423-0551c4842332",
+    "fields": {
+      "name": "DH-NOLANSID-002",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "a2442f5f-0126-4448-b7ad-ed9ac334dadf",
+      "collar_location": "SRID=4326;POINT (138.04024966256745 -28.381392653292053)",
+      "depth": 550.0,
+      "azimuth": 273.68,
+      "dip": -37.66,
+      "created_at": "2026-03-15T19:40:17.977Z",
+      "updated_at": "2026-03-15T19:40:17.977Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "bf2ef8b4-5b26-4b81-ab66-768c3106c8e4",
+    "fields": {
+      "name": "DH-NOLANSID-003",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "a2442f5f-0126-4448-b7ad-ed9ac334dadf",
+      "collar_location": "SRID=4326;POINT (118.10267327457947 -20.23623131935892)",
+      "depth": 531.68,
+      "azimuth": 204.62,
+      "dip": -50.74,
+      "created_at": "2026-03-15T19:40:17.978Z",
+      "updated_at": "2026-03-15T19:40:17.978Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "c971482e-b83d-4f10-927f-09f2aed9df4e",
+    "fields": {
+      "name": "DH-YESENIAM-001",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "65493bde-9097-4a27-bfc3-2cc3fb5e2cb2",
+      "collar_location": "SRID=4326;POINT (124.999730653872 -30.631617078320595)",
+      "depth": 584.78,
+      "azimuth": 120.68,
+      "dip": -59.44,
+      "created_at": "2026-03-15T19:40:17.984Z",
+      "updated_at": "2026-03-15T19:40:17.984Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "dc3031d9-828b-4972-aae3-328e1bc1fdfe",
+    "fields": {
+      "name": "DH-GRAHAMBU-002",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "722c378a-8a52-4106-bf9c-1ecd4955d101",
+      "collar_location": "SRID=4326;POINT (140.5916650059952 -26.084360500098974)",
+      "depth": 182.99,
+      "azimuth": 236.28,
+      "dip": -81.83,
+      "created_at": "2026-03-15T19:40:17.960Z",
+      "updated_at": "2026-03-15T19:40:17.960Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "e5e244e0-af1d-474c-b9dc-5cf6c8c603c1",
+    "fields": {
+      "name": "DH-WESTRON-002",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "fba170cb-f62b-4517-9bb0-ee2dc1b8eb52",
+      "collar_location": "SRID=4326;POINT (131.63795974224286 -21.742076511042548)",
+      "depth": 343.0,
+      "azimuth": 88.07,
+      "dip": -9.25,
+      "created_at": "2026-03-15T19:40:17.989Z",
+      "updated_at": "2026-03-15T19:40:17.989Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "f4a90328-9d7e-4d72-9965-4ccad7a7b769",
+    "fields": {
+      "name": "DH-YESENIAM-004",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "65493bde-9097-4a27-bfc3-2cc3fb5e2cb2",
+      "collar_location": "SRID=4326;POINT (137.15741256138557 -32.090391217866255)",
+      "depth": 214.11,
+      "azimuth": 123.43,
+      "dip": -3.86,
+      "created_at": "2026-03-15T19:40:17.987Z",
+      "updated_at": "2026-03-15T19:40:17.987Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "fa66377d-3153-4bfc-85b0-0e01ca9a4a78",
+    "fields": {
+      "name": "DH-BAIRDSTA-001",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "8eb59c8c-0ce1-4c7d-a52b-d13ddb971857",
+      "collar_location": "SRID=4326;POINT (147.77990437741033 -26.39983996844567)",
+      "depth": 653.33,
+      "azimuth": 220.94,
+      "dip": -57.31,
+      "created_at": "2026-03-15T19:40:17.969Z",
+      "updated_at": "2026-03-15T19:40:17.969Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "fbb17dc3-ed1c-4ee9-b195-961d568aca3a",
+    "fields": {
+      "name": "DH-JASONVIL-002",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "3b8ca855-02ae-41a5-a77e-8fde02595fd5",
+      "collar_location": "SRID=4326;POINT (146.7307092020681 -28.023406953242084)",
+      "depth": 272.32,
+      "azimuth": 205.91,
+      "dip": -35.1,
+      "created_at": "2026-03-15T19:40:17.963Z",
+      "updated_at": "2026-03-15T19:40:17.963Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "fcdb1773-a248-433b-92aa-992d9546e00f",
+    "fields": {
+      "name": "DH-YESENIAM-003",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "65493bde-9097-4a27-bfc3-2cc3fb5e2cb2",
+      "collar_location": "SRID=4326;POINT (117.24032297882653 -23.503047802336418)",
+      "depth": 317.54,
+      "azimuth": 310.71,
+      "dip": -64.25,
+      "created_at": "2026-03-15T19:40:17.986Z",
+      "updated_at": "2026-03-15T19:40:17.986Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "ffde03aa-49aa-451b-b099-ca76ca5d8cd8",
+    "fields": {
+      "name": "DH-JASONVIL-001",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "3b8ca855-02ae-41a5-a77e-8fde02595fd5",
+      "collar_location": "SRID=4326;POINT (127.81920766941099 -31.835152262674416)",
+      "depth": 81.08,
+      "azimuth": 279.35,
+      "dip": -73.6,
+      "created_at": "2026-03-15T19:40:17.963Z",
+      "updated_at": "2026-03-15T19:40:17.963Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "04a3412f-5d22-4bd0-b182-3c5295e5ce56",
+    "fields": {
+      "name": "Barrera Deposit",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "3b8ca855-02ae-41a5-a77e-8fde02595fd5",
+      "geom": "SRID=4326;POINT (128.5220934099896 -24.57678392763024)",
+      "created_at": "2026-03-15T19:40:17.996Z",
+      "updated_at": "2026-03-15T19:40:17.996Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "1996e95c-e8c8-44b7-88a1-cd489b6baf19",
+    "fields": {
+      "name": "Richardson Deposit",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "fba170cb-f62b-4517-9bb0-ee2dc1b8eb52",
+      "geom": "SRID=4326;POINT (132.29751366542024 -26.586550799332002)",
+      "created_at": "2026-03-15T19:40:18.013Z",
+      "updated_at": "2026-03-15T19:40:18.013Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "1e94e2e9-a139-4efd-af0c-f841d29f8c95",
+    "fields": {
+      "name": "Cervantes Deposit",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "aa330529-053a-43af-b219-8c01dd11b11b",
+      "geom": "SRID=4326;POINT (141.98475705975568 -25.21764911484167)",
+      "created_at": "2026-03-15T19:40:17.998Z",
+      "updated_at": "2026-03-15T19:40:17.998Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "233e47f2-472f-46d6-aa3b-9c6df7833d24",
+    "fields": {
+      "name": "King Deposit",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "a2442f5f-0126-4448-b7ad-ed9ac334dadf",
+      "geom": "SRID=4326;POINT (123.87492657192611 -20.29031018667448)",
+      "created_at": "2026-03-15T19:40:18.005Z",
+      "updated_at": "2026-03-15T19:40:18.005Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "2a09b343-995c-4937-a45f-902ec50bdac1",
+    "fields": {
+      "name": "Parsons Zone",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "65493bde-9097-4a27-bfc3-2cc3fb5e2cb2",
+      "geom": "SRID=4326;POINT (141.41084530040035 -23.47631775942527)",
+      "created_at": "2026-03-15T19:40:18.009Z",
+      "updated_at": "2026-03-15T19:40:18.009Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "2b8a43ef-c525-4008-beb3-62db163a0de6",
+    "fields": {
+      "name": "Joyce Lode",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "9341d628-35b5-43d5-8a4c-ec07184bb6a8",
+      "geom": "SRID=4326;POINT (139.0455121493156 -26.93678230310624)",
+      "created_at": "2026-03-15T19:40:18.003Z",
+      "updated_at": "2026-03-15T19:40:18.003Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "4977c360-8bbf-48d7-a9d3-b4049dd5ee19",
+    "fields": {
+      "name": "Williams Reef",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "9341d628-35b5-43d5-8a4c-ec07184bb6a8",
+      "geom": "SRID=4326;POINT (143.02348484148987 -27.11362765947828)",
+      "created_at": "2026-03-15T19:40:18.002Z",
+      "updated_at": "2026-03-15T19:40:18.002Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "535a57cd-6850-4cee-90b0-5f547ad26c6c",
+    "fields": {
+      "name": "Austin Lode",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "722c378a-8a52-4106-bf9c-1ecd4955d101",
+      "geom": "SRID=4326;POINT (144.16766455588518 -27.973623139018052)",
+      "created_at": "2026-03-15T19:40:17.994Z",
+      "updated_at": "2026-03-15T19:40:17.994Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "6a08c8ce-197e-47d0-ae38-ae1fb8e3d6d6",
+    "fields": {
+      "name": "Cole Zone",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "8eb59c8c-0ce1-4c7d-a52b-d13ddb971857",
+      "geom": "SRID=4326;POINT (125.37037791502823 -28.308398184805185)",
+      "created_at": "2026-03-15T19:40:18.001Z",
+      "updated_at": "2026-03-15T19:40:18.001Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "7bc2a839-5552-4706-9fb1-1b2a6f79ec13",
+    "fields": {
+      "name": "Herring Zone",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "65493bde-9097-4a27-bfc3-2cc3fb5e2cb2",
+      "geom": "SRID=4326;POINT (117.68858642796096 -29.32130689974369)",
+      "created_at": "2026-03-15T19:40:18.010Z",
+      "updated_at": "2026-03-15T19:40:18.011Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "8d6389df-e36a-4bfb-8280-07a8db6ce3da",
+    "fields": {
+      "name": "Vaughn Zone",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "1b9a37fc-4b8d-4841-8017-6f6869159da9",
+      "geom": "SRID=4326;POINT (134.37319121324978 -20.830818848261096)",
+      "created_at": "2026-03-15T19:40:18.007Z",
+      "updated_at": "2026-03-15T19:40:18.007Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "a174666c-f4e1-4937-a86b-7fb06116aff8",
+    "fields": {
+      "name": "Chambers Reef",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "3b8ca855-02ae-41a5-a77e-8fde02595fd5",
+      "geom": "SRID=4326;POINT (121.7571244636402 -30.358306214651883)",
+      "created_at": "2026-03-15T19:40:17.995Z",
+      "updated_at": "2026-03-15T19:40:17.995Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "b5f59ff4-e7c1-4553-a017-b4e387541bf2",
+    "fields": {
+      "name": "Harris Zone",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "a2442f5f-0126-4448-b7ad-ed9ac334dadf",
+      "geom": "SRID=4326;POINT (129.22373149575915 -32.984098376942164)",
+      "created_at": "2026-03-15T19:40:18.006Z",
+      "updated_at": "2026-03-15T19:40:18.006Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "bb538dc0-fad8-47e8-9314-3cda83f57cce",
+    "fields": {
+      "name": "Kelley Deposit",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "1b9a37fc-4b8d-4841-8017-6f6869159da9",
+      "geom": "SRID=4326;POINT (140.08126239637792 -21.83115466150671)",
+      "created_at": "2026-03-15T19:40:18.008Z",
+      "updated_at": "2026-03-15T19:40:18.008Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "c9bb995f-5ad8-43c8-90ce-b00642f830b0",
+    "fields": {
+      "name": "Knapp Deposit",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "aa330529-053a-43af-b219-8c01dd11b11b",
+      "geom": "SRID=4326;POINT (131.5007868061104 -27.660200693496908)",
+      "created_at": "2026-03-15T19:40:17.997Z",
+      "updated_at": "2026-03-15T19:40:17.997Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "ca31cc6f-7926-4e7b-88aa-c3a5cb9ff099",
+    "fields": {
+      "name": "Reed Zone",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "fba170cb-f62b-4517-9bb0-ee2dc1b8eb52",
+      "geom": "SRID=4326;POINT (147.84563838301165 -22.65106738863851)",
+      "created_at": "2026-03-15T19:40:18.012Z",
+      "updated_at": "2026-03-15T19:40:18.012Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "cee9563f-fe95-4427-9bd6-72a7a6269a0a",
+    "fields": {
+      "name": "Nixon Deposit",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "8eb59c8c-0ce1-4c7d-a52b-d13ddb971857",
+      "geom": "SRID=4326;POINT (147.0267598357298 -21.53199776644787)",
+      "created_at": "2026-03-15T19:40:18.000Z",
+      "updated_at": "2026-03-15T19:40:18.000Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "fe9bd7b7-7b99-499c-b00e-aa64ef8a7ec6",
+    "fields": {
+      "name": "Price Deposit",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "722c378a-8a52-4106-bf9c-1ecd4955d101",
+      "geom": "SRID=4326;POINT (118.5634559788091 -32.59372512326061)",
+      "created_at": "2026-03-15T19:40:17.992Z",
+      "updated_at": "2026-03-15T19:40:17.992Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "0b12b728-3277-4a0b-9346-b116dbf9f01c",
+    "fields": {
+      "name": "ML-2876/74",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "1b9a37fc-4b8d-4841-8017-6f6869159da9",
+      "geom": "SRID=4326;MULTIPOLYGON (((124.73130131997226 -31.851822207588565, 124.83130131997225 -31.851822207588565, 124.83130131997225 -31.751822207588564, 124.73130131997226 -31.751822207588564, 124.73130131997226 -31.851822207588565)))",
+      "created_at": "2026-03-15T19:40:18.044Z",
+      "updated_at": "2026-03-15T19:40:18.044Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "1c2ed401-809e-4ad5-880f-7aaeca5aaa28",
+    "fields": {
+      "name": "ML-6530/10",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "a2442f5f-0126-4448-b7ad-ed9ac334dadf",
+      "geom": "SRID=4326;MULTIPOLYGON (((122.33000284825481 -24.234890731453202, 122.4300028482548 -24.234890731453202, 122.4300028482548 -24.1348907314532, 122.33000284825481 -24.1348907314532, 122.33000284825481 -24.234890731453202)))",
+      "created_at": "2026-03-15T19:40:18.040Z",
+      "updated_at": "2026-03-15T19:40:18.040Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "1eb2e1be-5201-45ea-a755-9700b3c408cb",
+    "fields": {
+      "name": "ML-6668/76",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "aa330529-053a-43af-b219-8c01dd11b11b",
+      "geom": "SRID=4326;MULTIPOLYGON (((144.66846264844904 -24.374645003462827, 144.76846264844906 -24.374645003462827, 144.76846264844906 -24.274645003462826, 144.66846264844904 -24.274645003462826, 144.66846264844904 -24.374645003462827)))",
+      "created_at": "2026-03-15T19:40:18.026Z",
+      "updated_at": "2026-03-15T19:40:18.026Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "2d55db98-2c1d-436b-821b-ef5d8bd93dc3",
+    "fields": {
+      "name": "ML-9335/59",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "a2442f5f-0126-4448-b7ad-ed9ac334dadf",
+      "geom": "SRID=4326;MULTIPOLYGON (((119.3997791279241 -27.891467411409682, 119.4997791279241 -27.891467411409682, 119.4997791279241 -27.79146741140968, 119.3997791279241 -27.79146741140968, 119.3997791279241 -27.891467411409682)))",
+      "created_at": "2026-03-15T19:40:18.042Z",
+      "updated_at": "2026-03-15T19:40:18.042Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "2eff06ad-e8e5-46c9-839d-65f8dc5171f0",
+    "fields": {
+      "name": "ML-9950/29",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "8eb59c8c-0ce1-4c7d-a52b-d13ddb971857",
+      "geom": "SRID=4326;MULTIPOLYGON (((119.10688995210528 -31.62223574840187, 119.20688995210527 -31.62223574840187, 119.20688995210527 -31.52223574840187, 119.10688995210528 -31.52223574840187, 119.10688995210528 -31.62223574840187)))",
+      "created_at": "2026-03-15T19:40:18.029Z",
+      "updated_at": "2026-03-15T19:40:18.029Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "2f16e9a5-d38c-4444-b88d-d0fc87e93f01",
+    "fields": {
+      "name": "ML-5632/40",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "3b8ca855-02ae-41a5-a77e-8fde02595fd5",
+      "geom": "SRID=4326;MULTIPOLYGON (((117.99258950826257 -30.962079219322117, 118.09258950826256 -30.962079219322117, 118.09258950826256 -30.862079219322116, 117.99258950826257 -30.862079219322116, 117.99258950826257 -30.962079219322117)))",
+      "created_at": "2026-03-15T19:40:18.017Z",
+      "updated_at": "2026-03-15T19:40:18.017Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "3155b904-1c16-4089-9d19-f74ef67de9fa",
+    "fields": {
+      "name": "ML-1636/50",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "9341d628-35b5-43d5-8a4c-ec07184bb6a8",
+      "geom": "SRID=4326;MULTIPOLYGON (((139.6822384133942 -29.67831396252637, 139.78223841339423 -29.67831396252637, 139.78223841339423 -29.57831396252637, 139.6822384133942 -29.57831396252637, 139.6822384133942 -29.67831396252637)))",
+      "created_at": "2026-03-15T19:40:18.038Z",
+      "updated_at": "2026-03-15T19:40:18.038Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "32ffb403-5658-41b9-89f6-852a0e197185",
+    "fields": {
+      "name": "ML-5605/46",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "fba170cb-f62b-4517-9bb0-ee2dc1b8eb52",
+      "geom": "SRID=4326;MULTIPOLYGON (((148.97317234216519 -30.89200979187643, 149.0731723421652 -30.89200979187643, 149.0731723421652 -30.792009791876428, 148.97317234216519 -30.792009791876428, 148.97317234216519 -30.89200979187643)))",
+      "created_at": "2026-03-15T19:40:18.053Z",
+      "updated_at": "2026-03-15T19:40:18.053Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "3d61ff74-4126-4549-90fe-a15362451039",
+    "fields": {
+      "name": "ML-8477/26",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "722c378a-8a52-4106-bf9c-1ecd4955d101",
+      "geom": "SRID=4326;MULTIPOLYGON (((133.2822596350499 -27.559054352255266, 133.38225963504993 -27.559054352255266, 133.38225963504993 -27.459054352255265, 133.2822596350499 -27.459054352255265, 133.2822596350499 -27.559054352255266)))",
+      "created_at": "2026-03-15T19:40:18.014Z",
+      "updated_at": "2026-03-15T19:40:18.014Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "3e84f5c4-51cf-47f9-bf72-d58b771e2feb",
+    "fields": {
+      "name": "ML-4533/68",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "3b8ca855-02ae-41a5-a77e-8fde02595fd5",
+      "geom": "SRID=4326;MULTIPOLYGON (((137.4463807410671 -18.10831266759974, 137.5463807410671 -18.10831266759974, 137.5463807410671 -18.00831266759974, 137.4463807410671 -18.00831266759974, 137.4463807410671 -18.10831266759974)))",
+      "created_at": "2026-03-15T19:40:18.020Z",
+      "updated_at": "2026-03-15T19:40:18.020Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "418ee13b-acbb-4f0e-b9aa-53fe47b2eb7d",
+    "fields": {
+      "name": "ML-8187/77",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "aa330529-053a-43af-b219-8c01dd11b11b",
+      "geom": "SRID=4326;MULTIPOLYGON (((126.37885552065033 -19.086472383834582, 126.47885552065033 -19.086472383834582, 126.47885552065033 -18.98647238383458, 126.37885552065033 -18.98647238383458, 126.37885552065033 -19.086472383834582)))",
+      "created_at": "2026-03-15T19:40:18.023Z",
+      "updated_at": "2026-03-15T19:40:18.023Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "479a1bcc-1bb4-4ec7-8ad3-a61739c36d7f",
+    "fields": {
+      "name": "ML-8701/46",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "65493bde-9097-4a27-bfc3-2cc3fb5e2cb2",
+      "geom": "SRID=4326;MULTIPOLYGON (((142.24143288900515 -26.239014371917374, 142.34143288900518 -26.239014371917374, 142.34143288900518 -26.139014371917373, 142.24143288900515 -26.139014371917373, 142.24143288900515 -26.239014371917374)))",
+      "created_at": "2026-03-15T19:40:18.049Z",
+      "updated_at": "2026-03-15T19:40:18.049Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "63ede48c-3474-4c37-ae29-003368e3bd95",
+    "fields": {
+      "name": "ML-2077/80",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "722c378a-8a52-4106-bf9c-1ecd4955d101",
+      "geom": "SRID=4326;MULTIPOLYGON (((124.73410483158794 -26.519592738536996, 124.83410483158794 -26.519592738536996, 124.83410483158794 -26.419592738536995, 124.73410483158794 -26.419592738536995, 124.73410483158794 -26.519592738536996)))",
+      "created_at": "2026-03-15T19:40:18.016Z",
+      "updated_at": "2026-03-15T19:40:18.016Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "656a036f-2409-4b82-9f5c-df75b64a501c",
+    "fields": {
+      "name": "ML-7583/44",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "9341d628-35b5-43d5-8a4c-ec07184bb6a8",
+      "geom": "SRID=4326;MULTIPOLYGON (((147.47406353107357 -32.25336343259134, 147.5740635310736 -32.25336343259134, 147.5740635310736 -32.15336343259135, 147.47406353107357 -32.15336343259135, 147.47406353107357 -32.25336343259134)))",
+      "created_at": "2026-03-15T19:40:18.035Z",
+      "updated_at": "2026-03-15T19:40:18.035Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "810cb917-6445-4416-92de-b3e9a7a758fc",
+    "fields": {
+      "name": "ML-2695/49",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "8eb59c8c-0ce1-4c7d-a52b-d13ddb971857",
+      "geom": "SRID=4326;MULTIPOLYGON (((138.51549615065437 -24.176516592947838, 138.6154961506544 -24.176516592947838, 138.6154961506544 -24.076516592947836, 138.51549615065437 -24.076516592947836, 138.51549615065437 -24.176516592947838)))",
+      "created_at": "2026-03-15T19:40:18.032Z",
+      "updated_at": "2026-03-15T19:40:18.032Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "9493a9bb-cb3c-4b89-9a3c-c5bd64650468",
+    "fields": {
+      "name": "ML-7018/60",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "fba170cb-f62b-4517-9bb0-ee2dc1b8eb52",
+      "geom": "SRID=4326;MULTIPOLYGON (((147.71661711458626 -31.291328979568274, 147.81661711458628 -31.291328979568274, 147.81661711458628 -31.191328979568272, 147.71661711458626 -31.191328979568272, 147.71661711458626 -31.291328979568274)))",
+      "created_at": "2026-03-15T19:40:18.055Z",
+      "updated_at": "2026-03-15T19:40:18.055Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "aaa801cc-8030-4c11-bb87-01bb7b3b9350",
+    "fields": {
+      "name": "ML-3751/86",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "65493bde-9097-4a27-bfc3-2cc3fb5e2cb2",
+      "geom": "SRID=4326;MULTIPOLYGON (((125.38305288760117 -28.071397431840705, 125.48305288760116 -28.071397431840705, 125.48305288760116 -27.971397431840703, 125.38305288760117 -27.971397431840703, 125.38305288760117 -28.071397431840705)))",
+      "created_at": "2026-03-15T19:40:18.051Z",
+      "updated_at": "2026-03-15T19:40:18.051Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "d47d53dc-8afc-41bb-b332-cb70b2f58d6a",
+    "fields": {
+      "name": "ML-4820/43",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "1b9a37fc-4b8d-4841-8017-6f6869159da9",
+      "geom": "SRID=4326;MULTIPOLYGON (((133.292894426728 -34.77593545920959, 133.39289442672802 -34.77593545920959, 133.39289442672802 -34.6759354592096, 133.292894426728 -34.6759354592096, 133.292894426728 -34.77593545920959)))",
+      "created_at": "2026-03-15T19:40:18.046Z",
+      "updated_at": "2026-03-15T19:40:18.047Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "1a0f4993-a7c2-428b-bf76-6bc271979a99",
+    "fields": {
+      "title": "Also family rate carry second firm.",
+      "file": "documents/such.pdf",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "aa330529-053a-43af-b219-8c01dd11b11b",
+      "tags": "[\"14\", \"15\"]",
+      "timestamp": "2024-12-27",
+      "doc_type": "COMPLIANCE",
+      "confidentiality": "CONFIDENTIAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "7c93101840b8f0ea9bf48016e912d7230aa2320b08bfe05be1320d8e8c34354a",
+      "created_at": "2026-03-15T19:40:18.076Z",
+      "updated_at": "2026-03-15T19:40:18.076Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "1e43fcce-6de4-41e9-a57a-2f2c1fd6a212",
+    "fields": {
+      "title": "Hand in Democrat.",
+      "file": "documents/even.pdf",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "3b8ca855-02ae-41a5-a77e-8fde02595fd5",
+      "tags": "[\"3\", \"8\", \"16\", \"19\"]",
+      "timestamp": "2025-03-22",
+      "doc_type": "COMPLIANCE",
+      "confidentiality": "INTERNAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "6fbcf51632850a1e85bfa25ef4e373f455b74c2a2541ffeda367a05d0a798660",
+      "created_at": "2026-03-15T19:40:18.068Z",
+      "updated_at": "2026-03-15T19:40:18.068Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "3ada6ea6-89fe-43e1-8b54-d6b41b295f25",
+    "fields": {
+      "title": "Because keep his.",
+      "file": "documents/especially.pdf",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "fba170cb-f62b-4517-9bb0-ee2dc1b8eb52",
+      "tags": "[\"6\", \"15\"]",
+      "timestamp": "2025-05-14",
+      "doc_type": "JORC",
+      "confidentiality": "INTERNAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "204276c5cc027ac40c3642a7be538a0d46ae815ff2a2e18d53289689269d2819",
+      "created_at": "2026-03-15T19:40:18.108Z",
+      "updated_at": "2026-03-15T19:40:18.108Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "3dca9c76-61b2-4e2e-bc5c-a708f660557f",
+    "fields": {
+      "title": "Though four sense.",
+      "file": "documents/film.pdf",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "3b8ca855-02ae-41a5-a77e-8fde02595fd5",
+      "tags": "[\"13\"]",
+      "timestamp": "2025-09-25",
+      "doc_type": "COMPLIANCE",
+      "confidentiality": "CONFIDENTIAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "b3a4d781e5f634d7d851cb5b8adf4e154955bfe87a203f85a4137b2987329fc8",
+      "created_at": "2026-03-15T19:40:18.073Z",
+      "updated_at": "2026-03-15T19:40:18.073Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "45a9a519-b232-44f7-94c6-6c5b9ea83051",
+    "fields": {
+      "title": "Light where key upon.",
+      "file": "documents/side.pdf",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "65493bde-9097-4a27-bfc3-2cc3fb5e2cb2",
+      "tags": "[\"1\", \"9\", \"12\"]",
+      "timestamp": "2025-09-16",
+      "doc_type": "COMPLIANCE",
+      "confidentiality": "RESTRICTED",
+      "created_by": ["admin"],
+      "checksum_sha256": "241ad4957a8020762c89c4febd291b361b0df928b8ea802dc64f3c6e668333ba",
+      "created_at": "2026-03-15T19:40:18.104Z",
+      "updated_at": "2026-03-15T19:40:18.104Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "4b167214-e319-4625-87ac-5d469dc6c61e",
+    "fields": {
+      "title": "Second major trouble tree determine.",
+      "file": "documents/culture.pdf",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "1b9a37fc-4b8d-4841-8017-6f6869159da9",
+      "tags": "[\"3\", \"15\", \"19\"]",
+      "timestamp": "2025-06-15",
+      "doc_type": "JORC",
+      "confidentiality": "RESTRICTED",
+      "created_by": ["admin"],
+      "checksum_sha256": "269d84c42b4b290fa40d58c6a132f703944e55fee917e6a2dd01ae5cc4790f1c",
+      "created_at": "2026-03-15T19:40:18.099Z",
+      "updated_at": "2026-03-15T19:40:18.099Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "4e764cc9-c862-43fe-8535-6237d47d2720",
+    "fields": {
+      "title": "Foreign indeed thought.",
+      "file": "documents/determine.pdf",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "3b8ca855-02ae-41a5-a77e-8fde02595fd5",
+      "tags": "[\"1\", \"11\"]",
+      "timestamp": "2026-01-17",
+      "doc_type": "VALMIN",
+      "confidentiality": "INTERNAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "4712e1cb0815f1156a77e3560cb1aa09581883ccaf64f79fd9e3a93636aa3393",
+      "created_at": "2026-03-15T19:40:18.071Z",
+      "updated_at": "2026-03-15T19:40:18.071Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "5675b8c9-54c6-4a6c-9d31-5ba163294b4b",
+    "fields": {
+      "title": "Later kid fear country world.",
+      "file": "documents/whether.pdf",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "a2442f5f-0126-4448-b7ad-ed9ac334dadf",
+      "tags": "[\"5\", \"11\", \"15\"]",
+      "timestamp": "2025-03-09",
+      "doc_type": "INTERNAL",
+      "confidentiality": "RESTRICTED",
+      "created_by": ["admin"],
+      "checksum_sha256": "65c0c54850b10efa301fb5e80e3eaac76df8b74ff3810d67bc8bdad7f72f961f",
+      "created_at": "2026-03-15T19:40:18.096Z",
+      "updated_at": "2026-03-15T19:40:18.096Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "5c5ef036-c01d-4f44-9ad8-85fc08b5a628",
+    "fields": {
+      "title": "Hair special network generation.",
+      "file": "documents/foreign.pdf",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "1b9a37fc-4b8d-4841-8017-6f6869159da9",
+      "tags": "[\"6\", \"9\", \"11\", \"14\"]",
+      "timestamp": "2025-08-15",
+      "doc_type": "TECHNICAL",
+      "confidentiality": "CONFIDENTIAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "7b6b13780a32fe3302c30b29835e88312eb5bfdc9b8c2b09912fdd0c516c64f2",
+      "created_at": "2026-03-15T19:40:18.100Z",
+      "updated_at": "2026-03-15T19:40:18.100Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "5f02f585-8c00-4efb-9fcb-1238352420ff",
+    "fields": {
+      "title": "Shake character yes people.",
+      "file": "documents/himself.pdf",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "1b9a37fc-4b8d-4841-8017-6f6869159da9",
+      "tags": "[\"1\", \"2\", \"10\", \"13\"]",
+      "timestamp": "2024-10-28",
+      "doc_type": "JORC",
+      "confidentiality": "CONFIDENTIAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "ebebba710afcbcae29cefa4cab550e46155b5cddb1166b78f4eb314cf30d2b60",
+      "created_at": "2026-03-15T19:40:18.102Z",
+      "updated_at": "2026-03-15T19:40:18.102Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "64a8ef05-32e8-4aab-bf59-395deb3775f7",
+    "fields": {
+      "title": "Middle own identify.",
+      "file": "documents/such.pdf",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "8eb59c8c-0ce1-4c7d-a52b-d13ddb971857",
+      "tags": "[\"16\"]",
+      "timestamp": "2024-11-16",
+      "doc_type": "TECHNICAL",
+      "confidentiality": "PUBLIC",
+      "created_by": ["admin"],
+      "checksum_sha256": "5fe005fb28a546d9123dd7f20959f500846acbbae5c329866dea564be440e0c8",
+      "created_at": "2026-03-15T19:40:18.083Z",
+      "updated_at": "2026-03-15T19:40:18.083Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "71c3bf7e-7d3a-406f-ab62-76130a184f16",
+    "fields": {
+      "title": "May house finally.",
+      "file": "documents/police.pdf",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "722c378a-8a52-4106-bf9c-1ecd4955d101",
+      "tags": "[\"5\", \"8\", \"12\", \"19\"]",
+      "timestamp": "2025-02-22",
+      "doc_type": "INTERNAL",
+      "confidentiality": "RESTRICTED",
+      "created_by": ["admin"],
+      "checksum_sha256": "7777a1117a3adb8dca0821a9f1e1dc77c2785e22401237fc2b04fddf62c5f434",
+      "created_at": "2026-03-15T19:40:18.061Z",
+      "updated_at": "2026-03-15T19:40:18.061Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "80d7eeb5-0a7b-432d-8191-406595ef5136",
+    "fields": {
+      "title": "Who make participant.",
+      "file": "documents/night.pdf",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "722c378a-8a52-4106-bf9c-1ecd4955d101",
+      "tags": "[\"4\"]",
+      "timestamp": "2024-09-24",
+      "doc_type": "COMPLIANCE",
+      "confidentiality": "INTERNAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "a20855855be43daaf3949e836607bb85faf355e6b7565b4276dccf98654806e0",
+      "created_at": "2026-03-15T19:40:18.064Z",
+      "updated_at": "2026-03-15T19:40:18.064Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "836e956f-87c1-44b0-9704-f2304cf5ab1c",
+    "fields": {
+      "title": "Memory carry generation seek enter day.",
+      "file": "documents/former.pdf",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "9341d628-35b5-43d5-8a4c-ec07184bb6a8",
+      "tags": "[\"3\", \"4\", \"11\", \"18\"]",
+      "timestamp": "2025-06-08",
+      "doc_type": "INTERNAL",
+      "confidentiality": "INTERNAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "6c7699b24ee0152d39f9cc727ccf7f2dcf8fafb4c854501ef6ee996b6e7cde22",
+      "created_at": "2026-03-15T19:40:18.089Z",
+      "updated_at": "2026-03-15T19:40:18.089Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "8bcc5691-666f-40e1-9c95-290aff03eb23",
+    "fields": {
+      "title": "Own security smile weight state.",
+      "file": "documents/edge.pdf",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "fba170cb-f62b-4517-9bb0-ee2dc1b8eb52",
+      "tags": "[\"7\"]",
+      "timestamp": "2026-02-02",
+      "doc_type": "COMPLIANCE",
+      "confidentiality": "RESTRICTED",
+      "created_by": ["admin"],
+      "checksum_sha256": "66cc185625dc01012f0070f3c5286c3efa2d0bab48b6a914f8af22f066c4ae80",
+      "created_at": "2026-03-15T19:40:18.110Z",
+      "updated_at": "2026-03-15T19:40:18.110Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "a74ca9e9-534c-4c09-9ac4-3983617c73da",
+    "fields": {
+      "title": "State arm cold.",
+      "file": "documents/research.pdf",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "65493bde-9097-4a27-bfc3-2cc3fb5e2cb2",
+      "tags": "[\"7\", \"13\"]",
+      "timestamp": "2025-09-08",
+      "doc_type": "ENVIRONMENTAL",
+      "confidentiality": "RESTRICTED",
+      "created_by": ["admin"],
+      "checksum_sha256": "febf8a89a295f390fe9db1d90a36ff181247de12284ac250474757feef8f37da",
+      "created_at": "2026-03-15T19:40:18.106Z",
+      "updated_at": "2026-03-15T19:40:18.106Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "b02fea4c-140a-4165-b1bd-72d7162bbb6b",
+    "fields": {
+      "title": "When father reveal much out fire.",
+      "file": "documents/free.pdf",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "65493bde-9097-4a27-bfc3-2cc3fb5e2cb2",
+      "tags": "[\"10\", \"11\", \"14\"]",
+      "timestamp": "2025-05-22",
+      "doc_type": "VALMIN",
+      "confidentiality": "PUBLIC",
+      "created_by": ["admin"],
+      "checksum_sha256": "7ba5b42c8a218b0ea52fa66dffc8cc94c26142e3e198864946afd68961a398da",
+      "created_at": "2026-03-15T19:40:18.103Z",
+      "updated_at": "2026-03-15T19:40:18.103Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "b03ca693-2479-4300-87cf-ac4b3ee6656b",
+    "fields": {
+      "title": "Dark back tree break instead simply.",
+      "file": "documents/far.pdf",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "aa330529-053a-43af-b219-8c01dd11b11b",
+      "tags": "[\"5\", \"15\"]",
+      "timestamp": "2025-06-17",
+      "doc_type": "ENVIRONMENTAL",
+      "confidentiality": "CONFIDENTIAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "50adf12479fdf1d4d1429af6fb41a50388cf2f7e8344e313939b9c03b086a17e",
+      "created_at": "2026-03-15T19:40:18.078Z",
+      "updated_at": "2026-03-15T19:40:18.078Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "be0be938-4e83-4f00-b221-67cd82852ce6",
+    "fields": {
+      "title": "Attorney authority different reason ask.",
+      "file": "documents/technology.pdf",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "722c378a-8a52-4106-bf9c-1ecd4955d101",
+      "tags": "[\"8\", \"10\", \"12\", \"18\"]",
+      "timestamp": "2025-11-30",
+      "doc_type": "INTERNAL",
+      "confidentiality": "RESTRICTED",
+      "created_by": ["admin"],
+      "checksum_sha256": "9365b1e88630a5021e8cdfa99f02f782ef00fdada34e17d128bad67f16d46d07",
+      "created_at": "2026-03-15T19:40:18.058Z",
+      "updated_at": "2026-03-15T19:40:18.058Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "bfd898cf-a7ea-445a-b94a-0d6f9d136ad8",
+    "fields": {
+      "title": "Blue next sense add child college.",
+      "file": "documents/officer.pdf",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "9341d628-35b5-43d5-8a4c-ec07184bb6a8",
+      "tags": "[\"1\", \"3\", \"10\"]",
+      "timestamp": "2024-05-25",
+      "doc_type": "INTERNAL",
+      "confidentiality": "INTERNAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "56f1505967daf9a1653e57bce4f75174c333a68d49d71e1d37afa0127989cfa5",
+      "created_at": "2026-03-15T19:40:18.093Z",
+      "updated_at": "2026-03-15T19:40:18.093Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "c8b7a90e-a015-4b5d-9266-ccd6b7faa7ae",
+    "fields": {
+      "title": "Number policy assume from.",
+      "file": "documents/development.pdf",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "8eb59c8c-0ce1-4c7d-a52b-d13ddb971857",
+      "tags": "[\"5\", \"19\"]",
+      "timestamp": "2024-11-05",
+      "doc_type": "COMPLIANCE",
+      "confidentiality": "PUBLIC",
+      "created_by": ["admin"],
+      "checksum_sha256": "7a9f1fd7c58854eb1b139804121d0322094582905db29a263e2ca72a97a17aff",
+      "created_at": "2026-03-15T19:40:18.087Z",
+      "updated_at": "2026-03-15T19:40:18.087Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "cf50fc52-8145-4603-806b-eab31354ec2f",
+    "fields": {
+      "title": "To mission find single tough such.",
+      "file": "documents/base.pdf",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "a2442f5f-0126-4448-b7ad-ed9ac334dadf",
+      "tags": "[\"5\", \"13\", \"16\"]",
+      "timestamp": "2025-09-16",
+      "doc_type": "COMPLIANCE",
+      "confidentiality": "CONFIDENTIAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "e67d75fb252275c56a52662613658ead14c917e88307e2f317ffc35eebaf17b2",
+      "created_at": "2026-03-15T19:40:18.094Z",
+      "updated_at": "2026-03-15T19:40:18.094Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "d066bfdc-78d2-4ab1-8348-ff08efb72ca4",
+    "fields": {
+      "title": "Itself under factor.",
+      "file": "documents/discover.pdf",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "8eb59c8c-0ce1-4c7d-a52b-d13ddb971857",
+      "tags": "[\"8\", \"13\", \"18\"]",
+      "timestamp": "2025-05-23",
+      "doc_type": "VALMIN",
+      "confidentiality": "RESTRICTED",
+      "created_by": ["admin"],
+      "checksum_sha256": "ec079d2bd83ac3b70b07a8deb1932dea005c3cacb0a7506187270cb6bb2e1117",
+      "created_at": "2026-03-15T19:40:18.085Z",
+      "updated_at": "2026-03-15T19:40:18.085Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "db2c9ee0-90fd-4423-81d3-0ab0e1e76c08",
+    "fields": {
+      "title": "Fight store glass during.",
+      "file": "documents/whose.pdf",
+      "organisation": "06b96a00-27ad-40ca-a80d-2593d5d44a8c",
+      "process": "fba170cb-f62b-4517-9bb0-ee2dc1b8eb52",
+      "tags": "[\"4\", \"5\", \"15\"]",
+      "timestamp": "2025-07-31",
+      "doc_type": "JORC",
+      "confidentiality": "INTERNAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "404132c3f7bfbb10c8732c92c461d3f013b8cd21285dcd9573e4b4ace178a2fd",
+      "created_at": "2026-03-15T19:40:18.107Z",
+      "updated_at": "2026-03-15T19:40:18.107Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "dc934d3b-502d-4250-9f8e-7e5da481dd98",
+    "fields": {
+      "title": "Case maybe century edge organization kid.",
+      "file": "documents/onto.pdf",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "9341d628-35b5-43d5-8a4c-ec07184bb6a8",
+      "tags": "[\"15\", \"16\", \"17\"]",
+      "timestamp": "2025-11-03",
+      "doc_type": "COMPLIANCE",
+      "confidentiality": "PUBLIC",
+      "created_by": ["admin"],
+      "checksum_sha256": "221b41052971d3447d11bfd3f9fb16ab9be17a2ed35c4e5462fc6d62031fdbed",
+      "created_at": "2026-03-15T19:40:18.091Z",
+      "updated_at": "2026-03-15T19:40:18.091Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "e8a4edd5-d6e4-4e88-8118-77e8a5dfccb5",
+    "fields": {
+      "title": "Today doctor section.",
+      "file": "documents/analysis.pdf",
+      "organisation": "8f7edc20-633f-46df-a3b2-de3ce53dc79b",
+      "process": "aa330529-053a-43af-b219-8c01dd11b11b",
+      "tags": "[\"4\", \"5\", \"11\"]",
+      "timestamp": "2024-05-02",
+      "doc_type": "ENVIRONMENTAL",
+      "confidentiality": "INTERNAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "faa650f381270ea15a1e01fa1694517213e6f41dc23c261f00d1a1db4962863d",
+      "created_at": "2026-03-15T19:40:18.080Z",
+      "updated_at": "2026-03-15T19:40:18.080Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "fc1bdc09-3efb-4399-bcf9-4b88ba5a39fb",
+    "fields": {
+      "title": "While thought future leader chance.",
+      "file": "documents/picture.pdf",
+      "organisation": "0be77c43-71f4-455b-a314-03ce34ea7508",
+      "process": "a2442f5f-0126-4448-b7ad-ed9ac334dadf",
+      "tags": "[\"12\"]",
+      "timestamp": "2024-11-20",
+      "doc_type": "ENVIRONMENTAL",
+      "confidentiality": "RESTRICTED",
+      "created_by": ["admin"],
+      "checksum_sha256": "a5a1f965b58bf87d2081823c796f3eae0a788a8fd3d045ba784cd18ab8cdfe36",
+      "created_at": "2026-03-15T19:40:18.098Z",
+      "updated_at": "2026-03-15T19:40:18.098Z"
+    }
+  }
+]
