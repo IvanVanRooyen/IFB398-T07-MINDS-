@@ -369,8 +369,8 @@ class UserProfile(models.Model):
 
 # Autocreate profile when user is created
 @receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
+def create_user_profile(sender, instance, created, raw, **kwargs):
+    if created and not raw:
         UserProfile.objects.create(user=instance)
 
 
