@@ -5,8 +5,13 @@ Covers core/views.py::documents() and the DocumentSearchForm.
  
 Run with:
 docker compose exec web python manage.py test core.tests.test_search --verbosity=2
+<<<<<<< HEAD
 """
 
+=======
+
+"""
+>>>>>>> a68a026 (Added tests for search functionality)
 import datetime
 from django.test import TestCase, Client
 from django.urls import reverse
@@ -126,6 +131,14 @@ class KeywordSearchTests(TestCase):
     def test_no_match_returns_empty(self):
         results = self._get("xyzzy_no_such_term")
         self.assertEqual(results, [])
+<<<<<<< HEAD
+=======
+ 
+    def test_partial_word_match(self):
+        # icontains should match substrings
+        results = self._get("Uran")
+        self.assertIn("Uranium Feasibility Study", results)
+>>>>>>> a68a026 (Added tests for search functionality)
 
 class ProjectFilterTests(TestCase):
  
@@ -150,6 +163,14 @@ class ProjectFilterTests(TestCase):
         self.assertIn("Doc in Alpha", results)
         self.assertNotIn("Doc in Beta", results)
         self.assertNotIn("No Project Doc", results)
+<<<<<<< HEAD
+=======
+ 
+    def test_filter_by_other_project(self):
+        results = self._get(self.proj_b.pk)
+        self.assertIn("Doc in Beta", results)
+        self.assertNotIn("Doc in Alpha", results)
+>>>>>>> a68a026 (Added tests for search functionality)
 
 class DateRangeFilterTests(TestCase):
  
@@ -272,10 +293,18 @@ class TagFilterTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.url = reverse("documents")
+<<<<<<< HEAD
 
         self.doc_exploration = make_doc("Exploration Doc", tags=[10])          
         self.doc_drill       = make_doc("Drill Doc",       tags=[11])          
         self.doc_multi       = make_doc("Multi-tag Doc",   tags=[10, 12])     
+=======
+ 
+        # Tag IDs from core/tagging.py
+        self.doc_exploration = make_doc("Exploration Doc", tags=[10])          # Exploration Report
+        self.doc_drill       = make_doc("Drill Doc",       tags=[11])          # Drill Logs
+        self.doc_multi       = make_doc("Multi-tag Doc",   tags=[10, 12])      # Exploration + Assay
+>>>>>>> a68a026 (Added tests for search functionality)
         self.doc_no_tags     = make_doc("Untagged Doc",    tags=[])
  
     def _get(self, tag):
@@ -286,7 +315,11 @@ class TagFilterTests(TestCase):
     def test_filter_by_single_tag(self):
         results = self._get(10)
         self.assertIn("Exploration Doc", results)
+<<<<<<< HEAD
         self.assertIn("Multi-tag Doc", results)      
+=======
+        self.assertIn("Multi-tag Doc", results)      # has tag 10 among others
+>>>>>>> a68a026 (Added tests for search functionality)
         self.assertNotIn("Drill Doc", results)
         self.assertNotIn("Untagged Doc", results)
  
