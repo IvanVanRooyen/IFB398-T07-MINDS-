@@ -1,8 +1,11 @@
 import hashlib
+import os
 import random
 import uuid
 from datetime import timedelta
+from pathlib import Path
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
@@ -10,6 +13,25 @@ from django.contrib.gis.geos import MultiPolygon, Point, Polygon
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from faker import Faker
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import mm
+from reportlab.platypus import (
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
+from .test_document_content import (
+    compliance_content,
+    environmental_content,
+    internal_content,
+    jorc_content,
+    technical_content,
+    valmin_content,
+)
 
 from core.models import (
     ApprovalWorkflow,
@@ -54,6 +76,92 @@ TAG_POOL = list(range(1, 20))
 AU_LAT_RANGE = (-35.0, -18.0)
 AU_LON_RANGE = (115.0, 150.0)
 
+DOCTYPE_GENERATORS = {
+    "JORC": jorc_content,
+    "VALMIN": valmin_content,
+    "TECHNICAL": technical_content,
+    "ENVIRONMENTAL": environmental_content,
+    "COMPLIANCE": compliance_content,
+    "INTERNAL": internal_content,
+}
+
+
+def generate_pdf(doc_type, org, process, commodity, output_path):
+    generator = DOCTYPE_GENERATORS.get(doc_type, internal_content)
+    title, sections = generator(org, process, commodity or "Gold")
+
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+    doc = SimpleDocTemplate(
+        str(output_path),
+        pagesize=A4,
+        topMargin=25 * mm,
+        bottomMargin=20 * mm,
+        leftMargin=20 * mm,
+        rightMargin=20 * mm,
+    )
+
+    styles = getSampleStyleSheet()
+    styles.add(
+        ParagraphStyle(
+            "SectionHeading",
+            parent=styles["Heading2"],
+            spaceAfter=6 * mm,
+            spaceBefore=10 * mm,
+        )
+    )
+
+    story = []
+
+    story.append(Spacer(1, 40 * mm))
+    story.append(Paragraph(title, styles["Title"]))
+    story.append(Spacer(1, 10 * mm))
+    story.append(Paragraph(f"Prepared for: {org.name}", styles["Normal"]))
+    story.append(Paragraph(f"Project: {process.name}", styles["Normal"]))
+    story.append(
+        Paragraph(
+            f"Date: {fake.date_this_year().strftime('%d %B %Y')}", styles["Normal"]
+        )
+    )
+    story.append(
+        Paragraph(
+            f"Classification: {random.choice(CONFIDENTIALITY_LEVELS)}", styles["Normal"]
+        )
+    )
+    story.append(Spacer(1, 20 * mm))
+
+    meta_data = [
+        ["Document Type", doc_type],
+        ["Commodity", commodity or "N/A"],
+        ["Organisation", org.name or "N/A"],
+        ["Project / Operation", process.name or "N/A"],
+        ["Prepared By", fake.name()],
+        ["Reviewed By", fake.name()],
+    ]
+    meta_table = Table(meta_data, colWidths=[55 * mm, 100 * mm])
+    meta_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#e8e8e8")),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+                ("FONTSIZE", (0, 0), (-1, -1), 9),
+                ("TOPPADDING", (0, 0), (-1, -1), 4),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ]
+        )
+    )
+    story.append(meta_table)
+    story.append(Spacer(1, 30 * mm))
+
+    for heading, paragraphs in sections:
+        story.append(Paragraph(heading, styles["SectionHeading"]))
+        for para_text in paragraphs:
+            story.append(Paragraph(para_text, styles["Normal"]))
+            story.append(Spacer(1, 3 * mm))
+
+    doc.build(story)
+    return file_sha256(str(output_path))
+
 
 def random_point():
     lat = random.uniform(*AU_LAT_RANGE)
@@ -79,6 +187,15 @@ def random_multipolygon():
     )
 
     return MultiPolygon(p, srid=4326)
+
+
+def file_sha256(path: str) -> str:
+    """Compute SHA-256 of file on disk."""
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 def fake_sha256():
@@ -117,6 +234,14 @@ class Command(BaseCommand):
 
         group_count, _ = Group.objects.all().delete()
         self.stdout.write(f"deleted: {group_count} groups")
+
+        docs_dir = Path(settings.MEDIA_ROOT) / "docs"
+        if docs_dir.exists():
+            pdf_count = 0
+            for pdf in docs_dir.glob("*.pdf"):
+                pdf.unlink()
+                pdf_count += 1
+            self.stdout.write(f"deleted: {pdf_count} PDFs (PDF dir: {docs_dir})")
 
         self.stdout.write(self.style.WARNING("flushed app data\n"))
 
@@ -291,7 +416,12 @@ class Command(BaseCommand):
         return tenements
 
     def _create_documents(self, processes, users):
+        media_root = Path(settings.MEDIA_ROOT)
+        docs_dir = media_root / "docs"
+        docs_dir.mkdir(parents=True, exist_ok=True)
+
         docs = []
+
         for proc in processes:
             org_users = [
                 u
@@ -304,15 +434,30 @@ class Command(BaseCommand):
                 org_users = users[:1]
 
             for _ in range(NUM_DOCUMENTS_PER_PROCESS):
+                doc_id = uuid.uuid4()
+                doc_type = random.choice(DOC_TYPES)
+
+                filename = f"{doc_type.lower()}_{doc_id.hex[:8]}.pdf"
+                canonical_path = docs_dir / filename
+                rel_path = f"documents/{filename}"
+
+                checksum = generate_pdf(
+                    doc_type=doc_type,
+                    org=proc.organisation,
+                    process=proc,
+                    commodity=proc.commodity,
+                    output_path=str(canonical_path),
+                )
+
                 d = Document.objects.create(
-                    id=uuid.uuid4(),
+                    id=doc_id,
                     title=fake.sentence(nb_words=5)[:64],
-                    file=f"documents/{fake.file_name(extension='pdf')}",
+                    file=rel_path,
                     tags=sorted(random.sample(TAG_POOL, k=random.randint(1, 4))),
                     timestamp=fake.date_between(start_date="-2y", end_date="today"),
-                    doc_type=random.choice(DOC_TYPES),
+                    doc_type=doc_type,
                     confidentiality=random.choice(CONFIDENTIALITY_LEVELS),
-                    checksum_sha256=fake_sha256(),
+                    checksum_sha256=checksum,
                     created_by=random.choice(org_users),
                     organisation=proc.organisation,
                     process=proc,
@@ -391,6 +536,7 @@ class Command(BaseCommand):
         prospects = self._create_prospects(processes)
         tenements = self._create_tenements(processes)
         docs = self._create_documents(processes, users)
+
         self._create_approval_workflows(docs, users)
         self._create_audit_logs(docs, users)
         self._create_document_views(docs, users)
