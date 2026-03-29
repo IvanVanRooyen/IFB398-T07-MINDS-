@@ -63,9 +63,10 @@
           Automatically generate detailed project reports using AI analysis of documents and data.
         </p>
         <div class="flex gap-2">
-          <button class="flex-1 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700">
+          <a href="{% url 'report_list' %}"
+            class="flex-1 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 text-center">
             Generate Report
-          </button>
+          </a>
         </div>
       </div>
 
@@ -84,18 +85,48 @@
           Analyze documents to extract commodity information, dates, and key findings.
         </p>
         <div class="flex gap-2">
-          <button class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+          <a href="{% url 'document_analysis_page' %}"
+            class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-center">
             Analyze Documents
-          </button>
+          </a>
         </div>
       </div>
+    </div>
 
+    <!-- Recently Generated Reports -->
+    <div class="mb-8 bg-white rounded-xl shadow-lg overflow-hidden">
+      <div class="p-4 border-b">
+        <h2 class="text-lg font-semibold">Recently Generated Reports</h2>
+      </div>
+
+      {% if recent_reports %}
+        <div class="divide-y">
+          {% for report in recent_reports %}
+            <div class="p-4 hover:bg-gray-50 flex items-center justify-between">
+              <div class="flex-1">
+                <h3 class="font-medium text-gray-900">{{ report.title }}</h3>
+                <p class="text-sm text-gray-600">
+                  {{ report.created_at|date:"M d, Y" }}
+                </p>
+              </div>
+              <a href="{% url 'report_detail' report.id %}"
+                class="px-3 py-1 text-cyan-600 hover:underline text-sm">
+                View
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="p-8 text-center text-gray-500">
+          <p>No reports generated yet</p>
+        </div>
+      {% endif %}
     </div>
 
     <!-- Recent Projects for Report Generation -->
     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
       <div class="bg-gradient-to-r from-cyan-600 to-blue-600 text-white p-4">
-        <h2 class="text-xl font-semibold">Generate Reports for Projects</h2>
+        <h2 class="text-xl font-semibold">Generate Reports by Projects</h2>
       </div>
 
       {% if recent_projects %}
@@ -141,9 +172,13 @@
                     View
                   </a>
                 {% endif %}
-                <button class="px-3 py-1 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 text-sm">
-                  Analyze
-                </button>
+                <form method="post" action="{% url 'analyze_document' doc.id %}">
+                  {% csrf_token %}
+                  <button type="submit"
+                          class="px-3 py-1 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 text-sm">
+                    Analyze
+                  </button>
+                </form>
               </div>
             </div>
           {% endfor %}

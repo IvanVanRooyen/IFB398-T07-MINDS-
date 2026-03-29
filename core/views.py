@@ -1,5 +1,6 @@
 # core/views.py
 from __future__ import annotations
+from pydoc import doc
 
 from django.apps import apps
 from django.contrib.auth.decorators import login_required
@@ -9,6 +10,8 @@ from django.db.models import Q
 from django.http import Http404, HttpResponse, JsonResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_http_methods
+from django.shortcuts import render, redirect
+from django.contrib import messages
 
 from core.ai.report_service import generate_project_report
 from .ai.granite_client import GraniteClient
@@ -117,11 +120,14 @@ def upload_doc(request):
             # Only set if user is authenticated (created_by is nullable)
             if request.user.is_authenticated:
                 doc.created_by = request.user
+            
+            # Give extracted text a safe default in case extraction fails, to avoid null issues in search
+            doc.extracted_text = ""
 
             if doc.file:
                 # Important: call sha256_file on the uploaded file *before* saving
                 doc.checksum_sha256 = sha256_file(doc.file)
-                doc.extracted_text = extract_text(doc.file)
+                doc.extracted_text = extract_text(doc.file) or ""
 
             if doc.checksum_sha256 and Document.objects.filter(
                 checksum_sha256=doc.checksum_sha256
@@ -137,6 +143,21 @@ def upload_doc(request):
                         "error": "Duplicate file detected (checksum match).",
                     },
                 )
+
+            doc.extracted_text = doc.extracted_text or ""
+
+            #Debug
+            print("BEFORE SAVE extracted_text:", repr(doc.extracted_text))
+            print("BEFORE SAVE type:", type(doc.extracted_text))
+            print("BEFORE SAVE dict:", {
+                "title": doc.title,
+                "doc_type": doc.doc_type,
+                "confidentiality": doc.confidentiality,
+                "organisation_id": doc.organisation_id,
+                "process_id": doc.process_id,
+                "created_by_id": doc.created_by_id,
+                "extracted_text": repr(doc.extracted_text),
+            })
 
             doc.save()
             # form.save_m2m()
@@ -161,7 +182,7 @@ def upload_doc(request):
             # Show validation errors + keep the recent docs list
             # Show *why* it failed
             log.warning("Upload invalid: %s", form.errors)
-            docs = Document.objects.order_by("created_at")[:20]
+            docs = Document.objects.order_by("-created_at")[:20]
             return render(
                 request,
                 "core/upload.html",
@@ -495,3 +516,40 @@ def geojson_drillholes(request):
 
     import json
     return JsonResponse(json.loads(geojson_data), safe=False)
+
+# ---------- AI Report Generation & Document Analysis Pages ----------
+def report_list_page(request):
+    return render(request, "core/report_list.html", {
+        "recent_reports": [],
+        "recent_projects": [],
+    })
+
+
+def generate_report(request):
+    if request.method == "POST":
+        messages.success(request, "Report generation started.")
+    return redirect("report_list")
+
+
+def report_detail(request, report_id):
+    return render(request, "core/report_detail.html", {
+        "report_id": report_id,
+    })
+
+
+def document_analysis_page(request):
+    return render(request, "core/document_analysis.html", {
+        "recent_docs": [],
+    })
+
+
+def analyze_document(request, pk):
+    if request.method == "POST":
+        messages.success(request, f"Analysis started for document {pk}.")
+    return redirect("ai_insights")
+
+
+def document_analysis_detail(request, pk):
+    return render(request, "core/document_analysis_detail.html", {
+        "doc_id": pk,
+    })

@@ -16,6 +16,14 @@ urlpatterns = [
     path("upload/", views.upload_doc, name="upload"),
     path("ai/report/<uuid:process_id>/", views.project_report, name="project_report"),
 
+    # AI Routes
+    path("ai/reports/", views.report_list_page, name="report_list"),
+    path("ai/reports/generate/", views.generate_report, name="generate_report"),
+    path("ai/reports/<uuid:report_id>/", views.report_detail, name="report_detail"),
+    path("ai/documents/analysis/", views.document_analysis_page, name="document_analysis_page"),
+    path("ai/documents/<uuid:pk>/analyze/", views.analyze_document, name="analyze_document"),
+    path("ai/documents/<uuid:pk>/analysis/", views.document_analysis_detail, name="document_analysis_detail"),
+
     # GeoJSON API endpoints for the map viewer
     path("api/geojson/projects/", views.geojson_projects, name="geojson_projects"),
     path("api/geojson/tenements/", views.geojson_tenements, name="geojson_tenements"),
