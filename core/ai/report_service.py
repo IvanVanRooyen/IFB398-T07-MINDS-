@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 from datetime import datetime
 from typing import Iterable
 
@@ -8,6 +9,24 @@ from django.utils.timezone import localtime
 from ..models import Process, Document
 from .granite_client import GraniteClient
 from .retrieval import retrieve_context
+
+log = logging.getLogger(__name__)
+
+# clearance hierarchy — mirrors UserProfile.ClearanceLevel and retrieval.py
+CLEARANCE_LEVELS = {
+    "PUBLIC": 0,
+    "INTERNAL": 1,
+    "CONFIDENTIAL": 2,
+    "JORC_APPROVED": 3,
+}
+
+# doc confidentiality field values used in the Document model
+CONFIDENTIALITY_MAP = {
+    "public": 0,
+    "internal": 1,
+    "confidential": 2,
+    "jorc_restricted": 3,
+}
 
 def _fmt_dt(dt):
     if not dt:
@@ -20,19 +39,27 @@ def _fmt_dt(dt):
 def _fmt_user(user):
     if not user:
         return ""
-    # Prefer username if available
     return getattr(user, "username", str(user))
 
-def fetch_process_bundle(process_id: str) -> dict:
+def fetch_process_bundle(process_id: str, clearance_level: str = "INTERNAL") -> dict:
     """
-    Fetch the project (Process) and a small slice of related documents.
-    Keep it light for now; schema-aligned version.
+    Fetch the project (Process) and a clearance-filtered slice of related documents.
+
+    Only documents whose confidentiality level is accessible to the caller's
+    clearance_level are included.  This prevents higher-clearance content from
+    appearing in reports cached for lower-clearance users.
     """
     proc = Process.objects.select_related("organisation").get(pk=process_id)
 
+    user_level = CLEARANCE_LEVELS.get(clearance_level, 1)
+    accessible_confidentiality = [
+        conf for conf, level in CONFIDENTIALITY_MAP.items()
+        if level <= user_level
+    ]
+
     docs: QuerySet[Document] = (
         Document.objects
-        .filter(process=proc)
+        .filter(process=proc, confidentiality__in=accessible_confidentiality)
         .select_related("created_by", "organisation", "process")
         .order_by("-timestamp", "-created_at")[:50]
         .only(
@@ -124,20 +151,24 @@ Style:
 - Keep to ~400–700 words.
 """
 
-def generate_project_report(process_id: str) -> str:
+def generate_project_report(process_id: str, clearance_level: str = "INTERNAL") -> str:
     """
     Orchestrates: fetch → structure → call Granite → return Markdown.
+
+    Only documents and chunks accessible at clearance_level are included,
+    ensuring cached reports are correctly scoped per clearance tier.
     """
-    bundle = fetch_process_bundle(process_id)
+    bundle = fetch_process_bundle(process_id, clearance_level=clearance_level)
     p = bundle["process"]
 
     # Structured metadata context
     metadata_ctx = build_structured_context(bundle)
 
-    # Retrieved document content chunks
+    # Retrieved document content chunks (scoped to same clearance level)
     content_ctx = retrieve_context(
         query=f"{p.name or ''} {p.commodity or ''}".strip(),
         process=p,
+        clearance_level=clearance_level,
         max_chunks=8
     )
 
@@ -148,8 +179,9 @@ def generate_project_report(process_id: str) -> str:
     try:
         text = client.complete(prompt)
         return text
-    except Exception:
-      return f"""# {p.name or "Project"} - Auto Report (Fallback)
+    except Exception as e:
+        log.error("Granite call failed for process %s: %s", process_id, e, exc_info=True)
+        return f"""# {p.name or "Project"} - Auto Report (Fallback)
 
 Granite unavailable. Minimal context below:
 
@@ -159,4 +191,3 @@ Granite unavailable. Minimal context below:
 
 You can retry when the model service is reachable.
 """
-

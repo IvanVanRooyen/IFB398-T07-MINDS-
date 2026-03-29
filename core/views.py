@@ -13,9 +13,12 @@ from django.views.decorators.http import require_GET, require_http_methods
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
+from django.core.cache import cache
+
 from core.ai.report_service import generate_project_report
 from .ai.granite_client import GraniteClient
 
+from types import SimpleNamespace
 import logging
 
 # Exporting report
@@ -113,9 +116,49 @@ def stats_partial(request):
     return render(request, "core/partials/stats.html", ctx)
 
 
+# ---------- Cache keys ----------
+
+DOCS_CACHE_KEY = "docs:unfiltered:page1:v1"
+DOCS_CACHE_TTL = 120  # 2 minutes
+
 # ---------- Documents ----------
 
 log = logging.getLogger(__name__)
+
+
+def _get_clearance_level(request) -> str:
+    """return the requesting user's clearance level string, defaulting to PUBLIC"""
+    if request.user.is_authenticated and hasattr(request.user, "profile"):
+        return request.user.profile.clearance_level
+    return "PUBLIC"
+
+
+def _report_cache_key(process_id: str, clearance_level: str, latest_doc_ts) -> str:
+    doc_fingerprint = latest_doc_ts.strftime("%Y%m%d%H%M%S%f") if latest_doc_ts else "empty"
+    return f"report:v1:{process_id}:{clearance_level}:{doc_fingerprint}"
+
+
+def _get_cached_report_md(process_id: str, clearance_level: str) -> str:
+    """
+    return the cached report markdown for this project + clearance combination, generating and caching if not already existing
+
+    cache key includes a content fingerprint (latest document upload timestamp)
+    so the cache self-invalidates whenever a new document is added to the project
+    """
+    latest_doc_ts = (
+        Document.objects
+        .filter(process_id=process_id)
+        .order_by("-created_at")
+        .values_list("created_at", flat=True)
+        .first()
+    )
+    cache_key = _report_cache_key(process_id, clearance_level, latest_doc_ts)
+
+    md = cache.get(cache_key)
+    if md is None:
+        md = generate_project_report(process_id, clearance_level=clearance_level)
+        cache.set(cache_key, md, 86400)  # 24 hours
+    return md
 
 # @login_required
 @require_http_methods(["GET", "POST"])
@@ -187,7 +230,25 @@ def upload_doc(request):
                     )
                     for i, chunk in enumerate(chunks)
                 ])
-                
+
+            # Invalidate the unfiltered document list cache so the new doc appears immediately
+            cache.delete(DOCS_CACHE_KEY)
+
+            # Pre-warm the report cache for this project (shifts LLM wait to upload time)
+            if doc.process:
+                uploader_clearance = _get_clearance_level(request)
+                warm_cache_key = _report_cache_key(
+                    str(doc.process_id), uploader_clearance, doc.created_at
+                )
+                try:
+                    warmed = generate_project_report(
+                        str(doc.process_id), clearance_level=uploader_clearance
+                    )
+                    cache.set(warm_cache_key, warmed, 86400)
+                except Exception:
+                    # Granite unavailable — report will be generated on first view request
+                    pass
+
             return redirect("upload")
         else:
             # Show validation errors + keep the recent docs list
@@ -274,8 +335,44 @@ def documents(request):
  
     filters_active = any(request.GET.get(f) for f in
                          ["q", "process", "date_from", "date_to", "doc_type", "confidentiality", "tag"])
-    
+
+    page_num = request.GET.get("page", "1")
+
+    # Serve from cache for the default view (no filters, page 1)
+    if not filters_active and page_num == "1":
+        cached = cache.get(DOCS_CACHE_KEY)
+        if cached is not None:
+            # Reconstruct a Page-like proxy from the cached dict so the template
+            # interface (page.object_list, page.has_next, etc.) works unchanged.
+            page_proxy = SimpleNamespace(
+                object_list=cached["docs"],
+                has_other_pages=cached["has_next"] or cached["has_previous"],
+                has_previous=cached["has_previous"],
+                has_next=cached["has_next"],
+                number=1,
+                paginator=SimpleNamespace(num_pages=cached["num_pages"]),
+                previous_page_number=cached["prev_page_number"],
+                next_page_number=cached["next_page_number"],
+            )
+            return render(request, "core/documents.html", {
+                "form": form,
+                "page": page_proxy,
+                "q": "",
+                "filters_active": False,
+            })
+
     page = _paginate(qs, request, per_page=24)
+
+    # cache only the unfiltered page-1 result abd Store a plain dict rather than the Page object to avoid serialising the full queryset into Redis
+    if not filters_active and page_num == "1":
+        cache.set(DOCS_CACHE_KEY, {
+            "docs": list(page.object_list),
+            "num_pages": page.paginator.num_pages,
+            "has_next": page.has_next(),
+            "has_previous": page.has_previous(),
+            "next_page_number": page.next_page_number() if page.has_next() else None,
+            "prev_page_number": page.previous_page_number() if page.has_previous() else None,
+        }, DOCS_CACHE_TTL)
 
     return render(request, "core/documents.html", {
         "form": form,
@@ -309,6 +406,9 @@ def delete_document(request, pk):
     try:
         # The delete() method on the model will handle file deletion from MinIO
         doc.delete()
+
+        # Invalidate the document list cache so the deletion is reflected immediately
+        cache.delete(DOCS_CACHE_KEY)
 
         # Return JSON response for HTMX/AJAX requests
         if request.headers.get('HX-Request'):
@@ -407,12 +507,13 @@ def healthcheck(request):
 
 @require_GET
 def project_report(request, process_id: str):
-    # Validate the project exists early
     if not Process.objects.filter(pk=process_id).exists():
         raise Http404("Project not found")
 
+    clearance_level = _get_clearance_level(request)
+
     try:
-        md = generate_project_report(process_id)
+        md = _get_cached_report_md(process_id, clearance_level)
     except Exception as e:
         log.error("Report generation failed: %s", e)
         md = f"Report generation failed: {e}"
@@ -420,11 +521,9 @@ def project_report(request, process_id: str):
     if not md:
         md = "Report returned empty — check logs."
 
-    # Choose JSON if requested
     if request.GET.get("format") == "json":
         return JsonResponse({"markdown": md})
 
-    # Minimal HTML wrapper
     return HttpResponse(
         f"<html><body><pre style='white-space:pre-wrap'>{md}</pre></body></html>",
         content_type="text/html",
@@ -435,7 +534,8 @@ def project_report_pdf(request, process_id: str):
     if not Process.objects.filter(pk=process_id).exists():
         raise Http404("Project not found")
 
-    md_text = generate_project_report(process_id)
+    clearance_level = _get_clearance_level(request)
+    md_text = _get_cached_report_md(process_id, clearance_level)
     process = Process.objects.get(pk=process_id)
 
     buf = io.BytesIO()
@@ -481,7 +581,8 @@ def project_report_docx(request, process_id: str):
     if not Process.objects.filter(pk=process_id).exists():
         raise Http404("Project not found")
 
-    md_text = generate_project_report(process_id)
+    clearance_level = _get_clearance_level(request)
+    md_text = _get_cached_report_md(process_id, clearance_level)
     process = Process.objects.get(pk=process_id)
 
     doc = DocxDocument()
