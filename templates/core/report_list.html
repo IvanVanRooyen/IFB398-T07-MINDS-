@@ -25,8 +25,11 @@
       <a href="{% url 'tenements' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
         🗺️ <span>Tenements</span>
       </a>
-      <a href="{% url 'ai_insights' %}" class="flex items-center gap-2 p-3 rounded-lg bg-cyan-100 text-gray-800 font-medium">
-        🤖 <span>AI Insights</span>
+      <a href="{% url 'ai_insights' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        📊 <span>Reporting</span>
+      </a>
+      <a href="{% url 'document_analysis_page' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🔍 <span>Document Analysis</span>
       </a>
       <a href="{% url 'map_view' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
         🗺️ <span>Map</span>
@@ -67,6 +70,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Report Title</label>
                 <input
                   type="text"
+                  id="report-title-input"
                   placeholder="Enter report title"
                   class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 >
@@ -86,11 +90,11 @@
 
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Project / Process</label>
-                <select class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
-                  <option>Select linked project or process</option>
-                  <option>Alpha Prospect</option>
-                  <option>West Ridge Operation</option>
-                  <option>North Basin Exploration</option>
+                <select id="project-select" class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                  <option value="">Select linked project or process</option>
+                  {% for project in recent_projects %}
+                  <option value="{{ project.id }}">{{ project.name }}</option>
+                  {% endfor %}
                 </select>
               </div>
 
@@ -127,16 +131,17 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
               <input
                 type="text"
+                id="doc-search"
                 placeholder="Search files..."
                 class="md:col-span-2 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
               >
 
-              <select class="rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
-                <option>All Document Types</option>
-                <option>PDF</option>
-                <option>Report</option>
-                <option>Survey</option>
-                <option>Compliance</option>
+              <select id="doc-type-filter" class="rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                <option value="all">All Document Types</option>
+                <option value="pdf">PDF</option>
+                <option value="report">Report</option>
+                <option value="survey">Survey</option>
+                <option value="compliance">Compliance</option>
               </select>
 
               <select class="rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
@@ -148,30 +153,25 @@
             </div>
 
             <!-- File List -->
-            <div class="space-y-3">
-              <label class="flex items-start gap-3 p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer">
-                <input type="checkbox" class="mt-1 rounded border-gray-300 text-cyan-600">
-                <div>
-                  <p class="text-sm font-semibold text-gray-900">Placeholder document</p>
-                  <p class="text-xs text-gray-500">Placeholder date</p>
+            <div id="file-list" class="space-y-3 max-h-96 overflow-y-auto">
+              {% for doc in all_documents %}
+              <label class="flex items-start gap-3 p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer"
+                     data-title="{{ doc.title|lower }}"
+                     data-doctype="{{ doc.doc_type|lower }}"
+                     data-created="{{ doc.created_at|date:'Y-m-d' }}">
+                <input type="checkbox" class="mt-1 rounded border-gray-300 text-cyan-600 doc-checkbox" value="{{ doc.id }}">
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold text-gray-900 truncate">{{ doc.title }}</p>
+                  <p class="text-xs text-gray-500">
+                    {{ doc.doc_type|default:"Document" }}
+                    {% if doc.process %} &mdash; {{ doc.process.name }}{% endif %}
+                    &mdash; {{ doc.created_at|date:"d M Y" }}
+                  </p>
                 </div>
               </label>
-
-              <label class="flex items-start gap-3 p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer">
-                <input type="checkbox" class="mt-1 rounded border-gray-300 text-cyan-600">
-                <div>
-                  <p class="text-sm font-semibold text-gray-900">Placeholder document</p>
-                  <p class="text-xs text-gray-500">Placeholder date</p>
-                </div>
-              </label>
-
-              <label class="flex items-start gap-3 p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer">
-                <input type="checkbox" class="mt-1 rounded border-gray-300 text-cyan-600">
-                <div>
-                  <p class="text-sm font-semibold text-gray-900">Placeholder document</p>
-                  <p class="text-xs text-gray-500">Placeholder date</p>
-                </div>
-              </label>
+              {% empty %}
+              <p class="text-sm text-gray-500 py-4 text-center">No documents available.</p>
+              {% endfor %}
             </div>
           </div>
 
@@ -202,9 +202,14 @@
             </div>
 
             <div class="mt-6 flex justify-end">
-              <button class="inline-flex items-center rounded-lg bg-cyan-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-cyan-700">
-                Generate Report
-              </button>
+              <form id="generate-form" method="POST" action="{% url 'generate_report' %}">
+                {% csrf_token %}
+                <input type="hidden" name="process_id" id="hidden-process-id" value="">
+                <input type="hidden" name="report_title" id="hidden-report-title" value="">
+                <button type="submit" class="inline-flex items-center rounded-lg bg-cyan-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-cyan-700 disabled:opacity-50">
+                  Generate Report
+                </button>
+              </form>
             </div>
           </div>
 
@@ -246,31 +251,19 @@
           <!-- Recent Reports -->
           <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
             <h2 class="text-lg font-semibold text-gray-900 mb-4">Recent Reports</h2>
-            <div class="space-y-3">
-              <div class="rounded-lg border border-gray-200 p-3">
-                <p class="text-sm font-medium text-gray-900"></p>
-                <p class="text-xs text-gray-500"></p>
-              </div>
-              <div class="rounded-lg border border-gray-200 p-3">
-                <p class="text-sm font-medium text-gray-900"></p>
-                <p class="text-xs text-gray-500"></p>
-              </div>
+            <div class="space-y-2">
+              {% for report in recent_reports %}
+              <a href="{% url 'saved_report_editor' report.id %}"
+                 class="block p-3 rounded-lg hover:bg-gray-50 border border-gray-200">
+                <p class="text-sm font-medium text-gray-800 truncate">{{ report.title }}</p>
+                <p class="text-xs text-gray-500">{{ report.created_at|date:"d M Y" }}{% if report.process %} &mdash; {{ report.process.name }}{% endif %}</p>
+              </a>
+              {% empty %}
+              <p class="text-sm text-gray-500">No saved reports yet.</p>
+              {% endfor %}
             </div>
           </div>
 
-        </div>
-      </div>
-
-      <!-- Generated Report Output -->
-      <div class="mt-8 bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-        <h2 class="text-xl font-semibold text-gray-900 mb-4">Generated Report</h2>
-        <div class="rounded-xl bg-gray-50 border border-gray-200 p-5">
-          <p class="text-sm text-gray-600 mb-3">
-            Generated report content will go here.
-          </p>
-          <p class="text-sm text-gray-700">
-            Report content will be displayed here once generated.
-          </p>
         </div>
       </div>
 
@@ -278,5 +271,53 @@
   </main>
 
 </div>
+
+<script>
+  // ── Document list filtering 
+  const fileList     = document.getElementById("file-list");
+  const searchInput  = document.getElementById("doc-search");
+  const typeSelect   = document.getElementById("doc-type-filter");
+
+  function filterDocs() {
+    const query   = searchInput  ? searchInput.value.toLowerCase()  : "";
+    const docType = typeSelect   ? typeSelect.value.toLowerCase()    : "";
+    if (!fileList) return;
+    fileList.querySelectorAll("label[data-title]").forEach(function (row) {
+      const titleMatch = !query   || row.dataset.title.includes(query);
+      const typeMatch  = !docType || row.dataset.doctype === docType || docType === "all";
+      row.style.display = (titleMatch && typeMatch) ? "" : "none";
+    });
+  }
+
+  if (searchInput) searchInput.addEventListener("input", filterDocs);
+  if (typeSelect)  typeSelect.addEventListener("change", filterDocs);
+
+  // ── Project selector
+  const projectSelect    = document.getElementById("project-select");
+  const hiddenProcessId  = document.getElementById("hidden-process-id");
+  const hiddenTitle      = document.getElementById("hidden-report-title");
+  const titleInput       = document.getElementById("report-title-input");
+  const generateForm     = document.getElementById("generate-form");
+
+  if (projectSelect && hiddenProcessId) {
+    projectSelect.addEventListener("change", function () {
+      hiddenProcessId.value = this.value;
+    });
+  }
+
+  if (generateForm) {
+    generateForm.addEventListener("submit", function (e) {
+      if (!hiddenProcessId.value) {
+        e.preventDefault();
+        alert("Please select a project before generating a report.");
+        return false;
+      }
+      // Carry the user-entered title through to the editor (may be empty and we sgould probably put in an edge case for this)
+      if (hiddenTitle && titleInput) {
+        hiddenTitle.value = titleInput.value.trim();
+      }
+    });
+  }
+</script>
 
 {% endblock %}

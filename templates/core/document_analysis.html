@@ -1,6 +1,121 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="p-6">
-  <h1 class="text-2xl font-bold">Page connected</h1>
+{% load static %}
+<div class="flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white shadow-md hidden md:flex flex-col">
+    <div class="px-4 py-3 border-b flex items-center gap-3">
+      <img src="{% static 'img/logo.png' %}" alt="OreFox" class="h-14 w-14 object-contain translate-y-2.5">
+      <span class="text-xl font-semibold text-cyan-600">OreFox KMS</span>
+    </div>
+    <nav class="flex-1 p-4 space-y-2">
+      <a href="{% url 'dashboard' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🏠 <span>Dashboard</span>
+      </a>
+      <a href="{% url 'documents' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        📄 <span>Documents</span>
+      </a>
+      <a href="{% url 'prospects' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        💎 <span>Prospects</span>
+      </a>
+      <a href="{% url 'drillholes' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🧱 <span>Drillholes</span>
+      </a>
+      <a href="{% url 'tenements' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🗺️ <span>Tenements</span>
+      </a>
+      <a href="{% url 'ai_insights' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        📊 <span>Reporting</span>
+      </a>
+      <a href="{% url 'document_analysis_page' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium bg-cyan-100">
+        🔍 <span>Document Analysis</span>
+      </a>
+      <a href="{% url 'map_view' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🗺️ <span>Map</span>
+      </a>
+    </nav>
+    <div class="p-4 border-t text-sm text-gray-600 flex flex-col gap-3">
+      <div>Logged in as <span class="font-medium">{{ request.user.username }}</span></div>
+      <a href="/admin/"
+         class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-cyan-600 rounded-lg hover:bg-cyan-700 transition">
+        ⚙️ Admin Panel
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6 bg-gray-50">
+
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold">🔍 Document Analysis</h1>
+      <p class="text-gray-600 mt-2">Extract key insights, commodity information, and findings from documents</p>
+    </div>
+
+    <!-- Feature Card -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-2xl">
+          🔍
+        </div>
+        <div>
+          <h2 class="text-xl font-semibold">Document Analysis</h2>
+          <p class="text-sm text-gray-600">Extract key insights</p>
+        </div>
+      </div>
+      <p class="text-gray-700">
+        Analyze documents to extract commodity information, dates, and key findings using the Granite AI model.
+        Select a document below and click <strong>Analyze</strong> to begin.
+      </p>
+    </div>
+
+    <!-- Documents for Analysis -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+      <div class="p-4 border-b flex items-center justify-between">
+        <h2 class="text-lg font-semibold">Documents</h2>
+        <span class="text-sm text-gray-500">{{ recent_docs|length }} document{{ recent_docs|length|pluralize }}</span>
+      </div>
+
+      {% if recent_docs %}
+        <div class="divide-y">
+          {% for doc in recent_docs %}
+            <div class="p-4 hover:bg-gray-50 flex items-center justify-between">
+              <div class="flex-1 min-w-0 mr-4">
+                <h3 class="font-medium text-gray-900 truncate">{{ doc.title }}</h3>
+                <p class="text-sm text-gray-600">
+                  {{ doc.doc_type|default:"Document" }}
+                  {% if doc.process %} &mdash; {{ doc.process.name }}{% endif %}
+                  &mdash; {{ doc.created_at|date:"d M Y" }}
+                </p>
+              </div>
+              <div class="flex gap-2 flex-shrink-0">
+                {% if doc.file %}
+                  <a href="{{ doc.file.url }}" target="_blank"
+                     class="px-3 py-1 text-cyan-600 hover:underline text-sm">
+                    View
+                  </a>
+                {% endif %}
+                <form method="post" action="{% url 'analyze_document' doc.id %}">
+                  {% csrf_token %}
+                  <button type="submit"
+                          class="px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm">
+                    Analyze
+                  </button>
+                </form>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="p-8 text-center text-gray-500">
+          <p>No documents available for analysis.</p>
+          <a href="{% url 'upload' %}" class="mt-3 inline-block text-sm text-cyan-600 hover:underline">
+            Upload a document
+          </a>
+        </div>
+      {% endif %}
+    </div>
+
+  </main>
 </div>
 {% endblock %}
