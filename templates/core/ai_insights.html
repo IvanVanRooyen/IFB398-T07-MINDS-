@@ -26,7 +26,10 @@
         🗺️ <span>Tenements</span>
       </a>
       <a href="{% url 'ai_insights' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium bg-cyan-100">
-        🤖 <span>AI Insights</span>
+        📊 <span>Reporting</span>
+      </a>
+      <a href="{% url 'document_analysis_page' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🔍 <span>Document Analysis</span>
       </a>
       <a href="{% url 'map_view' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
         🗺️ <span>Map</span>
@@ -43,8 +46,8 @@
   <main class="flex-1 p-6 bg-gray-50">
 
     <div class="mb-6">
-      <h1 class="text-3xl font-bold">🤖 AI Insights</h1>
-      <p class="text-gray-600 mt-2">AI-powered analysis and report generation</p>
+      <h1 class="text-3xl font-bold">📊 Reporting</h1>
+      <p class="text-gray-600 mt-2">AI-powered report generation</p>
     </div>
 
     <!-- Feature Cards -->
@@ -71,28 +74,6 @@
           </a>
         </div>
       </div>
-
-      <!-- Document Analysis -->
-      <div class="bg-white rounded-xl shadow-lg p-6">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-2xl">
-            🔍
-          </div>
-          <div>
-            <h2 class="text-xl font-semibold">Document Analysis</h2>
-            <p class="text-sm text-gray-600">Extract key insights</p>
-          </div>
-        </div>
-        <p class="text-gray-700 mb-4">
-          Analyze documents to extract commodity information, dates, and key findings.
-        </p>
-        <div class="flex gap-2">
-          <a href="{% url 'document_analysis_page' %}"
-            class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-center">
-            Analyze Documents
-          </a>
-        </div>
-      </div>
     </div>
 
     <!-- Recently Generated Reports -->
@@ -108,12 +89,12 @@
               <div class="flex-1">
                 <h3 class="font-medium text-gray-900">{{ report.title }}</h3>
                 <p class="text-sm text-gray-600">
-                  {{ report.created_at|date:"M d, Y" }}
+                  {{ report.created_at|date:"M d, Y, g:i a" }}{% if report.process %} &mdash; {{ report.process.name }}{% endif %}
                 </p>
               </div>
-              <a href="{% url 'report_detail' report.id %}"
+              <a href="{% url 'saved_report_editor' report.id %}"
                 class="px-3 py-1 text-cyan-600 hover:underline text-sm">
-                View
+                Open
               </a>
             </div>
           {% endfor %}
@@ -140,10 +121,13 @@
                 <p class="text-sm text-gray-600">{{ project.mode }} • {{ project.commodity|default:"No commodity" }}</p>
               </div>
               <div class="flex gap-2">
-                <a href="{% url 'project_report' project.id %}"
-                  class="px-3 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 text-sm">
-                  Preview
-                </a>
+                <form method="POST" action="{% url 'generate_report' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="process_id" value="{{ project.id }}">
+                  <button type="submit" class="px-3 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 text-sm">
+                    Preview
+                  </button>
+                </form>
                 <a href="{% url 'project_report_pdf' project.id %}"
                   class="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
                   PDF ↓
@@ -160,44 +144,6 @@
         <div class="p-8 text-center text-gray-500">
           <p class="mb-2">No projects available</p>
           <p class="text-sm">Create a project in the admin panel to generate reports</p>
-        </div>
-      {% endif %}
-    </div>
-
-    <!-- Recent Documents -->
-    <div class="mt-8 bg-white rounded-xl shadow-lg overflow-hidden">
-      <div class="p-4 border-b">
-        <h2 class="text-lg font-semibold">Recent Documents for Analysis</h2>
-      </div>
-
-      {% if recent_docs %}
-        <div class="divide-y">
-          {% for doc in recent_docs %}
-            <div class="p-4 hover:bg-gray-50 flex items-center justify-between">
-              <div class="flex-1">
-                <h3 class="font-medium text-gray-900">{{ doc.title }}</h3>
-                <p class="text-sm text-gray-600">{{ doc.doc_type|default:"Document" }} • {{ doc.created_at|date:"M d, Y" }}</p>
-              </div>
-              <div class="flex gap-2">
-                {% if doc.file %}
-                  <a href="{{ doc.file.url }}" target="_blank" class="px-3 py-1 text-cyan-600 hover:underline text-sm">
-                    View
-                  </a>
-                {% endif %}
-                <form method="post" action="{% url 'analyze_document' doc.id %}">
-                  {% csrf_token %}
-                  <button type="submit"
-                          class="px-3 py-1 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 text-sm">
-                    Analyze
-                  </button>
-                </form>
-              </div>
-            </div>
-          {% endfor %}
-        </div>
-      {% else %}
-        <div class="p-8 text-center text-gray-500">
-          <p>No documents available for analysis</p>
         </div>
       {% endif %}
     </div>

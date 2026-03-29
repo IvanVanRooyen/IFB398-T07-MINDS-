@@ -371,6 +371,41 @@ class UserProfile(models.Model):
         return user_level >= doc_level
 
 
+class SavedReport(models.Model):
+    """An AI generated report, editable and savable into the database."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    process = models.ForeignKey(
+        Process, on_delete=models.SET_NULL, null=True, blank=True, related_name="saved_reports"
+    )
+    organisation = models.ForeignKey(
+        Organisation, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    title = models.CharField(max_length=256)
+    content_md = models.TextField()
+    clearance_level = models.CharField(
+        max_length=32,
+        choices=UserProfile.ClearanceLevel.choices,
+        default="INTERNAL",
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "saved_reports"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.title} ({self.created_at:%Y-%m-%d})"
+
+
 # Autocreate profile when user is created
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, raw, **kwargs):

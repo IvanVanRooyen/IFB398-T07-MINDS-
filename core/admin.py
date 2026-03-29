@@ -4,7 +4,7 @@ from django.contrib.gis.admin import GISModelAdmin
 
 from .models import (
     Process, Document, Organisation, Prospect, Tenement, Drillhole,
-    UserProfile, AuditLog, ApprovalWorkflow, DocumentView
+    UserProfile, AuditLog, ApprovalWorkflow, DocumentView, SavedReport
 )
 
 # CORE MODELS ---------------------------------
@@ -106,6 +106,14 @@ class ApprovalWorkflowAdmin(djadmin.ModelAdmin):
             "fields": ("submitted_at", "reviewed_at")
         }),
     )
+
+@djadmin.register(SavedReport)
+class SavedReportAdmin(djadmin.ModelAdmin):
+    list_display  = ("title", "process", "clearance_level", "created_by", "created_at", "updated_at")
+    list_filter   = ("clearance_level", "process__organisation")
+    search_fields = ("title", "process__name")
+    readonly_fields = ("id", "created_at", "updated_at")
+
 
 @djadmin.register(DocumentView)
 class DocumentViewAdmin(djadmin.ModelAdmin):
