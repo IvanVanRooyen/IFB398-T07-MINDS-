@@ -1,6 +1,282 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="p-6">
-  <h1 class="text-2xl font-bold">Page connected</h1>
+
+<div class="flex min-h-screen bg-gray-50">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white shadow-md hidden md:flex flex-col">
+    <div class="p-6 border-b">
+      <h2 class="text-xl font-semibold text-cyan-600">OreFox KMS</h2>
+    </div>
+
+    <nav class="flex-1 p-4 space-y-2">
+      <a href="{% url 'dashboard' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🏠 <span>Dashboard</span>
+      </a>
+      <a href="{% url 'documents' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        📄 <span>Documents</span>
+      </a>
+      <a href="{% url 'prospects' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        💎 <span>Prospects</span>
+      </a>
+      <a href="{% url 'drillholes' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🧱 <span>Drillholes</span>
+      </a>
+      <a href="{% url 'tenements' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🗺️ <span>Tenements</span>
+      </a>
+      <a href="{% url 'ai_insights' %}" class="flex items-center gap-2 p-3 rounded-lg bg-cyan-100 text-gray-800 font-medium">
+        🤖 <span>AI Insights</span>
+      </a>
+      <a href="{% url 'map_view' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
+        🗺️ <span>Map</span>
+      </a>
+    </nav>
+
+    <div class="p-4 border-t">
+      <a href="/admin/" class="block text-center px-4 py-2 text-sm font-semibold text-white bg-cyan-600 rounded-lg hover:bg-cyan-700">
+        ⚙️ Admin Panel
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6">
+    <div class="max-w-7xl mx-auto w-full">
+
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Generate Report</h1>
+        <p class="mt-2 text-sm text-gray-600">
+          Create AI-assisted reports using files and records stored in the system.
+        </p>
+      </div>
+
+      <!-- Main Grid -->
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+
+        <!-- Left/Main Column -->
+        <div class="xl:col-span-2 space-y-6">
+
+          <!-- Report Details -->
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Report Details</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Report Title</label>
+                <input
+                  type="text"
+                  placeholder="Enter report title"
+                  class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                >
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Report Type</label>
+                <select class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                  <option>Exploration Summary</option>
+                  <option>Project Update</option>
+                  <option>Document Summary</option>
+                  <option>Tenement Overview</option>
+                  <option>Risk / Findings Summary</option>
+                  <option>Custom Report</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Project / Process</label>
+                <select class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                  <option>Select linked project or process</option>
+                  <option>Alpha Prospect</option>
+                  <option>West Ridge Operation</option>
+                  <option>North Basin Exploration</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tone / Style</label>
+                <select class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                  <option>Professional</option>
+                  <option>Technical</option>
+                  <option>Executive Summary</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Instructions</label>
+              <textarea
+                rows="4"
+                placeholder="Add any additional instructions for the report..."
+                class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- File Selection -->
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-xl font-semibold text-gray-900">Select Files from Database</h2>
+              <button class="text-sm font-medium text-cyan-600 hover:text-cyan-700">
+                Browse All Files
+              </button>
+            </div>
+
+            <!-- Search / Filters -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <input
+                type="text"
+                placeholder="Search files..."
+                class="md:col-span-2 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              >
+
+              <select class="rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                <option>All Document Types</option>
+                <option>PDF</option>
+                <option>Report</option>
+                <option>Survey</option>
+                <option>Compliance</option>
+              </select>
+
+              <select class="rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                <option>All Dates</option>
+                <option>Last 30 days</option>
+                <option>Last 90 days</option>
+                <option>This year</option>
+              </select>
+            </div>
+
+            <!-- File List -->
+            <div class="space-y-3">
+              <label class="flex items-start gap-3 p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                <input type="checkbox" class="mt-1 rounded border-gray-300 text-cyan-600">
+                <div>
+                  <p class="text-sm font-semibold text-gray-900">Placeholder document</p>
+                  <p class="text-xs text-gray-500">Placeholder date</p>
+                </div>
+              </label>
+
+              <label class="flex items-start gap-3 p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                <input type="checkbox" class="mt-1 rounded border-gray-300 text-cyan-600">
+                <div>
+                  <p class="text-sm font-semibold text-gray-900">Placeholder document</p>
+                  <p class="text-xs text-gray-500">Placeholder date</p>
+                </div>
+              </label>
+
+              <label class="flex items-start gap-3 p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                <input type="checkbox" class="mt-1 rounded border-gray-300 text-cyan-600">
+                <div>
+                  <p class="text-sm font-semibold text-gray-900">Placeholder document</p>
+                  <p class="text-xs text-gray-500">Placeholder date</p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Report Options -->
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Report Options</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label class="flex items-center gap-3">
+                <input type="checkbox" class="rounded border-gray-300 text-cyan-600">
+                <span class="text-sm text-gray-700">Include document metadata</span>
+              </label>
+
+              <label class="flex items-center gap-3">
+                <input type="checkbox" class="rounded border-gray-300 text-cyan-600" checked>
+                <span class="text-sm text-gray-700">Include key findings</span>
+              </label>
+
+              <label class="flex items-center gap-3">
+                <input type="checkbox" class="rounded border-gray-300 text-cyan-600" checked>
+                <span class="text-sm text-gray-700">Include recommendations</span>
+              </label>
+
+              <label class="flex items-center gap-3">
+                <input type="checkbox" class="rounded border-gray-300 text-cyan-600">
+                <span class="text-sm text-gray-700">Include source references</span>
+              </label>
+            </div>
+
+            <div class="mt-6 flex justify-end">
+              <button class="inline-flex items-center rounded-lg bg-cyan-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-cyan-700">
+                Generate Report
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Column -->
+        <div class="space-y-6">
+
+          <!-- Selected Files Summary -->
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Selected Files</h2>
+            <div class="space-y-3 text-sm text-gray-700">
+              <div class="flex justify-between">
+                <span>Files selected</span>
+                <span class="font-semibold">1</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Report type</span>
+                <span class="font-semibold">Exploration Summary</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Project</span>
+                <span class="font-semibold">Project Name</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Report Content -->
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-3">Report Content</h2>
+            <ul class="space-y-2 text-sm text-gray-600">
+              <li>Overview of selected records</li>
+              <li>Summary of key findings</li>
+              <li>Important themes and issues</li>
+              <li>Recommendations based on selected files</li>
+            </ul>
+          </div>
+
+          <!-- Recent Reports -->
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Recent Reports</h2>
+            <div class="space-y-3">
+              <div class="rounded-lg border border-gray-200 p-3">
+                <p class="text-sm font-medium text-gray-900"></p>
+                <p class="text-xs text-gray-500"></p>
+              </div>
+              <div class="rounded-lg border border-gray-200 p-3">
+                <p class="text-sm font-medium text-gray-900"></p>
+                <p class="text-xs text-gray-500"></p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Generated Report Output -->
+      <div class="mt-8 bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Generated Report</h2>
+        <div class="rounded-xl bg-gray-50 border border-gray-200 p-5">
+          <p class="text-sm text-gray-600 mb-3">
+            Generated report content will go here.
+          </p>
+          <p class="text-sm text-gray-700">
+            Report content will be displayed here once generated.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
 </div>
+
 {% endblock %}
