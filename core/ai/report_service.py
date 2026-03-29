@@ -35,7 +35,20 @@ def fetch_process_bundle(process_id: str) -> dict:
         .filter(process=proc)
         .select_related("created_by", "organisation", "process")
         .order_by("-timestamp", "-created_at")[:50]
-        .only("id","title","timestamp","doc_type","confidentiality","file","created_at","checksum_sha256")
+        .only(
+            "id",
+            "title",
+            "timestamp",
+            "doc_type",
+            "confidentiality",
+            "file",
+            "created_at",
+            "checksum_sha256",
+            "extracted_text",
+            "created_by__username",
+            "organisation__name",
+            "process__name",
+        )
     )
 
     return {
