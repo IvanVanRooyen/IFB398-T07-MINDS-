@@ -35,7 +35,7 @@ def fetch_process_bundle(process_id: str) -> dict:
         .filter(process=proc)
         .select_related("created_by", "organisation", "process")
         .order_by("-timestamp", "-created_at")[:50]
-        .only("id","title","timestamp","doc_type","commodity","author","confidentiality","file","created_at","checksum_sha256")
+        .only("id","title","timestamp","doc_type","confidentiality","file","created_at","checksum_sha256")
     )
 
     return {
@@ -63,9 +63,16 @@ def build_structured_context(bundle: dict) -> str:
 
         lines.append(
             "  - {"
-            f"id: {d.id}, title: {d.title!r}, date: {d.timestamp}, type: {d.doc_type}, "
-            f"commodity: {d.commodity or ''}, author: {d.author or ''}, "
-            f"conf: {d.confidentiality}, created_at: {_fmt_dt(d.created_at)}"
+            f"id: {d.id}, "
+            f"title: {d.title!r}, "
+            f"date: {d.timestamp or ''}, "
+            f"type: {d.doc_type or ''}, "
+            f"uploaded_by: {_fmt_user(d.created_by)}, "
+            f"conf: {d.confidentiality or ''}, "
+            f"created_at: {_fmt_dt(d.created_at)}, "
+            f"file: {getattr(d.file, 'name', '')}, "
+            f"checksum: {d.checksum_sha256 or ''}, "
+            f"text_snippet: {snippet!r}"
             "}"
         )
 
