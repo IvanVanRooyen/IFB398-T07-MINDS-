@@ -137,10 +137,20 @@
                 <h3 class="font-semibold text-gray-900">{{ project.name }}</h3>
                 <p class="text-sm text-gray-600">{{ project.mode }} • {{ project.commodity|default:"No commodity" }}</p>
               </div>
-              <a href="{% url 'project_report' project.id %}"
-                 class="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 text-sm whitespace-nowrap">
-                Generate Report →
-              </a>
+              <div class="flex gap-2">
+                <a href="{% url 'project_report' project.id %}"
+                  class="px-3 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 text-sm">
+                  Preview
+                </a>
+                <a href="{% url 'project_report_pdf' project.id %}"
+                  class="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
+                  PDF ↓
+                </a>
+                <a href="{% url 'project_report_docx' project.id %}"
+                  class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+                  DOCX ↓
+                </a>
+              </div>
             </div>
           {% endfor %}
         </div>

@@ -8,3 +8,6 @@ Pillow>=10.0
 requests>=2.31
 pydantic>=2.11   
 pdfplumber
+reportlab>=4.0
+python-docx>=1.1
+markdown>=3.6

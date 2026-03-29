@@ -35,20 +35,7 @@ def fetch_process_bundle(process_id: str) -> dict:
         .filter(process=proc)
         .select_related("created_by", "organisation", "process")
         .order_by("-timestamp", "-created_at")[:50]
-        .only(
-            "id",
-            "title",
-            "timestamp",
-            "doc_type",
-            "confidentiality",
-            "file",
-            "created_at",
-            "checksum_sha256",
-            "extracted_text",
-            "created_by__username",
-            "organisation__name",
-            "process__name",
-        )
+        .only("id","title","timestamp","doc_type","commodity","author","confidentiality","file","created_at","checksum_sha256")
     )
 
     return {
@@ -76,16 +63,9 @@ def build_structured_context(bundle: dict) -> str:
 
         lines.append(
             "  - {"
-            f"id: {d.id}, "
-            f"title: {d.title!r}, "
-            f"date: {d.timestamp or ''}, "
-            f"type: {d.doc_type or ''}, "
-            f"uploaded_by: {_fmt_user(d.created_by)}, "
-            f"conf: {d.confidentiality or ''}, "
-            f"created_at: {_fmt_dt(d.created_at)}, "
-            f"file: {getattr(d.file, 'name', '')}, "
-            f"checksum: {d.checksum_sha256 or ''}, "
-            f"text_snippet: {snippet!r}"
+            f"id: {d.id}, title: {d.title!r}, date: {d.timestamp}, type: {d.doc_type}, "
+            f"commodity: {d.commodity or ''}, author: {d.author or ''}, "
+            f"conf: {d.confidentiality}, created_at: {_fmt_dt(d.created_at)}"
             "}"
         )
 
@@ -136,7 +116,7 @@ def generate_project_report(process_id: str) -> str:
 
     # Retrieved document content chunks
     content_ctx = retrieve_context(
-        query=f"{p.name or ''} {p.commodity or ''}".strip().strip,
+        query=f"{p.name or ''} {p.commodity or ''}".strip(),
         process=p,
         max_chunks=8
     )
@@ -147,6 +127,7 @@ def generate_project_report(process_id: str) -> str:
     client = GraniteClient()
     try:
         text = client.complete(prompt)
+        return text
     except Exception:
       return f"""# {p.name or "Project"} - Auto Report (Fallback)
 

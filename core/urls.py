@@ -15,6 +15,8 @@ urlpatterns = [
 
     path("upload/", views.upload_doc, name="upload"),
     path("ai/report/<uuid:process_id>/", views.project_report, name="project_report"),
+    path("ai/report/<uuid:process_id>/pdf/",  views.project_report_pdf,  name="project_report_pdf"),
+    path("ai/report/<uuid:process_id>/docx/", views.project_report_docx, name="project_report_docx"),
 
     # AI Routes
     path("ai/reports/", views.report_list_page, name="report_list"),

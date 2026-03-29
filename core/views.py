@@ -18,6 +18,17 @@ from .ai.granite_client import GraniteClient
 
 import logging
 
+# Exporting report
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.enums import TA_LEFT
+from docx import Document as DocxDocument
+from docx.shared import Pt, RGBColor
+import re, io
+
 from .forms import DocumentForm, DocumentSearchForm
 from .models import Document, Process
 from .utils import sha256_file, extract_text, chunk_text
@@ -400,7 +411,14 @@ def project_report(request, process_id: str):
     if not Process.objects.filter(pk=process_id).exists():
         raise Http404("Project not found")
 
-    md = generate_project_report(process_id)
+    try:
+        md = generate_project_report(process_id)
+    except Exception as e:
+        log.error("Report generation failed: %s", e)
+        md = f"Report generation failed: {e}"
+
+    if not md:
+        md = "Report returned empty — check logs."
 
     # Choose JSON if requested
     if request.GET.get("format") == "json":
@@ -411,6 +429,92 @@ def project_report(request, process_id: str):
         f"<html><body><pre style='white-space:pre-wrap'>{md}</pre></body></html>",
         content_type="text/html",
     )
+
+@require_GET
+def project_report_pdf(request, process_id: str):
+    if not Process.objects.filter(pk=process_id).exists():
+        raise Http404("Project not found")
+
+    md_text = generate_project_report(process_id)
+    process = Process.objects.get(pk=process_id)
+
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=A4,
+                            leftMargin=2*cm, rightMargin=2*cm,
+                            topMargin=2*cm, bottomMargin=2*cm)
+
+    styles = getSampleStyleSheet()
+    # Custom styles
+    h1 = ParagraphStyle('h1', parent=styles['Heading1'], textColor=colors.HexColor('#0e7490'), spaceAfter=10)
+    h2 = ParagraphStyle('h2', parent=styles['Heading2'], textColor=colors.HexColor('#155e75'), spaceAfter=6)
+    h3 = ParagraphStyle('h3', parent=styles['Heading3'], textColor=colors.HexColor('#1e4d5c'), spaceAfter=4)
+    body = ParagraphStyle('body', parent=styles['Normal'], spaceAfter=6, leading=16)
+    bullet = ParagraphStyle('bullet', parent=styles['Normal'], leftIndent=20, spaceAfter=4,
+                             bulletIndent=10, leading=16)
+
+    story = []
+    for line in md_text.splitlines():
+        if line.startswith('### '):
+            story.append(Paragraph(line[4:], h3))
+        elif line.startswith('## '):
+            story.append(Paragraph(line[3:], h2))
+        elif line.startswith('# '):
+            story.append(Paragraph(line[2:], h1))
+        elif line.startswith('- ') or line.startswith('* '):
+            story.append(Paragraph(f'• {line[2:]}', bullet))
+        elif re.match(r'^\d+\. ', line):
+            story.append(Paragraph(re.sub(r'^\d+\. ', '', line), bullet))
+        elif line.strip() == '':
+            story.append(Spacer(1, 8))
+        else:
+            story.append(Paragraph(line, body))
+
+    doc.build(story)
+    buf.seek(0)
+    slug = re.sub(r'[^\w-]', '_', process.name or str(process_id))
+    response = HttpResponse(buf.getvalue(), content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{slug}_report.pdf"'
+    return response
+
+@require_GET
+def project_report_docx(request, process_id: str):
+    if not Process.objects.filter(pk=process_id).exists():
+        raise Http404("Project not found")
+
+    md_text = generate_project_report(process_id)
+    process = Process.objects.get(pk=process_id)
+
+    doc = DocxDocument()
+    style = doc.styles["Normal"]
+    style.font.name = "Calibri"
+    style.font.size = Pt(11)
+
+    for line in md_text.splitlines():
+        if line.startswith("### "):
+            p = doc.add_heading(line[4:], level=3)
+        elif line.startswith("## "):
+            p = doc.add_heading(line[3:], level=2)
+        elif line.startswith("# "):
+            p = doc.add_heading(line[2:], level=1)
+        elif line.startswith("- ") or line.startswith("* "):
+            doc.add_paragraph(line[2:], style="List Bullet")
+        elif re.match(r"^\d+\. ", line):
+            doc.add_paragraph(re.sub(r"^\d+\. ", "", line), style="List Number")
+        elif line.strip() == "":
+            doc.add_paragraph("")
+        else:
+            doc.add_paragraph(line)
+
+    buf = io.BytesIO()
+    doc.save(buf)
+    buf.seek(0)
+    slug = re.sub(r"[^\w-]", "_", process.name or str(process_id))
+    response = HttpResponse(
+        buf.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    )
+    response["Content-Disposition"] = f'attachment; filename="{slug}_report.docx"'
+    return response
 
 # ---------- GeoJSON API Endpoints for Map Viewer ----------
 
