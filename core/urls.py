@@ -22,6 +22,17 @@ urlpatterns = [
     path("ai/reports/", views.report_list_page, name="report_list"),
     path("ai/reports/generate/", views.generate_report, name="generate_report"),
     path("ai/reports/<uuid:report_id>/", views.report_detail, name="report_detail"),
+
+    # Report Editor 
+    path("ai/reports/editor/<uuid:process_id>/", views.report_editor, name="report_editor"),
+    path("ai/reports/<uuid:report_id>/view/", views.saved_report_editor, name="saved_report_editor"),
+
+    # Save / Update 
+    path("ai/reports/save/", views.save_report, name="save_report"),
+    path("ai/reports/<uuid:report_id>/update/", views.update_saved_report, name="update_saved_report"),
+
+    # Export from editor content via POST 
+    path("ai/reports/export/", views.export_report, name="export_report"),
     path("ai/documents/analysis/", views.document_analysis_page, name="document_analysis_page"),
     path("ai/documents/<uuid:pk>/analyze/", views.analyze_document, name="analyze_document"),
     path("ai/documents/<uuid:pk>/analysis/", views.document_analysis_detail, name="document_analysis_detail"),
