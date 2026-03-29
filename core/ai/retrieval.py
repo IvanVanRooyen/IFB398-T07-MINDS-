@@ -39,13 +39,13 @@ def query_chunks(
 
     return list(qs[:max_chunks])
 
-def format_chunks_for_prompt(chunks: list[DocumnentChunk]) -> str:
+def format_chunks_for_prompt(chunks: list[DocumentChunk]) -> str:
     """
     Format retrieved chunks into a text block for an LLM prompt.
     Each chunk is labelled with its source document.
     """
     if not chunks:
-        return "No relevant deocument content found."
+        return "No relevant document content found."
     
     lines = []
     current_doc = None

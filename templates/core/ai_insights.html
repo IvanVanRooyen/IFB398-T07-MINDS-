@@ -1,11 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
+{% load static %}
 <div class="flex min-h-screen">
 
   <!-- Sidebar -->
   <aside class="w-64 bg-white shadow-md hidden md:flex flex-col">
-    <div class="p-6 border-b">
-      <h2 class="text-xl font-semibold text-cyan-600">OreFox KMS</h2>
+    <div class="px-4 py-3 border-b flex items-center gap-3">
+      <img src="{% static 'img/logo.png' %}" alt="OreFox" class="h-14 w-14 object-contain translate-y-2.5">
+      <span class="text-xl font-semibold text-cyan-600">OreFox KMS</span>
     </div>
     <nav class="flex-1 p-4 space-y-2">
       <a href="{% url 'dashboard' %}" class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium">
@@ -137,10 +139,20 @@
                 <h3 class="font-semibold text-gray-900">{{ project.name }}</h3>
                 <p class="text-sm text-gray-600">{{ project.mode }} • {{ project.commodity|default:"No commodity" }}</p>
               </div>
-              <a href="{% url 'project_report' project.id %}"
-                 class="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 text-sm whitespace-nowrap">
-                Generate Report →
-              </a>
+              <div class="flex gap-2">
+                <a href="{% url 'project_report' project.id %}"
+                  class="px-3 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 text-sm">
+                  Preview
+                </a>
+                <a href="{% url 'project_report_pdf' project.id %}"
+                  class="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
+                  PDF ↓
+                </a>
+                <a href="{% url 'project_report_docx' project.id %}"
+                  class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+                  DOCX ↓
+                </a>
+              </div>
             </div>
           {% endfor %}
         </div>

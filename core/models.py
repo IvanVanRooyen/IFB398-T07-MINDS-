@@ -39,10 +39,6 @@ class AutoCleanMixin:
     """
 
     def save(self, *args, **kwargs):
-    # Ensure extracted_text is never NULL
-        if self.extracted_text is None:
-            self.extracted_text = ""
-
         self.full_clean()
         super().save(*args, **kwargs)
 
@@ -212,6 +208,9 @@ class Document(models.Model):
         if self.file and not self.checksum_sha256:
             from .utils import sha256_file
             self.checksum_sha256 = sha256_file(self.file)
+        # Ensure extracted_text is never NULL
+        if self.extracted_text is None:
+            self.extracted_text = ""
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):

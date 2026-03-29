@@ -1,5 +1,7 @@
 import os
 import requests
+import logging
+log = logging.getLogger(__name__)
 
 class GraniteClient:
     """
@@ -36,6 +38,9 @@ class GraniteClient:
             r = requests.post(self.url, json=payload, timeout=self.timeout)
             r.raise_for_status()
             data = r.json()
+            log.debug("Ollama response keys: %s", list(data.keys()))
+            log.debug("Ollama response text: %s", data.get("response", "")[:100])
+            result = data.get("response", "")
             return data.get("response", "")
 
         headers = {"Authorization": f"Bearer {self.hf_token}"} if getattr(self, "hf_token", None) else {}
