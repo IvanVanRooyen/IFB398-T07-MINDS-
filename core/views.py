@@ -14,9 +14,11 @@ from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods
 from django.shortcuts import render, redirect
 from django.contrib import messages
-
+from django.http import HttpResponse
+from django.views.decorators.http import require_POST
 from django.core.cache import cache
-
+from django.shortcuts import render, get_object_or_404, redirect
+from core.models import Document
 from core.ai.report_service import generate_project_report
 from .ai.granite_client import GraniteClient
 
@@ -620,6 +622,23 @@ def project_report_docx(request, process_id: str):
     response["Content-Disposition"] = f'attachment; filename="{slug}_report.docx"'
     return response
 
+def document_analysis_detail(request, pk):
+    document = get_object_or_404(Document, pk=pk)
+
+    analysis_text = getattr(document, "analysis_text", "") or "No insights available yet."
+
+    return render(request, "core/document_analysis_detail.html", {
+        "document": document,
+        "analysis": analysis_text,
+    })
+
+@require_POST
+def save_document_analysis(request, pk):
+    return HttpResponse("Save document analysis placeholder")
+
+def export_document_analysis(request, pk):
+    return HttpResponse("Export document analysis placeholder")
+
 # ---------- GeoJSON API Endpoints for Map Viewer ----------
 
 
@@ -1003,9 +1022,3 @@ def analyze_document(request, pk):
     if request.method == "POST":
         messages.success(request, f"Analysis started for document {pk}.")
     return redirect("document_analysis_page")
-
-
-def document_analysis_detail(request, pk):
-    return render(request, "core/document_analysis_detail.html", {
-        "doc_id": pk,
-    })
