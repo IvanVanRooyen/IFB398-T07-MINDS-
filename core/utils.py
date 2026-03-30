@@ -28,24 +28,34 @@ log = logging.getLogger(__name__)
 
 def extract_text(file_field) -> str:
     """
-    Extract plain text from a pdf file.
+    Extract plain text from supported document types.
+    Currently supports PDF and DOCX.
     """
     try:
         name = getattr(file_field, "name", "") or ""
-        if not name.lower().endswith(".pdf"):
-            return ""
-        
-        # read the file into memory
+        lower_name = name.lower()
+
         file_field.seek(0)
         raw = file_field.read()
-        file_field.seek(0) # reset so the file saves correctly
+        file_field.seek(0)  # reset so the file saves correctly
 
         import io
-        with pdfplumber.open(io.BytesIO(raw)) as pdf:
-            pages = [page.extract_text() or "" for page in pdf.pages]
-        return "\n".join(pages)
+
+        if lower_name.endswith(".pdf"):
+            with pdfplumber.open(io.BytesIO(raw)) as pdf:
+                pages = [page.extract_text() or "" for page in pdf.pages]
+            return "\n".join(pages)
+
+        if lower_name.endswith(".docx"):
+            from docx import Document as DocxDocument
+            doc = DocxDocument(io.BytesIO(raw))
+            paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
+            return "\n".join(paragraphs)
+
+        return ""
+
     except Exception as e:
-        log.warning("Text extraction failed for %s: %s", file_field.name, e)
+        log.warning("Text extraction failed for %s: %s", getattr(file_field, "name", "unknown"), e)
         return ""
     
 def chunk_text(text: str, chunk_size: int = 500, overlap: int = 50) -> list[str]:

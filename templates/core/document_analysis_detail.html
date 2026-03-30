@@ -18,15 +18,18 @@
                     type="submit"
                     class="inline-flex items-center rounded-xl bg-cyan-600 px-6 py-3 text-white font-medium shadow-sm hover:bg-cyan-700 transition"
                 >
-                    ✓ Save
+                    Save
                 </button>
             </form>
 
-            <a
-                href="{% url 'export_document_analysis' document.pk %}"
-                class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-6 py-3 text-slate-700 font-medium hover:bg-slate-50 transition"
-            >
-                Export
+            <a href="{% url 'export_document_analysis' document.pk %}?format=pdf"
+              class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-6 py-3 text-slate-700 font-medium hover:bg-slate-50 transition">
+                Export PDF
+            </a>
+
+            <a href="{% url 'export_document_analysis' document.pk %}?format=docx"
+              class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-6 py-3 text-slate-700 font-medium hover:bg-slate-50 transition">
+                Export DOCX
             </a>
 
             <a

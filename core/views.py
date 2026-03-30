@@ -1043,6 +1043,19 @@ Provide:
 - Important findings
 - Suggested next steps
 
+Return the analysis in this exact format:
+
+## Summary
+...
+
+## Key Insights
+- ...
+
+## Risks
+- ...
+
+## Recommended Actions
+- ...
 Document title: {document.title}
 
 Document text:
@@ -1060,3 +1073,89 @@ Document text:
     except Exception as e:
         messages.error(request, f"Analysis failed: {e}")
         return redirect("document_analysis_page")
+
+@require_GET
+def export_document_analysis(request, pk):
+    document = get_object_or_404(Document, pk=pk)
+
+    md_text = (document.analysis_text or "").strip()
+    if not md_text:
+        return JsonResponse({"error": "No analysis available to export."}, status=400)
+
+    fmt = request.GET.get("format", "pdf").lower()
+    title = f"{document.title} Analysis"
+    slug = re.sub(r"[^\w-]", "_", title)
+
+    if fmt == "pdf":
+        buf = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buf,
+            pagesize=A4,
+            leftMargin=2*cm,
+            rightMargin=2*cm,
+            topMargin=2*cm,
+            bottomMargin=2*cm,
+        )
+        styles = getSampleStyleSheet()
+        h1 = ParagraphStyle("h1", parent=styles["Heading1"], textColor=colors.HexColor("#0e7490"), spaceAfter=10)
+        h2 = ParagraphStyle("h2", parent=styles["Heading2"], textColor=colors.HexColor("#155e75"), spaceAfter=6)
+        h3 = ParagraphStyle("h3", parent=styles["Heading3"], textColor=colors.HexColor("#1e4d5c"), spaceAfter=4)
+        body = ParagraphStyle("body", parent=styles["Normal"], spaceAfter=6, leading=16)
+        bullet = ParagraphStyle("bullet", parent=styles["Normal"], leftIndent=20, spaceAfter=4, bulletIndent=10, leading=16)
+
+        story = []
+        for line in md_text.splitlines():
+            if line.startswith("### "):
+                story.append(Paragraph(line[4:], h3))
+            elif line.startswith("## "):
+                story.append(Paragraph(line[3:], h2))
+            elif line.startswith("# "):
+                story.append(Paragraph(line[2:], h1))
+            elif line.startswith("- ") or line.startswith("* "):
+                story.append(Paragraph(f"• {line[2:]}", bullet))
+            elif re.match(r"^\d+\. ", line):
+                story.append(Paragraph(re.sub(r"^\d+\. ", "", line), bullet))
+            elif line.strip() == "":
+                story.append(Spacer(1, 8))
+            else:
+                story.append(Paragraph(line, body))
+
+        doc.build(story)
+        buf.seek(0)
+        response = HttpResponse(buf.getvalue(), content_type="application/pdf")
+        response["Content-Disposition"] = f'attachment; filename="{slug}_analysis.pdf"'
+        return response
+
+    if fmt == "docx":
+        doc = DocxDocument()
+        style = doc.styles["Normal"]
+        style.font.name = "Calibri"
+        style.font.size = Pt(11)
+
+        for line in md_text.splitlines():
+            if line.startswith("### "):
+                doc.add_heading(line[4:], level=3)
+            elif line.startswith("## "):
+                doc.add_heading(line[3:], level=2)
+            elif line.startswith("# "):
+                doc.add_heading(line[2:], level=1)
+            elif line.startswith("- ") or line.startswith("* "):
+                doc.add_paragraph(line[2:], style="List Bullet")
+            elif re.match(r"^\d+\. ", line):
+                doc.add_paragraph(re.sub(r"^\d+\. ", "", line), style="List Number")
+            elif line.strip() == "":
+                doc.add_paragraph("")
+            else:
+                doc.add_paragraph(line)
+
+        buf = io.BytesIO()
+        doc.save(buf)
+        buf.seek(0)
+        response = HttpResponse(
+            buf.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+        response["Content-Disposition"] = f'attachment; filename="{slug}_analysis.docx"'
+        return response
+
+    return JsonResponse({"error": "Invalid format. Use 'pdf' or 'docx'."}, status=400)
