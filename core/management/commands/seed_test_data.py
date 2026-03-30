@@ -24,14 +24,6 @@ from reportlab.platypus import (
     Table,
     TableStyle,
 )
-from .test_document_content import (
-    compliance_content,
-    environmental_content,
-    internal_content,
-    jorc_content,
-    technical_content,
-    valmin_content,
-)
 
 from core.models import (
     ApprovalWorkflow,
@@ -44,6 +36,15 @@ from core.models import (
     Prospect,
     Tenement,
     UserProfile,
+)
+
+from .test_document_content import (
+    compliance_content,
+    environmental_content,
+    internal_content,
+    jorc_content,
+    technical_content,
+    valmin_content,
 )
 
 fake = Faker()
@@ -207,6 +208,12 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--flush", action="store_true", dest="flush", default=False)
+        parser.add_argument(
+            "--no-org", action="store_false", dest="gen_org", default=True
+        )
+        parser.add_argument(
+            "--no-pdfs", action="store_false", dest="gen_pdf", default=True
+        )
 
     def _log(self, msg):
         self.stdout.write(self.style.SUCCESS(f"{msg}"))
@@ -439,7 +446,7 @@ class Command(BaseCommand):
 
                 filename = f"{doc_type.lower()}_{doc_id.hex[:8]}.pdf"
                 canonical_path = docs_dir / filename
-                rel_path = f"documents/{filename}"
+                rel_path = f"media/docs/{filename}"
 
                 checksum = generate_pdf(
                     doc_type=doc_type,
@@ -535,11 +542,16 @@ class Command(BaseCommand):
         drillholes = self._create_drillholes(processes)
         prospects = self._create_prospects(processes)
         tenements = self._create_tenements(processes)
-        docs = self._create_documents(processes, users)
 
-        self._create_approval_workflows(docs, users)
-        self._create_audit_logs(docs, users)
-        self._create_document_views(docs, users)
+        if options["gen_pdf"]:
+            docs = self._create_documents(processes, users)
+
+            self._create_approval_workflows(docs, users)
+            self._create_audit_logs(docs, users)
+            self._create_document_views(docs, users)
+
+        else:
+            docs = []
 
         total = sum(
             [
