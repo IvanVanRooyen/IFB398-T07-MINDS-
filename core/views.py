@@ -22,6 +22,10 @@ from core.models import Document
 from core.ai.report_service import generate_project_report
 from .ai.granite_client import GraniteClient
 
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from core.models import Document
+
 from types import SimpleNamespace
 import logging
 
@@ -1019,6 +1023,40 @@ def document_analysis_page(request):
 
 
 def analyze_document(request, pk):
-    if request.method == "POST":
-        messages.success(request, f"Analysis started for document {pk}.")
-    return redirect("document_analysis_page")
+    document = get_object_or_404(Document, pk=pk)
+
+    text = (document.extracted_text or "").strip()
+    if not text:
+        messages.error(request, "This document has no extracted text to analyse.")
+        return redirect("document_analysis_page")
+
+    try:
+        client = GraniteClient()
+
+        prompt = f"""
+You are analysing a mining/exploration document.
+
+Provide:
+- A short summary
+- Key insights
+- Risks or issues
+- Important findings
+- Suggested next steps
+
+Document title: {document.title}
+
+Document text:
+{text[:12000]}
+"""
+
+        analysis_text = client.complete(prompt)
+
+        document.analysis_text = analysis_text
+        document.save(update_fields=["analysis_text"])
+
+        messages.success(request, "Analysis complete.")
+        return redirect("document_analysis_detail", pk=document.pk)
+
+    except Exception as e:
+        messages.error(request, f"Analysis failed: {e}")
+        return redirect("document_analysis_page")

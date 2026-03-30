@@ -97,10 +97,11 @@
                 {% endif %}
                 <form method="post" action="{% url 'analyze_document' doc.id %}">
                   {% csrf_token %}
-                    <a href="{% url 'document_analysis_detail' doc.id %}"
-                      class="rounded-lg bg-purple-600 px-4 py-2 text-white text-sm font-medium hover:bg-purple-700">
-                        Analyze
-                    </a>
+                  <button
+                    type="submit"
+                    class="rounded-lg bg-purple-600 px-4 py-2 text-white text-sm font-medium hover:bg-purple-700"
+                  >
+                    Analyze
                   </button>
                 </form>
               </div>

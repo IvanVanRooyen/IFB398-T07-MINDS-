@@ -190,7 +190,8 @@ class Document(models.Model):
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, null=True, blank=True)
     process = models.ForeignKey(Process, null=True, on_delete=models.SET_NULL, blank=True)
     tags = ArrayField(models.IntegerField(), default=list, blank=True)
-
+    analysis_text = models.TextField(blank=True, default="")
+    
     timestamp = models.DateField(null=True)
     doc_type = models.CharField(max_length=64, blank=True)
     confidentiality = models.CharField(max_length=64, default="internal")
