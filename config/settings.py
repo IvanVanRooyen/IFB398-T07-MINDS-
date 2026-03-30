@@ -82,6 +82,9 @@ STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
+# directory for generated PDFs
+TEST_MEDIA_ROOT = Path(BASE_DIR) / "media" / ".tests"
+
 # MinIO storage configuration (Django 5.x STORAGES format)
 STORAGES = {
     "default": {

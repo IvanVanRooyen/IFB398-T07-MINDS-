@@ -50,6 +50,7 @@ from .test_document_content import (
 fake = Faker()
 User = get_user_model()
 
+
 NUM_ORGANISATIONS = 3
 NUM_USERS_PER_ORG = 4
 NUM_PROCESSES_PER_ORG = 3
@@ -205,12 +206,10 @@ def fake_sha256():
 
 class Command(BaseCommand):
     APP_LABEL = "core"
+    DOCS_DIR = Path(settings.TEST_MEDIA_ROOT) / "docs"
 
     def add_arguments(self, parser):
         parser.add_argument("--flush", action="store_true", dest="flush", default=False)
-        parser.add_argument(
-            "--no-org", action="store_false", dest="gen_org", default=True
-        )
         parser.add_argument(
             "--no-pdfs", action="store_false", dest="gen_pdf", default=True
         )
@@ -242,13 +241,12 @@ class Command(BaseCommand):
         group_count, _ = Group.objects.all().delete()
         self.stdout.write(f"deleted: {group_count} groups")
 
-        docs_dir = Path(settings.MEDIA_ROOT) / "docs"
-        if docs_dir.exists():
+        if self.DOCS_DIR.exists():
             pdf_count = 0
-            for pdf in docs_dir.glob("*.pdf"):
+            for pdf in self.DOCS_DIR.glob("*.pdf"):
                 pdf.unlink()
                 pdf_count += 1
-            self.stdout.write(f"deleted: {pdf_count} PDFs (PDF dir: {docs_dir})")
+            self.stdout.write(f"deleted: {pdf_count} PDFs (PDF dir: {self.DOCS_DIR})")
 
         self.stdout.write(self.style.WARNING("flushed app data\n"))
 
@@ -423,9 +421,7 @@ class Command(BaseCommand):
         return tenements
 
     def _create_documents(self, processes, users):
-        media_root = Path(settings.MEDIA_ROOT)
-        docs_dir = media_root / "docs"
-        docs_dir.mkdir(parents=True, exist_ok=True)
+        self.DOCS_DIR.mkdir(parents=True, exist_ok=True)
 
         docs = []
 
@@ -445,8 +441,8 @@ class Command(BaseCommand):
                 doc_type = random.choice(DOC_TYPES)
 
                 filename = f"{doc_type.lower()}_{doc_id.hex[:8]}.pdf"
-                canonical_path = docs_dir / filename
-                rel_path = f"media/docs/{filename}"
+                canonical_path = self.DOCS_DIR / filename
+                rel_path = f"docs/{filename}"  # relative to 'settings.TEST_MEDIA_ROOT directory'
 
                 checksum = generate_pdf(
                     doc_type=doc_type,
