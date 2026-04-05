@@ -49,6 +49,7 @@
           buildInputs = with pkgs; [
             # nodejs
             bun
+            redis
 
             ruff
             pyright

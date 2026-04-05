@@ -12,7 +12,7 @@ ingester:
 
 compactor:
   compaction:
-    block_retention: 336h # 14 days
+    block_retention: 168h # 7 days
 
 memberlist:
   bind_port: 7947
@@ -21,9 +21,9 @@ storage:
   trace:
     backend: local
     local:
-      path: /tmp/tempo/blocks
+      path: /var/tempo/blocks
     wal:
-      path: /tmp/tempo/wal
+      path: /var/tempo/wal
 
 query_frontend:
   search:
@@ -45,7 +45,7 @@ metrics_generator:
     external_labels:
       source: tempo
   storage:
-    path: /tmp/tempo/generator/wal
+    path: /var/tempo/generator/wal
     remote_write:
       - url: http://tempo:9090/v1/write
   processor:
