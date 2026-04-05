@@ -1,3 +1,7 @@
+x-common: &common
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+
 services:
   redis:
     image: redis:alpine
@@ -58,6 +62,7 @@ services:
       '
 
   web:
+    <<: *common
     build: ./infra/web
     env_file: .env
     environment:
@@ -79,7 +84,7 @@ services:
   # ======================================================================================
   # |-                              -| GRAFANA SERVICES |-                              -|
   # ======================================================================================
-
+  
   # --------------------------------------
   #   TELEMETRY COLLECTOR & DISTRIBUTOR  |
   # --------------------------------------
@@ -140,9 +145,42 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--web.enable-remote-write-receiver'
     volumes:
-      - ./infra/telemetry/config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infra/telemetry/config/prometheus.yml:/etc/prometheus/prometheus.yml
       - prom_data:/prometheus
-   
+  
+  # redis metrics exporter
+  redis-exporter:
+    container_name: redis_exporter
+    image: oliver006/redis_exporter:latest
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+    depends_on:
+      - redis
+
+  # postgres metrics exporter
+  postgres-exporter:
+    container_name: postgres_exporter
+    image: prometheuscommunity/postgres-exporter
+    ports: 
+      - "9187:9187"
+    environment:
+      - DATA_SOURCE_USER=${POSTGRES_USER}
+      - DATA_SOURCE_PASS=${POSTGRES_PASSWORD}
+      - DATA_SOURCE_URI=db:5432/${POSTGRES_DB}?sslmode=disable
+
+  # ollama metrics exporter
+  ollama-exporter:
+    <<: *common
+    image: lucabecker42/ollama-exporter:latest
+    container_name: ollama_exporter
+    environment:
+      - OLLAMA_HOST=${OLLAMA_HOST}
+    ports:
+      - "9110:9110"
+      - "8001:8000"
+
   # ------------------------------
   #       GRAFANA DASHBOARD      | 
   # ------------------------------
@@ -171,9 +209,9 @@ services:
 
       # Pass environment variables to the container so they can be used in 
       # `datasources.yml`
-      - GF_PG_READER_USER=${GF_PG_READER_USER}
-      - GF_PG_READER_PASS=${GF_PG_READER_PASS}
       - POSTGRES_DB=${POSTGRES_DB}
+      - GF_PG_READER_USER=${GF_PG_READER_USER:-grafana}
+      - GF_PG_READER_PASS=${GF_PG_READER_PASS:-grafana}
 
       # Plugin auto-installation
       - GF_PLUGINS_PREINSTALL_SYNC=redis-datasource
@@ -197,4 +235,3 @@ volumes:
   prom_data:
   loki_data:
   tempo_data:
-
