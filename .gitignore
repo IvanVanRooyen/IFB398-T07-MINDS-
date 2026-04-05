@@ -26,7 +26,10 @@ __backup__/
 node_modules/
 docker-compose.override.yml
 staticfiles/
-media/
+media/*
+
+!media/.tests/
+
 static/
 tmp/
 htmlcov/

@@ -15,7 +15,10 @@
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = import nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+        };
 
         postGISPatch = pkgs.postgresql17Packages.postgis.overrideAttrs (prev: {
           postInstall = (prev.postInstall or "") + ''
@@ -50,6 +53,9 @@
             ruff
             pyright
 
+            ollama
+            ollama-cuda
+
             pkg-config
             openssl.dev
 
@@ -59,7 +65,12 @@
             uv
           ];
 
+          NIX_LD = pkgs.lib.fileContents "${pkgs.stdenv.cc}/nix-support/dynamic-linker";
           shellHook = ''
+            export CUDA_PATH=/run/opengl-driver
+            export LD_LIBRARY_PATH=$NIX_LD_LIBRARY_PATH:$LD_LIBRARY_PATH
+            export LD_LIBRARY_PATH="/run/opengl-driver/lib:$LD_LIBRARY_PATH"
+
             export PKG_CONFIG_PATH=${pkgs.openssl.dev}/lib/pkgconfig:$PKG_CONFIG_PATH
             export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$NIX_LD_LIBRARY_PATH
 
@@ -78,7 +89,7 @@
               echo "unix_socket_directories = '$PWD/.pg-sock'" >> .pg-data/postgresql.conf
               echo "port = 5432" >> .pg-data/postgresql.conf
             fi
-            
+
             UV_RUN_SCRIPT="$UV_PROJECT/.venv/util/manage-py"
             if [ ! -f "$UV_RUN_SCRIPT" ]; then  
               mkdir -p "$UV_PROJECT/.venv/util"
@@ -90,15 +101,16 @@
             PATH+=:$UV_PROJECT/.venv/util
 
             echo "===================================================================="
-            echo "in shell"
-            echo ""
-            echo "  start postgres:"
-            echo '      pg_ctl -D $PGDATA -l $PGDATA/logfile start'
-            echo ""
-            echo "  create new a db with postGIS extension:"
-            echo '      psql -U postgres -c "CREATE DATABASE orefox;" && \'
-            echo '      psql -U postgres -d orefox -c "CREATE EXTENSION postgis;"'
-            echo ""
+
+            # echo "in shell"
+            # echo ""
+            # echo "  start postgres:"
+            # echo '      pg_ctl -D $PGDATA -l $PGDATA/logfile start'
+            # echo ""
+            # echo "  create new a db with postGIS extension:"
+            # echo '      psql -U postgres -c "CREATE DATABASE orefox;" && \'
+            # echo '      psql -U postgres -d orefox -c "CREATE EXTENSION postgis;"'
+            # echo ""
           '';
         };
       }
