@@ -72,6 +72,85 @@ services:
         condition: service_healthy
       create-bucket:
         condition: service_completed_successfully
+  
+  # ======================================================================================
+  # |-                              -| GRAFANA SERVICES |-                              -|
+  # ======================================================================================
+
+  # --------------------------------------
+  #   telemetry collector & distributor  |
+  # --------------------------------------
+  alloy:
+    image: grafana/alloy:latest
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --server.http.listen-addr=0.0.0.0:12345
+    volumes:
+      - ./infra/telemetry/config/config.alloy:/etc/alloy/config.alloy
+    depends_on:
+      - loki
+      - tempo
+      - prometheus
+    ports:
+      # the alloy interface and receivers can't be password-protected so these ports
+      # probably shouldn't be exposed like this (i.e. bound to `0.0.0.0:[port]`) in a
+      # "real" instance of this service (without properly configuring e.g. auth headers)
+      #
+      - "12345:12345"                       # alloy interface
+      - "4317:4317"                         # otlp grpc receiver
+      - "4318:4318"                         # otlp http receiver
+
+  # -----------------------------
+  #        trace receiver       |
+  # -----------------------------
+  tempo:
+    image: grafana/tempo:latest
+    command: ["-config.file=/etc/tempo.yml"]
+    volumes:
+      - ./infra/telemetry/config/tempo.yml:/etc/tempo.yml
+  
+  # -----------------------------
+  #         log receiver        |
+  # -----------------------------
+  loki:
+    image: grafana/loki:latest
+    command: ["-config.file=/etc/loki.yml"]
+    volumes:
+      - ./infra/telemetry/config/loki.yml:/etc/loki.yml
+
+  # -----------------------------
+  #        metric receiver      |
+  # -----------------------------
+  prometheus:
+    image: prom/prometheus:latest
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-remote-write-receiver'
+    volumes:
+      - ./infra/telemetry/config/prometheus.yml:/etc/prometheus/prometheus.yml
+
+   
+  # -----------------------------
+  #      grafana dashboard      | 
+  # -----------------------------
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+
+    environment:
+      # enable passwordless administration (!)
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+
+    volumes:
+      - ./infra/telemetry/config/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    depends_on:
+      - loki
+      - tempo
+      - prometheus
 
 volumes:
   db_data:

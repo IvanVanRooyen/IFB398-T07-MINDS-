@@ -1,0 +1,55 @@
+# --------------------------------------------------------------------------------------------------
+# This Tempo configuration uses `/tmp/loki` for "long-term" storage, though this can be 
+# configured to use a range of object storage options; see the grafana loki configuration examples
+# page for cloud object storage setup configuration options and examples:
+#
+#   - https://grafana.com/docs/loki/latest/configure
+#   - https://grafana.com/docs/loki/latest/configure/examples/configuration-examples
+#
+# --------------------------------------------------------------------------------------------------
+
+auth_enabled: false
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: info
+
+common:
+  ring:
+    kvstore:
+      store: memberlist
+  replication_factor: 1
+  path_prefix: /tmp/loki
+
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  filesystem:
+    directory: /tmp/loki/chunks
+
+pattern_ingester:
+  enabled: true
+
+compactor:
+  working_directory: /tmp/loki/compactor
+  retention_enabled: true
+  delete_request_store: filesystem
+
+limits_config:
+  volume_enabled: true
+  metric_aggregation_enabled: true
+  enable_multi_variant_queries: true
+  retention_period: 672h # 28 days
+
+query_scheduler:
+  scheduler_ring:
+    kvstore:
+      store: memberlist
