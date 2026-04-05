@@ -1,6 +1,57 @@
 {% extends "base.html" %}
+
 {% block content %}
-<div class="p-6">
-  <h1 class="text-2xl font-bold">Page connected</h1>
+<div class="max-w-6xl mx-auto px-6 py-8">
+    <!-- Header -->
+    <div class="flex items-start justify-between mb-6">
+        <div>
+            <h1 class="text-4xl font-bold text-slate-900">Document Analysis</h1>
+            <p class="text-lg text-slate-600 mt-1">
+                Document: <span class="font-medium">{{ document.title }}</span>
+            </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <form method="post" action="{% url 'save_document_analysis' document.id %}">
+                {% csrf_token %}
+                <button
+                    type="submit"
+                    class="inline-flex items-center rounded-xl bg-cyan-600 px-6 py-3 text-white font-medium shadow-sm hover:bg-cyan-700 transition"
+                >
+                    Save
+                </button>
+            </form>
+
+            <a href="{% url 'export_document_analysis' document.pk %}?format=pdf"
+              class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-6 py-3 text-slate-700 font-medium hover:bg-slate-50 transition">
+                Export PDF
+            </a>
+
+            <a href="{% url 'export_document_analysis' document.pk %}?format=docx"
+              class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-6 py-3 text-slate-700 font-medium hover:bg-slate-50 transition">
+                Export DOCX
+            </a>
+
+            <a
+                href="{% url 'document_analysis_page' %}"
+                class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-6 py-3 text-slate-700 font-medium hover:bg-slate-50 transition"
+            >
+                Back
+            </a>
+        </div>
+    </div>
+
+    <!-- Insights Card -->
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-6 py-4">
+            <h2 class="text-lg font-semibold text-slate-900">Insights</h2>
+        </div>
+
+        <div class="px-8 py-8">
+            <div class="prose prose-slate max-w-none">
+                {{ analysis|linebreaks }}
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
