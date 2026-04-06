@@ -51,6 +51,8 @@
             bun
             redis
 
+            go
+
             ruff
             pyright
 

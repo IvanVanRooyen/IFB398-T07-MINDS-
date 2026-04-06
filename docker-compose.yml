@@ -169,17 +169,17 @@ services:
       - DATA_SOURCE_USER=${POSTGRES_USER}
       - DATA_SOURCE_PASS=${POSTGRES_PASSWORD}
       - DATA_SOURCE_URI=db:5432/${POSTGRES_DB}?sslmode=disable
-
+  
   # ollama metrics exporter
   ollama-exporter:
     <<: *common
-    image: lucabecker42/ollama-exporter:latest
+    build: ./infra/telemetry/ollama-exporter
     container_name: ollama_exporter
     environment:
-      - OLLAMA_HOST=${OLLAMA_HOST}
+      - OLLAMA_HOST=${OLLAMA_HOST:-host.docker.internal:11434}
+      - PROXY_PORT=9110
     ports:
       - "9110:9110"
-      - "8001:8000"
 
   # ------------------------------
   #       GRAFANA DASHBOARD      | 

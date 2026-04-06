@@ -26,6 +26,7 @@ scrape_configs:
     static_configs:
       - targets: ['postgres_exporter:9187']
 
-  - job_name: 'ollama'
+  - job_name: 'ollama-exporter'
+    scrape_interval: 5s
     static_configs:
       - targets: ['ollama_exporter:9110']
