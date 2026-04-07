@@ -17,9 +17,11 @@ var (
 
 	requestDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "ollama_request_duration_seconds",
-			Help:    "Latency of Ollama API requests in seconds.",
-			Buckets: prometheus.ExponentialBuckets(0.1, 2, 10), // 0.1s to ~51s
+			Name: "ollama_request_duration_seconds",
+			Help: "Latency of Ollama API requests in seconds.",
+
+			// Buckets: prometheus.ExponentialBuckets(0.1, 2, 10),
+			Buckets: prometheus.LinearBuckets(5, 5, 10),
 		},
 		[]string{"model", "endpoint"},
 	)

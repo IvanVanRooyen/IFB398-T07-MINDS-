@@ -27,7 +27,7 @@ func fakeOllamaServer(t *testing.T, statusCode int, res GenerateResponse) *httpt
 		}
 
 		if req.Stream {
-			t.Error("expected stream=false (was true) - client should force this off")
+			t.Error("expected stream=false, got stream=true (client expected to force this off).")
 		}
 
 		w.WriteHeader(statusCode)

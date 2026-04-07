@@ -1,3 +1,6 @@
+# tragically: container -> host on Linux does not "just work"
+# like it supposedly does on Windows/Mac; this is the workaround
+# and it shouldn't affect functionality on other systems (allegedly)
 x-common: &common
   extra_hosts:
     - "host.docker.internal:host-gateway"
@@ -176,6 +179,10 @@ services:
     build: ./infra/telemetry/ollama-exporter
     container_name: ollama_exporter
     environment:
+      # i am unsure what the "default" is for services running on the host;
+      # `host.docker.internal:11434` is the default for me but replace this
+      # with whatever works for you and re-commit to avoid having to set the
+      # `OLLAMA_HOST` variable in your environment...
       - OLLAMA_HOST=${OLLAMA_HOST:-host.docker.internal:11434}
       - PROXY_PORT=9110
     ports:
