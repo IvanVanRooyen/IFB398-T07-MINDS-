@@ -5,6 +5,8 @@ import uuid
 from datetime import timedelta
 from pathlib import Path
 
+import boto3
+from botocore.exceptions import ClientError
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
@@ -230,6 +232,49 @@ class Command(BaseCommand):
         Organisation,
     ]
 
+    def _get_s3_client(self):
+        return boto3.client(
+            "s3",
+            endpoint_url=getattr(settings, "MINIO_ENDPOINT", "http://minio:9000"),
+            aws_access_key_id=getattr(
+                settings, "MINIO_ROOT_USER", os.getenv("MINIO_ROOT_USER", "minio")
+            ),
+            aws_secret_access_key=getattr(
+                settings,
+                "MINIO_ROOT_PASSWORD",
+                os.getenv("MINIO_ROOT_PASSWORD", "minio12345"),
+            ),
+            region_name="us-east-1",  # required by boto3 but ignored by MinIO
+        )
+
+    def _get_bucket(self):
+        return getattr(settings, "MINIO_BUCKET", os.getenv("MINIO_BUCKET", "documents"))
+
+    def _upload_to_minio(self, s3, bucket: str, key: str, filepath):
+        s3.upload_file(
+            Filename=str(filepath),
+            Bucket=bucket,
+            Key=key,
+            ExtraArgs={"ContentType": "application/pdf"},
+        )
+
+        return key
+
+    def _flush_bucket(self, s3, bucket, prefix="documents/"):
+        try:
+            paginator = s3.get_paginator("list_objects_v2")
+            deleted = 0
+            for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+                objects = page.get("Contents", [])
+                if not objects:
+                    continue
+                delete_req = {"Objects": [{"Key": obj["Key"]} for obj in objects]}
+                s3.delete_objects(Bucket=bucket, Delete=delete_req)
+                deleted += len(objects)
+            self._log(f"    deleted {deleted} objects from s3://{bucket}/{prefix}")
+        except ClientError as err:
+            self._log(f"    failed to flush bucket: {err}")
+
     def _flush(self):
         for model in self.FLUSH_MODELS:
             count, _ = model.objects.all().delete()
@@ -241,12 +286,28 @@ class Command(BaseCommand):
         group_count, _ = Group.objects.all().delete()
         self.stdout.write(f"deleted: {group_count} groups")
 
-        if self.DOCS_DIR.exists():
+        try:
+            s3 = self._get_s3_client()
+            bucket = self._get_bucket()
+            self._flush_bucket(s3, bucket, prefix="documents/")
+        except Exception as err:
+            self.stderr.write(
+                self.style.WARNING(
+                    f"      failed to connect to minio during flush: {err}\n"
+                )
+            )
+
+        fixture_docs = Path(settings.BASE_DIR) / "fixtures" / "media" / "documents"
+        if fixture_docs.exists():
             pdf_count = 0
-            for pdf in self.DOCS_DIR.glob("*.pdf"):
+            for pdf in fixture_docs.glob("*pdf"):
                 pdf.unlink()
                 pdf_count += 1
-            self.stdout.write(f"deleted: {pdf_count} PDFs (PDF dir: {self.DOCS_DIR})")
+
+            if pdf_count:
+                self._log(
+                    f"    delete {pdf_count} PDFs from local path: {fixture_docs}"
+                )
 
         self.stdout.write(self.style.WARNING("flushed app data\n"))
 
@@ -421,9 +482,14 @@ class Command(BaseCommand):
         return tenements
 
     def _create_documents(self, processes, users):
-        self.DOCS_DIR.mkdir(parents=True, exist_ok=True)
+        fixture_docs_dir = self.fixtures_media_dir
+        fixture_docs_dir.mkdir(parents=True, exist_ok=True)
+
+        s3 = self._get_s3_client()
+        bucket = self._get_bucket()
 
         docs = []
+        uploaded = 0
 
         for proc in processes:
             org_users = [
@@ -441,21 +507,24 @@ class Command(BaseCommand):
                 doc_type = random.choice(DOC_TYPES)
 
                 filename = f"{doc_type.lower()}_{doc_id.hex[:8]}.pdf"
-                canonical_path = self.DOCS_DIR / filename
-                rel_path = f"docs/{filename}"  # relative to 'settings.TEST_MEDIA_ROOT directory'
+                object_key = f"documents/{filename}"
+                fixture_path = fixture_docs_dir / filename
 
                 checksum = generate_pdf(
                     doc_type=doc_type,
                     org=proc.organisation,
                     process=proc,
                     commodity=proc.commodity,
-                    output_path=str(canonical_path),
+                    output_path=str(fixture_path),
                 )
+
+                self._upload_to_minio(s3, bucket, object_key, str(fixture_path))
+                uploaded += 1
 
                 d = Document.objects.create(
                     id=doc_id,
                     title=fake.sentence(nb_words=5)[:64],
-                    file=rel_path,
+                    file=object_key,
                     tags=sorted(random.sample(TAG_POOL, k=random.randint(1, 4))),
                     timestamp=fake.date_between(start_date="-2y", end_date="today"),
                     doc_type=doc_type,
@@ -467,6 +536,8 @@ class Command(BaseCommand):
                 )
                 docs.append(d)
         self._log(f"created: {len(docs)} documents")
+        self._log(f"    uploaded {uploaded} PDFs to s3://{bucket}/documents/")
+        self._log(f"    fixture copies written to {fixture_docs_dir}")
         return docs
 
     def _create_approval_workflows(self, docs, users):
@@ -523,9 +594,21 @@ class Command(BaseCommand):
         self._log("created: document views")
 
     def handle(self, *args, **options):
-        self.stdout.write(self.style.MIGRATE_HEADING("seeding database\n"))
+        self.stdout.write(self.style.MIGRATE_HEADING("starting database seeder...\n"))
 
+        self._log("using options:")
         self._log(options)
+
+        seed = 12345
+        self._log(f"rng seed: {seed}")
+
+        random.seed(seed)
+        Faker.seed(seed)
+        fake.unique.clear()
+
+        self.fixtures_dir = Path(settings.BASE_DIR) / "fixtures"
+        self.fixtures_media_dir = self.fixtures_dir / "media" / "documents"
+        # self.fixtures_media_dir.mkdir(parents=True, exists_ok=True)
 
         if options["flush"]:
             self._flush()

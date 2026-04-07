@@ -26,9 +26,7 @@ __backup__/
 node_modules/
 docker-compose.override.yml
 staticfiles/
-media/*
-
-!media/.tests/
+media/
 
 static/
 tmp/
