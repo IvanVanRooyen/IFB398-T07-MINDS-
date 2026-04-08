@@ -1,5 +1,5 @@
 """
-Handles MinIO population from fixture data in addition to loading fixture data
+Handles MinIO population from fixtures-related media
 """
 
 from pathlib import Path
@@ -27,12 +27,6 @@ class Command(BaseCommand):
             help="path to fixture directory (default: `BASE_DIR/fixtures`)",
         )
 
-    def _get_s3_client(self):
-        return handlers.get_s3_client()
-
-    def _get_bucket(self):
-        return handlers.get_bucket()
-
     def handle(self, *args, **options):
         fixture_json = options["filename"] or "generated_with_docs.json"
         fixture_dir = Path(
@@ -57,7 +51,7 @@ class Command(BaseCommand):
                 s3.head_bucket(Bucket=bucket)
 
             except ClientError:
-                self.stdout.write(f"    unable to get bucket '{bucket}' - creating")
+                self.stdout.write(f"    unable to get bucket '{bucket}': creating")
                 s3.create_bucket(Bucket=bucket)
 
         except Exception as err:
@@ -86,7 +80,9 @@ class Command(BaseCommand):
                     continue
 
             except ClientError:
-                # this is an expected exception when the file does not exist
+                # we are checking if the file we want to upload already exists in minio; generally,
+                # we expect this exception to occur as the file probably doesn't exist when this command
+                # is called
                 pass
 
             handlers.upload_minio(
