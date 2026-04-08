@@ -3,11 +3,21 @@ from django.contrib import admin as djadmin
 from django.contrib.gis.admin import GISModelAdmin
 
 from .models import (
-    Process, Document, Organisation, Prospect, Tenement, Drillhole,
-    UserProfile, AuditLog, ApprovalWorkflow, DocumentView, SavedReport
+    ApprovalWorkflow,
+    AuditLog,
+    Document,
+    DocumentView,
+    Drillhole,
+    Organisation,
+    Process,
+    Prospect,
+    SavedReport,
+    Tenement,
+    UserProfile,
 )
 
 # CORE MODELS ---------------------------------
+
 
 @djadmin.register(Organisation)
 class OrganisationAdmin(djadmin.ModelAdmin):
@@ -15,68 +25,114 @@ class OrganisationAdmin(djadmin.ModelAdmin):
     list_filter = ("mode",)
     search_fields = ("name",)
 
+
 @djadmin.register(Process)
 class ProcessAdmin(GISModelAdmin):
     list_display = ("name", "mode", "commodity", "organisation")
     list_filter = ("mode", "organisation")
     search_fields = ("name", "commodity")
 
+
 @djadmin.register(Document)
 class DocumentAdmin(djadmin.ModelAdmin):
-    list_display = ("title", "timestamp", "doc_type", "confidentiality", "process", "created_by")
+    list_display = (
+        "title",
+        "timestamp",
+        "doc_type",
+        "confidentiality",
+        "process",
+        "created_by",
+    )
     list_filter = ("doc_type", "confidentiality", "organisation")
     search_fields = ("title", "checksum_sha256")
     readonly_fields = ("checksum_sha256", "created_at", "updated_at")
 
+
 @djadmin.register(Prospect)
-class ProspectAdmin(GISModelAdmin):  # Changed to GISModelAdmin for map widget (also did the same for Tenement & Drillhole)
+class ProspectAdmin(
+    GISModelAdmin
+):  # Changed to GISModelAdmin for map widget (also did the same for Tenement & Drillhole)
     list_display = ("name", "organisation", "process", "created_at")
     list_filter = ("organisation",)
     search_fields = ("name",)
+
 
 @djadmin.register(Tenement)
-class TenementAdmin(GISModelAdmin):  
+class TenementAdmin(GISModelAdmin):
     list_display = ("name", "organisation", "process", "created_at")
     list_filter = ("organisation",)
     search_fields = ("name",)
 
+
 @djadmin.register(Drillhole)
-class DrillholeAdmin(GISModelAdmin):  
+class DrillholeAdmin(GISModelAdmin):
     list_display = ("name", "organisation", "process", "depth", "created_at")
     list_filter = ("organisation",)
     search_fields = ("name",)
 
+
 # USER PERMISSIONS & AUDIT ---------------------------------
+
 
 @djadmin.register(UserProfile)
 class UserProfileAdmin(djadmin.ModelAdmin):
-    list_display = ("user", "role", "organisation", "clearance_level", "can_approve_jorc", "can_approve_valmin")
-    list_filter = ("role", "clearance_level", "can_approve_jorc", "can_approve_valmin", "organisation")
+    list_display = (
+        "user",
+        "role",
+        "organisation",
+        "clearance_level",
+        "can_approve_jorc",
+        "can_approve_valmin",
+    )
+    list_filter = (
+        "role",
+        "clearance_level",
+        "can_approve_jorc",
+        "can_approve_valmin",
+        "organisation",
+    )
     search_fields = ("user__username", "user__email", "employee_id")
     readonly_fields = ("created_at", "updated_at")
 
     fieldsets = (
-        ("User Information", {
-            "fields": ("user", "organisation", "role", "clearance_level")
-        }),
-        ("Contact Details", {
-            "fields": ("department", "phone", "employee_id")
-        }),
-        ("Approval Permissions", {
-            "fields": ("can_approve_jorc", "can_approve_valmin")
-        }),
-        ("Timestamps", {
-            "fields": ("created_at", "updated_at"),
-            "classes": ("collapse",)
-        }),
+        (
+            "User Information",
+            {"fields": ("user", "organisation", "role", "clearance_level")},
+        ),
+        ("Contact Details", {"fields": ("department", "phone", "employee_id")}),
+        (
+            "Approval Permissions",
+            {"fields": ("can_approve_jorc", "can_approve_valmin")},
+        ),
+        (
+            "Timestamps",
+            {"fields": ("created_at", "updated_at"), "classes": ("collapse",)},
+        ),
     )
+
 
 @djadmin.register(AuditLog)
 class AuditLogAdmin(djadmin.ModelAdmin):
-    list_display = ("user", "action", "content_type", "object_id", "timestamp", "ip_address")
+    list_display = (
+        "user",
+        "action",
+        "content_type",
+        "object_id",
+        "timestamp",
+        "ip_address",
+    )
     list_filter = ("action", "content_type", "timestamp")
     search_fields = ("user__username", "description", "object_id")
-    readonly_fields = ("user", "action", "content_type", "object_id", "description", "ip_address", "user_agent", "timestamp")
+    readonly_fields = (
+        "user",
+        "action",
+        "content_type",
+        "object_id",
+        "description",
+        "ip_address",
+        "user_agent",
+        "timestamp",
+    )
     date_hierarchy = "timestamp"
 
     def has_add_permission(self, request):
@@ -85,32 +141,44 @@ class AuditLogAdmin(djadmin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return False  # Audit logs should be immutable
 
+
 @djadmin.register(ApprovalWorkflow)
 class ApprovalWorkflowAdmin(djadmin.ModelAdmin):
-    list_display = ("workflow_type", "status", "content_type", "object_id", "submitted_by", "approved_by", "submitted_at")
+    list_display = (
+        "workflow_type",
+        "status",
+        "content_type",
+        "object_id",
+        "submitted_by",
+        "approved_by",
+        "submitted_at",
+    )
     list_filter = ("workflow_type", "status", "submitted_at")
     search_fields = ("submission_notes", "approval_notes", "object_id")
     readonly_fields = ("submitted_at", "reviewed_at")
 
     fieldsets = (
-        ("Workflow Details", {
-            "fields": ("workflow_type", "status", "content_type", "object_id")
-        }),
-        ("Participants", {
-            "fields": ("submitted_by", "approved_by")
-        }),
-        ("Notes", {
-            "fields": ("submission_notes", "approval_notes")
-        }),
-        ("Timestamps", {
-            "fields": ("submitted_at", "reviewed_at")
-        }),
+        (
+            "Workflow Details",
+            {"fields": ("workflow_type", "status", "content_type", "object_id")},
+        ),
+        ("Participants", {"fields": ("submitted_by", "approved_by")}),
+        ("Notes", {"fields": ("submission_notes", "approval_notes")}),
+        ("Timestamps", {"fields": ("submitted_at", "reviewed_at")}),
     )
+
 
 @djadmin.register(SavedReport)
 class SavedReportAdmin(djadmin.ModelAdmin):
-    list_display  = ("title", "process", "clearance_level", "created_by", "created_at", "updated_at")
-    list_filter   = ("clearance_level", "process__organisation")
+    list_display = (
+        "title",
+        "process",
+        "clearance_level",
+        "created_by",
+        "created_at",
+        "updated_at",
+    )
+    list_filter = ("clearance_level", "process__organisation")
     search_fields = ("title", "process__name")
     readonly_fields = ("id", "created_at", "updated_at")
 

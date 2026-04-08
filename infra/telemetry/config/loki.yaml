@@ -1,13 +1,3 @@
-# -----------------------------------------------------------------------------------------------------
-# This Tempo configuration uses the local filepath `/loki` for "long-term" storage, though this can
-# be configured to use a range of object storage options (including MinIO - I assume); see the grafana
-# loki configuration examples page for cloud object storage setup configuration options and examples:
-#
-#   - https://grafana.com/docs/loki/latest/configure
-#   - https://grafana.com/docs/loki/latest/configure/examples/configuration-examples
-# 
-# -----------------------------------------------------------------------------------------------------
-
 auth_enabled: false
 server:
   http_listen_port: 3100
@@ -18,6 +8,7 @@ common:
   ring:
     kvstore:
       store: memberlist
+
   replication_factor: 1
   path_prefix: /loki
 

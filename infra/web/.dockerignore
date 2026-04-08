@@ -1,0 +1,7 @@
+infra/telemetry/
+
+.git/
+.venv/
+.pg-sock/
+.pg-data/
+.direnv/

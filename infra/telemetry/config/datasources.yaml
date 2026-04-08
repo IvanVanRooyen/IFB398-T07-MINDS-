@@ -33,4 +33,3 @@ datasources:
     type: redis-datasource
     url: redis://redis:6379
     access: proxy
-
