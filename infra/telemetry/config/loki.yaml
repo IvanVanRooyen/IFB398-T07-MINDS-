@@ -1,0 +1,46 @@
+auth_enabled: false
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: info
+
+common:
+  ring:
+    kvstore:
+      store: memberlist
+
+  replication_factor: 1
+  path_prefix: /loki
+
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  filesystem:
+    directory: /loki/chunks
+
+pattern_ingester:
+  enabled: true
+
+compactor:
+  working_directory: /loki/compactor
+  retention_enabled: true
+  delete_request_store: filesystem
+
+limits_config:
+  volume_enabled: true
+  metric_aggregation_enabled: true
+  enable_multi_variant_queries: true
+  retention_period: 168h # 7 days
+
+query_scheduler:
+  scheduler_ring:
+    kvstore:
+      store: memberlist

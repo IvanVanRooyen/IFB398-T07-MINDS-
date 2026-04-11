@@ -1,0 +1,2141 @@
+[
+{
+  "model": "auth.group",
+  "fields": {
+    "name": "Viewers",
+    "permissions": [
+      [
+        "view_approvalworkflow",
+        "core",
+        "approvalworkflow"
+      ],
+      [
+        "view_auditlog",
+        "core",
+        "auditlog"
+      ],
+      [
+        "view_document",
+        "core",
+        "document"
+      ],
+      [
+        "view_documentchunk",
+        "core",
+        "documentchunk"
+      ],
+      [
+        "view_documentview",
+        "core",
+        "documentview"
+      ],
+      [
+        "view_drillhole",
+        "core",
+        "drillhole"
+      ],
+      [
+        "view_organisation",
+        "core",
+        "organisation"
+      ],
+      [
+        "view_process",
+        "core",
+        "process"
+      ],
+      [
+        "view_prospect",
+        "core",
+        "prospect"
+      ],
+      [
+        "view_savedreport",
+        "core",
+        "savedreport"
+      ],
+      [
+        "view_tenement",
+        "core",
+        "tenement"
+      ],
+      [
+        "view_userprofile",
+        "core",
+        "userprofile"
+      ]
+    ]
+  }
+},
+{
+  "model": "auth.group",
+  "fields": {
+    "name": "Editors",
+    "permissions": [
+      [
+        "add_approvalworkflow",
+        "core",
+        "approvalworkflow"
+      ],
+      [
+        "change_approvalworkflow",
+        "core",
+        "approvalworkflow"
+      ],
+      [
+        "view_approvalworkflow",
+        "core",
+        "approvalworkflow"
+      ],
+      [
+        "add_auditlog",
+        "core",
+        "auditlog"
+      ],
+      [
+        "change_auditlog",
+        "core",
+        "auditlog"
+      ],
+      [
+        "view_auditlog",
+        "core",
+        "auditlog"
+      ],
+      [
+        "add_document",
+        "core",
+        "document"
+      ],
+      [
+        "change_document",
+        "core",
+        "document"
+      ],
+      [
+        "view_document",
+        "core",
+        "document"
+      ],
+      [
+        "add_documentchunk",
+        "core",
+        "documentchunk"
+      ],
+      [
+        "change_documentchunk",
+        "core",
+        "documentchunk"
+      ],
+      [
+        "view_documentchunk",
+        "core",
+        "documentchunk"
+      ],
+      [
+        "add_documentview",
+        "core",
+        "documentview"
+      ],
+      [
+        "change_documentview",
+        "core",
+        "documentview"
+      ],
+      [
+        "view_documentview",
+        "core",
+        "documentview"
+      ],
+      [
+        "add_drillhole",
+        "core",
+        "drillhole"
+      ],
+      [
+        "change_drillhole",
+        "core",
+        "drillhole"
+      ],
+      [
+        "view_drillhole",
+        "core",
+        "drillhole"
+      ],
+      [
+        "add_organisation",
+        "core",
+        "organisation"
+      ],
+      [
+        "change_organisation",
+        "core",
+        "organisation"
+      ],
+      [
+        "view_organisation",
+        "core",
+        "organisation"
+      ],
+      [
+        "add_process",
+        "core",
+        "process"
+      ],
+      [
+        "change_process",
+        "core",
+        "process"
+      ],
+      [
+        "view_process",
+        "core",
+        "process"
+      ],
+      [
+        "add_prospect",
+        "core",
+        "prospect"
+      ],
+      [
+        "change_prospect",
+        "core",
+        "prospect"
+      ],
+      [
+        "view_prospect",
+        "core",
+        "prospect"
+      ],
+      [
+        "add_savedreport",
+        "core",
+        "savedreport"
+      ],
+      [
+        "change_savedreport",
+        "core",
+        "savedreport"
+      ],
+      [
+        "view_savedreport",
+        "core",
+        "savedreport"
+      ],
+      [
+        "add_tenement",
+        "core",
+        "tenement"
+      ],
+      [
+        "change_tenement",
+        "core",
+        "tenement"
+      ],
+      [
+        "view_tenement",
+        "core",
+        "tenement"
+      ],
+      [
+        "add_userprofile",
+        "core",
+        "userprofile"
+      ],
+      [
+        "change_userprofile",
+        "core",
+        "userprofile"
+      ],
+      [
+        "view_userprofile",
+        "core",
+        "userprofile"
+      ]
+    ]
+  }
+},
+{
+  "model": "auth.group",
+  "fields": {
+    "name": "Managers",
+    "permissions": [
+      [
+        "add_approvalworkflow",
+        "core",
+        "approvalworkflow"
+      ],
+      [
+        "change_approvalworkflow",
+        "core",
+        "approvalworkflow"
+      ],
+      [
+        "delete_approvalworkflow",
+        "core",
+        "approvalworkflow"
+      ],
+      [
+        "view_approvalworkflow",
+        "core",
+        "approvalworkflow"
+      ],
+      [
+        "add_auditlog",
+        "core",
+        "auditlog"
+      ],
+      [
+        "change_auditlog",
+        "core",
+        "auditlog"
+      ],
+      [
+        "delete_auditlog",
+        "core",
+        "auditlog"
+      ],
+      [
+        "view_auditlog",
+        "core",
+        "auditlog"
+      ],
+      [
+        "add_document",
+        "core",
+        "document"
+      ],
+      [
+        "change_document",
+        "core",
+        "document"
+      ],
+      [
+        "delete_document",
+        "core",
+        "document"
+      ],
+      [
+        "view_document",
+        "core",
+        "document"
+      ],
+      [
+        "add_documentchunk",
+        "core",
+        "documentchunk"
+      ],
+      [
+        "change_documentchunk",
+        "core",
+        "documentchunk"
+      ],
+      [
+        "delete_documentchunk",
+        "core",
+        "documentchunk"
+      ],
+      [
+        "view_documentchunk",
+        "core",
+        "documentchunk"
+      ],
+      [
+        "add_documentview",
+        "core",
+        "documentview"
+      ],
+      [
+        "change_documentview",
+        "core",
+        "documentview"
+      ],
+      [
+        "delete_documentview",
+        "core",
+        "documentview"
+      ],
+      [
+        "view_documentview",
+        "core",
+        "documentview"
+      ],
+      [
+        "add_drillhole",
+        "core",
+        "drillhole"
+      ],
+      [
+        "change_drillhole",
+        "core",
+        "drillhole"
+      ],
+      [
+        "delete_drillhole",
+        "core",
+        "drillhole"
+      ],
+      [
+        "view_drillhole",
+        "core",
+        "drillhole"
+      ],
+      [
+        "add_organisation",
+        "core",
+        "organisation"
+      ],
+      [
+        "change_organisation",
+        "core",
+        "organisation"
+      ],
+      [
+        "delete_organisation",
+        "core",
+        "organisation"
+      ],
+      [
+        "view_organisation",
+        "core",
+        "organisation"
+      ],
+      [
+        "add_process",
+        "core",
+        "process"
+      ],
+      [
+        "change_process",
+        "core",
+        "process"
+      ],
+      [
+        "delete_process",
+        "core",
+        "process"
+      ],
+      [
+        "view_process",
+        "core",
+        "process"
+      ],
+      [
+        "add_prospect",
+        "core",
+        "prospect"
+      ],
+      [
+        "change_prospect",
+        "core",
+        "prospect"
+      ],
+      [
+        "delete_prospect",
+        "core",
+        "prospect"
+      ],
+      [
+        "view_prospect",
+        "core",
+        "prospect"
+      ],
+      [
+        "add_savedreport",
+        "core",
+        "savedreport"
+      ],
+      [
+        "change_savedreport",
+        "core",
+        "savedreport"
+      ],
+      [
+        "delete_savedreport",
+        "core",
+        "savedreport"
+      ],
+      [
+        "view_savedreport",
+        "core",
+        "savedreport"
+      ],
+      [
+        "add_tenement",
+        "core",
+        "tenement"
+      ],
+      [
+        "change_tenement",
+        "core",
+        "tenement"
+      ],
+      [
+        "delete_tenement",
+        "core",
+        "tenement"
+      ],
+      [
+        "view_tenement",
+        "core",
+        "tenement"
+      ],
+      [
+        "add_userprofile",
+        "core",
+        "userprofile"
+      ],
+      [
+        "change_userprofile",
+        "core",
+        "userprofile"
+      ],
+      [
+        "delete_userprofile",
+        "core",
+        "userprofile"
+      ],
+      [
+        "view_userprofile",
+        "core",
+        "userprofile"
+      ]
+    ]
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$kEFN0xqX6dp2qrR90IU1Fv$obMxEMezfjGv0K5V4r3kJtslRtTrfY+E0x6tfr46gVM=",
+    "last_login": null,
+    "is_superuser": true,
+    "username": "admin",
+    "first_name": "Admin",
+    "last_name": "User",
+    "email": "admin@example.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-04-07T14:00:33.169Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$dbsxqmmLsYVkgnvxiEeYnP$80qjs28eQOhrPFIUWOoQ4ZWtxUileJRqEEE9KG50aAE=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "david.hamilton.9309",
+    "first_name": "David",
+    "last_name": "Hamilton",
+    "email": "david.hamilton.9309@hotmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-04-07T14:00:33.270Z",
+    "groups": [
+      [
+        "Managers"
+      ]
+    ],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$TkAByKoDWcrSD6ynzE2B4l$98fhQXJ/VIqQKlwv9oJIhoQj3eJDDmBQgD+Ig6XNacM=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "jennifer.lee.5696",
+    "first_name": "Jennifer",
+    "last_name": "Lee",
+    "email": "jennifer.lee.5696@yahoo.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-04-07T14:00:33.374Z",
+    "groups": [
+      [
+        "Editors"
+      ]
+    ],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$HUdFNcsWXBG9P37kbTxF3Y$Ha6+Vp2BHl2f1VFxwcFwel2xI46PJFMI50xWcE8GbRU=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "denise.rodriguez.9571",
+    "first_name": "Denise",
+    "last_name": "Rodriguez",
+    "email": "denise.rodriguez.9571@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-04-07T14:00:33.477Z",
+    "groups": [
+      [
+        "Editors"
+      ]
+    ],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$oPwl8qucJE5Y3LXvCqUsTk$Ou7YDrAA9PBDhTw9+pLpt8RU87GlzgseP1AMLZRHO1c=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "sabrina.anderson.2789",
+    "first_name": "Sabrina",
+    "last_name": "Anderson",
+    "email": "sabrina.anderson.2789@yahoo.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-04-07T14:00:33.579Z",
+    "groups": [
+      [
+        "Viewers"
+      ]
+    ],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$mqAB88Ukrdy9nKeJ6q6A70$3prNjEZkBk5sUmrm2YAJNbl5maRdIMiuChJlrh/3AVM=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "jennifer.miller.3040",
+    "first_name": "Jennifer",
+    "last_name": "Miller",
+    "email": "jennifer.miller.3040@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-04-07T14:00:33.682Z",
+    "groups": [
+      [
+        "Managers"
+      ]
+    ],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$2FEPqeSyFJxPwQGNVu89hK$hrP5zc4NZqcGjYnse+KTFVa/GKkqhmGaaBOTG/9Q6kQ=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "angela.miller.2802",
+    "first_name": "Angela",
+    "last_name": "Miller",
+    "email": "angela.miller.2802@yahoo.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-04-07T14:00:33.785Z",
+    "groups": [
+      [
+        "Editors"
+      ]
+    ],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$PKhjqu15MvSsvA7qLnuqXm$j86hCns39UCGhqs6uhTW6ox1+Y0GW+69rquh6+Ee8ZY=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "diane.blackwell.1670",
+    "first_name": "Diane",
+    "last_name": "Blackwell",
+    "email": "diane.blackwell.1670@yahoo.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-04-07T14:00:33.890Z",
+    "groups": [
+      [
+        "Viewers"
+      ]
+    ],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$jc5jeNYIxOFFM1ypNhYvsS$SvAd2ATJds9Pgrsx8hCxMkopTRnrsNAPCifta3+F2PQ=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "william.butler.2068",
+    "first_name": "William",
+    "last_name": "Butler",
+    "email": "william.butler.2068@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-04-07T14:00:33.992Z",
+    "groups": [
+      [
+        "Editors"
+      ]
+    ],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$32hdHE53qAPYT4kmZ7mCX3$+Zx93nV1b7G++myA+sHqlcuTKvWOyGwrwgjak6DF4h8=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "bradley.lloyd.8880",
+    "first_name": "Bradley",
+    "last_name": "Lloyd",
+    "email": "bradley.lloyd.8880@hotmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-04-07T14:00:34.096Z",
+    "groups": [
+      [
+        "Managers"
+      ]
+    ],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$KYVFFUMpBBonrRwT4khCzK$d7tT9dqSbYblfjvHOcXQHmkRohU7DaEJF3njZOBaQOo=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "larry.vasquez.925",
+    "first_name": "Larry",
+    "last_name": "Vasquez",
+    "email": "larry.vasquez.925@yahoo.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-04-07T14:00:34.199Z",
+    "groups": [
+      [
+        "Editors"
+      ]
+    ],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$LLPW1Ne7ukSB9W8vF4QOJU$TTBHuqGj11eZ9ahCeWh41WYLnwbD6AIyVW5mPHkWz94=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "michael.valenzuela.5265",
+    "first_name": "Michael",
+    "last_name": "Valenzuela",
+    "email": "michael.valenzuela.5265@yahoo.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-04-07T14:00:34.302Z",
+    "groups": [
+      [
+        "Viewers"
+      ]
+    ],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$w9PKdxdhSsBbqbeCd8yiqB$/p8qtGBLksabQ8fGffU+EIghvdJ5wp3ckb8NgMLYkbI=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "marvin.harris.2555",
+    "first_name": "Marvin",
+    "last_name": "Harris",
+    "email": "marvin.harris.2555@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-04-07T14:00:34.405Z",
+    "groups": [
+      [
+        "Viewers"
+      ]
+    ],
+    "user_permissions": []
+  }
+},
+{
+  "model": "core.organisation",
+  "pk": "402122a1-3b88-493c-8529-b4c5d95b585a",
+  "fields": {
+    "name": "Knight-Martin",
+    "mode": "MINING",
+    "created_at": "2026-04-07T14:00:33.168Z",
+    "updated_at": "2026-04-07T14:00:33.168Z"
+  }
+},
+{
+  "model": "core.organisation",
+  "pk": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+  "fields": {
+    "name": "Oconnor-Wilkins",
+    "mode": "MINING",
+    "created_at": "2026-04-07T14:00:33.165Z",
+    "updated_at": "2026-04-07T14:00:33.165Z"
+  }
+},
+{
+  "model": "core.organisation",
+  "pk": "dc590ba6-ce28-433e-9679-838ade152314",
+  "fields": {
+    "name": "Wyatt-Huynh",
+    "mode": "EXPLORATION",
+    "created_at": "2026-04-07T14:00:33.166Z",
+    "updated_at": "2026-04-07T14:00:33.166Z"
+  }
+},
+{
+  "model": "core.process",
+  "pk": "0c6341aa-b21c-497c-a4eb-23993ec24474",
+  "fields": {
+    "name": "New Amanda Mine",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "mode": "PROJECT",
+    "geom": "SRID=4326;MULTIPOLYGON (((145.2092857489524 -29.92744636300225, 145.30928574895242 -29.92744636300225, 145.30928574895242 -29.82744636300225, 145.2092857489524 -29.82744636300225, 145.2092857489524 -29.92744636300225)))",
+    "commodity": "Iron Ore",
+    "created_at": "2026-04-07T14:00:34.519Z",
+    "updated_at": "2026-04-07T14:00:34.519Z"
+  }
+},
+{
+  "model": "core.process",
+  "pk": "455142e3-459c-4859-b8c6-4185fd911d18",
+  "fields": {
+    "name": "West Elainefurt Project",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "mode": "OPERATION",
+    "geom": "SRID=4326;MULTIPOLYGON (((139.85870528354482 -34.21157320860677, 139.95870528354484 -34.21157320860677, 139.95870528354484 -34.11157320860678, 139.85870528354482 -34.11157320860678, 139.85870528354482 -34.21157320860677)))",
+    "commodity": "Gold",
+    "created_at": "2026-04-07T14:00:34.522Z",
+    "updated_at": "2026-04-07T14:00:34.522Z"
+  }
+},
+{
+  "model": "core.process",
+  "pk": "631020fd-90df-4450-8c68-8571aecdbf84",
+  "fields": {
+    "name": "Emilyside Mine",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "mode": "OPERATION",
+    "geom": "SRID=4326;MULTIPOLYGON (((142.55901052810117 -19.40031274667947, 142.6590105281012 -19.40031274667947, 142.6590105281012 -19.30031274667947, 142.55901052810117 -19.30031274667947, 142.55901052810117 -19.40031274667947)))",
+    "commodity": "Coal",
+    "created_at": "2026-04-07T14:00:34.523Z",
+    "updated_at": "2026-04-07T14:00:34.523Z"
+  }
+},
+{
+  "model": "core.process",
+  "pk": "6e3d7586-8a39-489a-80b7-0c9a39196330",
+  "fields": {
+    "name": "Hoopertown Mine",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "mode": "OPERATION",
+    "geom": "SRID=4326;MULTIPOLYGON (((147.01100399459293 -27.677521032019932, 147.11100399459295 -27.677521032019932, 147.11100399459295 -27.57752103201993, 147.01100399459293 -27.57752103201993, 147.01100399459293 -27.677521032019932)))",
+    "commodity": "Nickel",
+    "created_at": "2026-04-07T14:00:34.517Z",
+    "updated_at": "2026-04-07T14:00:34.517Z"
+  }
+},
+{
+  "model": "core.process",
+  "pk": "74b431c3-2011-4398-8af9-604a682911b5",
+  "fields": {
+    "name": "Lawrenceport Project",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "mode": "PROJECT",
+    "geom": "SRID=4326;MULTIPOLYGON (((126.3516291277079 -24.40623287140993, 126.45162912770789 -24.40623287140993, 126.45162912770789 -24.30623287140993, 126.3516291277079 -24.30623287140993, 126.3516291277079 -24.40623287140993)))",
+    "commodity": "Gold",
+    "created_at": "2026-04-07T14:00:34.526Z",
+    "updated_at": "2026-04-07T14:00:34.526Z"
+  }
+},
+{
+  "model": "core.process",
+  "pk": "88742fa9-bdeb-4f37-87aa-38e65d1244a8",
+  "fields": {
+    "name": "Port Monicaville Mine",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "mode": "OPERATION",
+    "geom": "SRID=4326;MULTIPOLYGON (((119.1430800718192 -34.36573281474979, 119.2430800718192 -34.36573281474979, 119.2430800718192 -34.265732814749796, 119.1430800718192 -34.265732814749796, 119.1430800718192 -34.36573281474979)))",
+    "commodity": "Coal",
+    "created_at": "2026-04-07T14:00:34.510Z",
+    "updated_at": "2026-04-07T14:00:34.510Z"
+  }
+},
+{
+  "model": "core.process",
+  "pk": "8b897b2f-882b-4abd-a3ed-390cd08add20",
+  "fields": {
+    "name": "South Robert Mine",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "mode": "PROJECT",
+    "geom": "SRID=4326;MULTIPOLYGON (((126.91884066234775 -29.104635404308507, 127.01884066234774 -29.104635404308507, 127.01884066234774 -29.004635404308505, 126.91884066234775 -29.004635404308505, 126.91884066234775 -29.104635404308507)))",
+    "commodity": "Iron Ore",
+    "created_at": "2026-04-07T14:00:34.520Z",
+    "updated_at": "2026-04-07T14:00:34.520Z"
+  }
+},
+{
+  "model": "core.process",
+  "pk": "b1e83e2d-0fa2-4061-9479-fc0ec531253b",
+  "fields": {
+    "name": "West Thomaston Prospect",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "mode": "OPERATION",
+    "geom": "SRID=4326;MULTIPOLYGON (((141.5940568436136 -23.51199505990075, 141.69405684361362 -23.51199505990075, 141.69405684361362 -23.41199505990075, 141.5940568436136 -23.41199505990075, 141.5940568436136 -23.51199505990075)))",
+    "commodity": "Iron Ore",
+    "created_at": "2026-04-07T14:00:34.524Z",
+    "updated_at": "2026-04-07T14:00:34.524Z"
+  }
+},
+{
+  "model": "core.process",
+  "pk": "c52d133d-9901-4093-b869-081103b5cdb8",
+  "fields": {
+    "name": "New William Project",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "mode": "PROJECT",
+    "geom": "SRID=4326;MULTIPOLYGON (((134.37798546284318 -21.41771296074366, 134.4779854628432 -21.41771296074366, 134.4779854628432 -21.31771296074366, 134.37798546284318 -21.31771296074366, 134.37798546284318 -21.41771296074366)))",
+    "commodity": "Zinc",
+    "created_at": "2026-04-07T14:00:34.516Z",
+    "updated_at": "2026-04-07T14:00:34.516Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "13ab6bdc-b04d-4999-b49e-2997a54d52c8",
+  "fields": {
+    "name": "DH-NEWWILL-001",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "c52d133d-9901-4093-b869-081103b5cdb8",
+    "collar_location": "SRID=4326;POINT (142.6658649094474 -28.095651916235834)",
+    "depth": 428.88,
+    "azimuth": 287.45,
+    "dip": -81.37,
+    "created_at": "2026-04-07T14:00:34.530Z",
+    "updated_at": "2026-04-07T14:00:34.530Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "1c3308c5-ddfa-44b2-822e-048fae13580d",
+  "fields": {
+    "name": "DH-SOUTHRO-001",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "8b897b2f-882b-4abd-a3ed-390cd08add20",
+    "collar_location": "SRID=4326;POINT (144.6202085062097 -22.66833129256821)",
+    "depth": 726.03,
+    "azimuth": 65.46,
+    "dip": -58.58,
+    "created_at": "2026-04-07T14:00:34.540Z",
+    "updated_at": "2026-04-07T14:00:34.540Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "1e3f40eb-110c-437b-8d6f-9f1599260f5d",
+  "fields": {
+    "name": "DH-PORTMON-002",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "88742fa9-bdeb-4f37-87aa-38e65d1244a8",
+    "collar_location": "SRID=4326;POINT (148.85486920732595 -32.195820911432925)",
+    "depth": 110.03,
+    "azimuth": 251.48,
+    "dip": -39.91,
+    "created_at": "2026-04-07T14:00:34.528Z",
+    "updated_at": "2026-04-07T14:00:34.528Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "2345c7ee-d8db-4ab6-bbfc-9bff531a1ba9",
+  "fields": {
+    "name": "DH-WESTELA-002",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "455142e3-459c-4859-b8c6-4185fd911d18",
+    "collar_location": "SRID=4326;POINT (118.21209842927382 -20.443248139212514)",
+    "depth": 263.08,
+    "azimuth": 129.2,
+    "dip": -2.0,
+    "created_at": "2026-04-07T14:00:34.544Z",
+    "updated_at": "2026-04-07T14:00:34.544Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "350aaf63-1636-44a1-ab3c-61c933b1cfda",
+  "fields": {
+    "name": "DH-EMILYSID-001",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "631020fd-90df-4450-8c68-8571aecdbf84",
+    "collar_location": "SRID=4326;POINT (145.38103277679673 -23.736547742299788)",
+    "depth": 68.43,
+    "azimuth": 58.94,
+    "dip": -52.69,
+    "created_at": "2026-04-07T14:00:34.547Z",
+    "updated_at": "2026-04-07T14:00:34.547Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "4036a714-e699-4980-9ae8-2638bf069df0",
+  "fields": {
+    "name": "DH-SOUTHRO-003",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "8b897b2f-882b-4abd-a3ed-390cd08add20",
+    "collar_location": "SRID=4326;POINT (115.48496399258505 -27.7870396791742)",
+    "depth": 224.18,
+    "azimuth": 29.47,
+    "dip": -16.42,
+    "created_at": "2026-04-07T14:00:34.541Z",
+    "updated_at": "2026-04-07T14:00:34.541Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "444d9902-17a9-49e3-b6b9-a4d5fb3b477d",
+  "fields": {
+    "name": "DH-LAWRENCE-001",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "74b431c3-2011-4398-8af9-604a682911b5",
+    "collar_location": "SRID=4326;POINT (142.45050621397584 -31.686375131870697)",
+    "depth": 60.84,
+    "azimuth": 263.65,
+    "dip": -13.56,
+    "created_at": "2026-04-07T14:00:34.555Z",
+    "updated_at": "2026-04-07T14:00:34.555Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "48a318ce-e86b-43df-b290-6c0f3c992f7f",
+  "fields": {
+    "name": "DH-HOOPERTO-002",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "6e3d7586-8a39-489a-80b7-0c9a39196330",
+    "collar_location": "SRID=4326;POINT (139.26836976407776 -25.849597829017142)",
+    "depth": 269.23,
+    "azimuth": 321.83,
+    "dip": -60.27,
+    "created_at": "2026-04-07T14:00:34.534Z",
+    "updated_at": "2026-04-07T14:00:34.534Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "4d26ef93-3348-4d4a-ada4-3cb58ca57f51",
+  "fields": {
+    "name": "DH-NEWAMAN-001",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "0c6341aa-b21c-497c-a4eb-23993ec24474",
+    "collar_location": "SRID=4326;POINT (129.06269729699122 -23.33967596838139)",
+    "depth": 609.68,
+    "azimuth": 255.08,
+    "dip": -86.82,
+    "created_at": "2026-04-07T14:00:34.537Z",
+    "updated_at": "2026-04-07T14:00:34.537Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "4d9be3e2-98dc-4308-8833-1f1d3af92d17",
+  "fields": {
+    "name": "DH-WESTTHO-004",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "b1e83e2d-0fa2-4061-9479-fc0ec531253b",
+    "collar_location": "SRID=4326;POINT (120.57867816497888 -24.122380408376884)",
+    "depth": 748.14,
+    "azimuth": 324.03,
+    "dip": -40.17,
+    "created_at": "2026-04-07T14:00:34.553Z",
+    "updated_at": "2026-04-07T14:00:34.553Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "5655ed91-0d6e-4231-91f5-0594661564a4",
+  "fields": {
+    "name": "DH-SOUTHRO-002",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "8b897b2f-882b-4abd-a3ed-390cd08add20",
+    "collar_location": "SRID=4326;POINT (121.6402870462717 -34.3123285537408)",
+    "depth": 638.12,
+    "azimuth": 27.17,
+    "dip": -62.92,
+    "created_at": "2026-04-07T14:00:34.541Z",
+    "updated_at": "2026-04-07T14:00:34.541Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "587c0668-fe25-49df-8654-40112f0fb3dd",
+  "fields": {
+    "name": "DH-NEWAMAN-004",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "0c6341aa-b21c-497c-a4eb-23993ec24474",
+    "collar_location": "SRID=4326;POINT (128.89304956174254 -31.804836968555232)",
+    "depth": 501.84,
+    "azimuth": 336.2,
+    "dip": -87.25,
+    "created_at": "2026-04-07T14:00:34.539Z",
+    "updated_at": "2026-04-07T14:00:34.539Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "69d99a63-0574-41c3-bc06-732cbdfd19c7",
+  "fields": {
+    "name": "DH-PORTMON-003",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "88742fa9-bdeb-4f37-87aa-38e65d1244a8",
+    "collar_location": "SRID=4326;POINT (133.1864668380485 -25.868951003699543)",
+    "depth": 266.22,
+    "azimuth": 83.03,
+    "dip": -75.28,
+    "created_at": "2026-04-07T14:00:34.529Z",
+    "updated_at": "2026-04-07T14:00:34.529Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "7ee991c1-d9af-45a8-b030-a35e04487a21",
+  "fields": {
+    "name": "DH-WESTTHO-003",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "b1e83e2d-0fa2-4061-9479-fc0ec531253b",
+    "collar_location": "SRID=4326;POINT (147.334879125019 -18.15915022032944)",
+    "depth": 795.37,
+    "azimuth": 211.73,
+    "dip": -68.25,
+    "created_at": "2026-04-07T14:00:34.552Z",
+    "updated_at": "2026-04-07T14:00:34.552Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "80bb8323-9555-4457-aba7-e709d1b03381",
+  "fields": {
+    "name": "DH-HOOPERTO-001",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "6e3d7586-8a39-489a-80b7-0c9a39196330",
+    "collar_location": "SRID=4326;POINT (119.72590128767251 -31.567880177978115)",
+    "depth": 515.98,
+    "azimuth": 165.78,
+    "dip": -72.44,
+    "created_at": "2026-04-07T14:00:34.534Z",
+    "updated_at": "2026-04-07T14:00:34.534Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "81232a0a-0301-4857-a17e-74643692caaf",
+  "fields": {
+    "name": "DH-SOUTHRO-004",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "8b897b2f-882b-4abd-a3ed-390cd08add20",
+    "collar_location": "SRID=4326;POINT (126.17719717567357 -29.202544639510396)",
+    "depth": 643.48,
+    "azimuth": 40.92,
+    "dip": -43.74,
+    "created_at": "2026-04-07T14:00:34.542Z",
+    "updated_at": "2026-04-07T14:00:34.542Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "817df1d7-f27b-44b0-9a89-89b2d3520d2a",
+  "fields": {
+    "name": "DH-WESTELA-001",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "455142e3-459c-4859-b8c6-4185fd911d18",
+    "collar_location": "SRID=4326;POINT (134.94470859790218 -31.49361727829557)",
+    "depth": 161.39,
+    "azimuth": 14.69,
+    "dip": -81.03,
+    "created_at": "2026-04-07T14:00:34.543Z",
+    "updated_at": "2026-04-07T14:00:34.543Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "883c4c24-9528-4f60-ba71-693a458bc457",
+  "fields": {
+    "name": "DH-WESTTHO-001",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "b1e83e2d-0fa2-4061-9479-fc0ec531253b",
+    "collar_location": "SRID=4326;POINT (132.47411319180128 -33.36025378981543)",
+    "depth": 212.37,
+    "azimuth": 338.43,
+    "dip": -62.2,
+    "created_at": "2026-04-07T14:00:34.551Z",
+    "updated_at": "2026-04-07T14:00:34.551Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "8b8d5f19-0bf1-4320-a1e6-b5e4689843e9",
+  "fields": {
+    "name": "DH-WESTELA-004",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "455142e3-459c-4859-b8c6-4185fd911d18",
+    "collar_location": "SRID=4326;POINT (142.35939801856864 -25.002616152444425)",
+    "depth": 448.71,
+    "azimuth": 280.01,
+    "dip": -76.36,
+    "created_at": "2026-04-07T14:00:34.546Z",
+    "updated_at": "2026-04-07T14:00:34.546Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "923cc0be-1bd4-484a-8173-19103be5a358",
+  "fields": {
+    "name": "DH-EMILYSID-003",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "631020fd-90df-4450-8c68-8571aecdbf84",
+    "collar_location": "SRID=4326;POINT (134.7879335044961 -32.867177438324674)",
+    "depth": 650.48,
+    "azimuth": 16.47,
+    "dip": -61.81,
+    "created_at": "2026-04-07T14:00:34.549Z",
+    "updated_at": "2026-04-07T14:00:34.549Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "ac0eed42-cbb4-4754-baf0-ec331b5eb6f4",
+  "fields": {
+    "name": "DH-EMILYSID-004",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "631020fd-90df-4450-8c68-8571aecdbf84",
+    "collar_location": "SRID=4326;POINT (121.09399327012976 -33.361074526225494)",
+    "depth": 764.12,
+    "azimuth": 20.42,
+    "dip": -80.12,
+    "created_at": "2026-04-07T14:00:34.550Z",
+    "updated_at": "2026-04-07T14:00:34.550Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "ae71794f-f23d-4b29-925f-cf57d857a664",
+  "fields": {
+    "name": "DH-NEWWILL-003",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "c52d133d-9901-4093-b869-081103b5cdb8",
+    "collar_location": "SRID=4326;POINT (133.13931935479155 -23.441107034689914)",
+    "depth": 183.49,
+    "azimuth": 118.97,
+    "dip": -54.47,
+    "created_at": "2026-04-07T14:00:34.532Z",
+    "updated_at": "2026-04-07T14:00:34.532Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "b2b7e998-554f-4db9-8979-29649c506a4f",
+  "fields": {
+    "name": "DH-NEWWILL-002",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "c52d133d-9901-4093-b869-081103b5cdb8",
+    "collar_location": "SRID=4326;POINT (115.9546499926744 -20.06595279176937)",
+    "depth": 232.45,
+    "azimuth": 343.73,
+    "dip": -52.5,
+    "created_at": "2026-04-07T14:00:34.531Z",
+    "updated_at": "2026-04-07T14:00:34.531Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "b62f9bfc-7189-4c5b-94cb-a620a56e6cc0",
+  "fields": {
+    "name": "DH-HOOPERTO-004",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "6e3d7586-8a39-489a-80b7-0c9a39196330",
+    "collar_location": "SRID=4326;POINT (127.99260713765001 -33.84478216875384)",
+    "depth": 521.97,
+    "azimuth": 186.01,
+    "dip": -38.34,
+    "created_at": "2026-04-07T14:00:34.536Z",
+    "updated_at": "2026-04-07T14:00:34.536Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "b8d47677-e1ae-4120-964f-42f3f98c1a95",
+  "fields": {
+    "name": "DH-WESTELA-003",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "455142e3-459c-4859-b8c6-4185fd911d18",
+    "collar_location": "SRID=4326;POINT (133.33962072083716 -28.027683580873827)",
+    "depth": 542.97,
+    "azimuth": 189.94,
+    "dip": -40.55,
+    "created_at": "2026-04-07T14:00:34.545Z",
+    "updated_at": "2026-04-07T14:00:34.545Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "ba9a6551-a2a7-4ffc-b6d4-b6631ba3b245",
+  "fields": {
+    "name": "DH-PORTMON-004",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "88742fa9-bdeb-4f37-87aa-38e65d1244a8",
+    "collar_location": "SRID=4326;POINT (136.2625292516002 -31.857473647598372)",
+    "depth": 422.05,
+    "azimuth": 1.2,
+    "dip": -89.71,
+    "created_at": "2026-04-07T14:00:34.530Z",
+    "updated_at": "2026-04-07T14:00:34.530Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "c468e62c-f2e3-4d4a-b6de-44572fc99903",
+  "fields": {
+    "name": "DH-HOOPERTO-003",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "6e3d7586-8a39-489a-80b7-0c9a39196330",
+    "collar_location": "SRID=4326;POINT (127.73861004392086 -27.743108356381356)",
+    "depth": 244.95,
+    "azimuth": 241.56,
+    "dip": -18.14,
+    "created_at": "2026-04-07T14:00:34.535Z",
+    "updated_at": "2026-04-07T14:00:34.535Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "cf1ab63e-97be-4aec-af07-b802d2cdcdb6",
+  "fields": {
+    "name": "DH-LAWRENCE-003",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "74b431c3-2011-4398-8af9-604a682911b5",
+    "collar_location": "SRID=4326;POINT (138.21082058641406 -23.28644132171224)",
+    "depth": 327.59,
+    "azimuth": 353.01,
+    "dip": -69.72,
+    "created_at": "2026-04-07T14:00:34.557Z",
+    "updated_at": "2026-04-07T14:00:34.557Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "d0bd1306-3eff-44f8-bde7-2955dbe69ac7",
+  "fields": {
+    "name": "DH-EMILYSID-002",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "631020fd-90df-4450-8c68-8571aecdbf84",
+    "collar_location": "SRID=4326;POINT (131.45839948443708 -34.71034466902139)",
+    "depth": 543.52,
+    "azimuth": 127.27,
+    "dip": -16.54,
+    "created_at": "2026-04-07T14:00:34.548Z",
+    "updated_at": "2026-04-07T14:00:34.548Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "df17b73e-18d5-40b3-a6f0-f6728c8d2595",
+  "fields": {
+    "name": "DH-NEWWILL-004",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "c52d133d-9901-4093-b869-081103b5cdb8",
+    "collar_location": "SRID=4326;POINT (117.3697092572665 -29.47561144797151)",
+    "depth": 568.91,
+    "azimuth": 89.62,
+    "dip": -52.81,
+    "created_at": "2026-04-07T14:00:34.533Z",
+    "updated_at": "2026-04-07T14:00:34.533Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "e047b15d-b730-463a-8dad-7916eece7cd2",
+  "fields": {
+    "name": "DH-WESTTHO-002",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "b1e83e2d-0fa2-4061-9479-fc0ec531253b",
+    "collar_location": "SRID=4326;POINT (120.67456203261035 -22.33251652614951)",
+    "depth": 216.59,
+    "azimuth": 21.2,
+    "dip": -70.2,
+    "created_at": "2026-04-07T14:00:34.551Z",
+    "updated_at": "2026-04-07T14:00:34.551Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "ebeb827f-1eae-4d9f-b174-b3b13077805e",
+  "fields": {
+    "name": "DH-LAWRENCE-004",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "74b431c3-2011-4398-8af9-604a682911b5",
+    "collar_location": "SRID=4326;POINT (118.79564228009147 -19.462756398503593)",
+    "depth": 698.75,
+    "azimuth": 202.39,
+    "dip": -31.44,
+    "created_at": "2026-04-07T14:00:34.558Z",
+    "updated_at": "2026-04-07T14:00:34.558Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "f4e0c330-849b-4c60-ab34-3698a38e36fa",
+  "fields": {
+    "name": "DH-NEWAMAN-003",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "0c6341aa-b21c-497c-a4eb-23993ec24474",
+    "collar_location": "SRID=4326;POINT (136.8960863587288 -23.505536485589438)",
+    "depth": 740.74,
+    "azimuth": 10.57,
+    "dip": -58.94,
+    "created_at": "2026-04-07T14:00:34.538Z",
+    "updated_at": "2026-04-07T14:00:34.538Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "f65e7b9b-7e98-4efd-b795-d71f52d96283",
+  "fields": {
+    "name": "DH-PORTMON-001",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "88742fa9-bdeb-4f37-87aa-38e65d1244a8",
+    "collar_location": "SRID=4326;POINT (141.90997282564362 -31.572891524487137)",
+    "depth": 764.4,
+    "azimuth": 219.63,
+    "dip": -52.13,
+    "created_at": "2026-04-07T14:00:34.527Z",
+    "updated_at": "2026-04-07T14:00:34.527Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "f671dc7d-0757-46ba-9cc1-febc9790c35d",
+  "fields": {
+    "name": "DH-LAWRENCE-002",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "74b431c3-2011-4398-8af9-604a682911b5",
+    "collar_location": "SRID=4326;POINT (123.25003581103435 -30.490695255723445)",
+    "depth": 141.73,
+    "azimuth": 276.5,
+    "dip": -39.55,
+    "created_at": "2026-04-07T14:00:34.556Z",
+    "updated_at": "2026-04-07T14:00:34.556Z"
+  }
+},
+{
+  "model": "core.drillhole",
+  "pk": "f8ccbc19-8a9b-4a0b-95d1-7fd6a821b23e",
+  "fields": {
+    "name": "DH-NEWAMAN-002",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "0c6341aa-b21c-497c-a4eb-23993ec24474",
+    "collar_location": "SRID=4326;POINT (124.27953206445676 -26.833107725857246)",
+    "depth": 602.92,
+    "azimuth": 161.7,
+    "dip": -66.21,
+    "created_at": "2026-04-07T14:00:34.537Z",
+    "updated_at": "2026-04-07T14:00:34.537Z"
+  }
+},
+{
+  "model": "core.prospect",
+  "pk": "051d344e-a04e-414d-8f47-4562d1161023",
+  "fields": {
+    "name": "Brown Deposit",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "631020fd-90df-4450-8c68-8571aecdbf84",
+    "geom": "SRID=4326;POINT (115.20473443403243 -19.3892164042959)",
+    "created_at": "2026-04-07T14:00:34.574Z",
+    "updated_at": "2026-04-07T14:00:34.574Z"
+  }
+},
+{
+  "model": "core.prospect",
+  "pk": "0f1daa77-5c1b-489a-bc18-f902c968519b",
+  "fields": {
+    "name": "Martin Zone",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "74b431c3-2011-4398-8af9-604a682911b5",
+    "geom": "SRID=4326;POINT (138.87719415378996 -28.313529456658152)",
+    "created_at": "2026-04-07T14:00:34.579Z",
+    "updated_at": "2026-04-07T14:00:34.579Z"
+  }
+},
+{
+  "model": "core.prospect",
+  "pk": "222cdf80-5681-4ea9-9c95-622670e4aecf",
+  "fields": {
+    "name": "Walker Reef",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "b1e83e2d-0fa2-4061-9479-fc0ec531253b",
+    "geom": "SRID=4326;POINT (119.49414044109034 -29.417381334124308)",
+    "created_at": "2026-04-07T14:00:34.577Z",
+    "updated_at": "2026-04-07T14:00:34.577Z"
+  }
+},
+{
+  "model": "core.prospect",
+  "pk": "295ca214-8af5-4c1d-b232-3e9568d29c08",
+  "fields": {
+    "name": "Parker Deposit",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "8b897b2f-882b-4abd-a3ed-390cd08add20",
+    "geom": "SRID=4326;POINT (122.05666778730603 -23.205099316460803)",
+    "created_at": "2026-04-07T14:00:34.569Z",
+    "updated_at": "2026-04-07T14:00:34.569Z"
+  }
+},
+{
+  "model": "core.prospect",
+  "pk": "381c516b-14bc-4965-bb23-4e34879c4924",
+  "fields": {
+    "name": "Bentley Deposit",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "0c6341aa-b21c-497c-a4eb-23993ec24474",
+    "geom": "SRID=4326;POINT (147.89275479894908 -34.596164660842724)",
+    "created_at": "2026-04-07T14:00:34.568Z",
+    "updated_at": "2026-04-07T14:00:34.568Z"
+  }
+},
+{
+  "model": "core.prospect",
+  "pk": "72307823-d42f-49a4-acae-6f8ee3f8570d",
+  "fields": {
+    "name": "Thompson Reef",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "0c6341aa-b21c-497c-a4eb-23993ec24474",
+    "geom": "SRID=4326;POINT (133.07820935268703 -24.30507146496187)",
+    "created_at": "2026-04-07T14:00:34.567Z",
+    "updated_at": "2026-04-07T14:00:34.567Z"
+  }
+},
+{
+  "model": "core.prospect",
+  "pk": "8cec1e2e-9d9e-4878-9eba-12ac17057692",
+  "fields": {
+    "name": "Porter Reef",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "455142e3-459c-4859-b8c6-4185fd911d18",
+    "geom": "SRID=4326;POINT (142.7852446372881 -33.43122568994368)",
+    "created_at": "2026-04-07T14:00:34.573Z",
+    "updated_at": "2026-04-07T14:00:34.573Z"
+  }
+},
+{
+  "model": "core.prospect",
+  "pk": "9db2b7f8-4359-42a4-b20d-1ac7f6034114",
+  "fields": {
+    "name": "Rodriguez Reef",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "c52d133d-9901-4093-b869-081103b5cdb8",
+    "geom": "SRID=4326;POINT (129.86216492814472 -27.448353453254427)",
+    "created_at": "2026-04-07T14:00:34.564Z",
+    "updated_at": "2026-04-07T14:00:34.564Z"
+  }
+},
+{
+  "model": "core.prospect",
+  "pk": "9ec64eba-75ef-4bcd-b84c-aede432a3294",
+  "fields": {
+    "name": "Martinez Lode",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "88742fa9-bdeb-4f37-87aa-38e65d1244a8",
+    "geom": "SRID=4326;POINT (133.90704595937794 -26.28108869097354)",
+    "created_at": "2026-04-07T14:00:34.560Z",
+    "updated_at": "2026-04-07T14:00:34.560Z"
+  }
+},
+{
+  "model": "core.prospect",
+  "pk": "a5207b9c-696e-4472-966a-9ce81ce142f9",
+  "fields": {
+    "name": "Davis Zone",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "6e3d7586-8a39-489a-80b7-0c9a39196330",
+    "geom": "SRID=4326;POINT (145.82837989381417 -30.542214410786695)",
+    "created_at": "2026-04-07T14:00:34.566Z",
+    "updated_at": "2026-04-07T14:00:34.566Z"
+  }
+},
+{
+  "model": "core.prospect",
+  "pk": "b56fcc6d-b1da-4a9d-9734-cde374cc39ed",
+  "fields": {
+    "name": "Brown Lode",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "c52d133d-9901-4093-b869-081103b5cdb8",
+    "geom": "SRID=4326;POINT (118.88597463422632 -27.83434457395614)",
+    "created_at": "2026-04-07T14:00:34.563Z",
+    "updated_at": "2026-04-07T14:00:34.563Z"
+  }
+},
+{
+  "model": "core.prospect",
+  "pk": "b7aa6032-ca93-44ee-ac34-9da66046e317",
+  "fields": {
+    "name": "Farley Lode",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "6e3d7586-8a39-489a-80b7-0c9a39196330",
+    "geom": "SRID=4326;POINT (140.50216381691448 -32.08941252004062)",
+    "created_at": "2026-04-07T14:00:34.565Z",
+    "updated_at": "2026-04-07T14:00:34.565Z"
+  }
+},
+{
+  "model": "core.prospect",
+  "pk": "ce57c95b-a4fa-4aa1-b26e-0f0068edfc1f",
+  "fields": {
+    "name": "Davis Reef",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "455142e3-459c-4859-b8c6-4185fd911d18",
+    "geom": "SRID=4326;POINT (149.51067603204365 -19.08491340621532)",
+    "created_at": "2026-04-07T14:00:34.572Z",
+    "updated_at": "2026-04-07T14:00:34.572Z"
+  }
+},
+{
+  "model": "core.prospect",
+  "pk": "d9c71214-d822-4a40-be77-ae1026abdf93",
+  "fields": {
+    "name": "Chapman Zone",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "74b431c3-2011-4398-8af9-604a682911b5",
+    "geom": "SRID=4326;POINT (137.41463203336187 -21.553468033748835)",
+    "created_at": "2026-04-07T14:00:34.580Z",
+    "updated_at": "2026-04-07T14:00:34.580Z"
+  }
+},
+{
+  "model": "core.prospect",
+  "pk": "ded97386-c611-42da-89a6-6b6a0f6990ae",
+  "fields": {
+    "name": "Robinson Reef",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "631020fd-90df-4450-8c68-8571aecdbf84",
+    "geom": "SRID=4326;POINT (142.62373542418257 -25.421137624274216)",
+    "created_at": "2026-04-07T14:00:34.575Z",
+    "updated_at": "2026-04-07T14:00:34.575Z"
+  }
+},
+{
+  "model": "core.prospect",
+  "pk": "e114dd24-a04c-4887-983f-04daaad722ae",
+  "fields": {
+    "name": "Cunningham Deposit",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "88742fa9-bdeb-4f37-87aa-38e65d1244a8",
+    "geom": "SRID=4326;POINT (132.26255550214535 -30.93983586285374)",
+    "created_at": "2026-04-07T14:00:34.561Z",
+    "updated_at": "2026-04-07T14:00:34.561Z"
+  }
+},
+{
+  "model": "core.prospect",
+  "pk": "e970f10b-ece4-4cad-9bcd-3e4397c6893f",
+  "fields": {
+    "name": "Robinson Deposit",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "8b897b2f-882b-4abd-a3ed-390cd08add20",
+    "geom": "SRID=4326;POINT (128.91948094849184 -34.521893222919886)",
+    "created_at": "2026-04-07T14:00:34.571Z",
+    "updated_at": "2026-04-07T14:00:34.571Z"
+  }
+},
+{
+  "model": "core.prospect",
+  "pk": "eff5e3d9-bf88-4fbf-b1f7-2c85d43cf620",
+  "fields": {
+    "name": "Mcgee Deposit",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "b1e83e2d-0fa2-4061-9479-fc0ec531253b",
+    "geom": "SRID=4326;POINT (116.01483078564705 -26.32656954334021)",
+    "created_at": "2026-04-07T14:00:34.578Z",
+    "updated_at": "2026-04-07T14:00:34.578Z"
+  }
+},
+{
+  "model": "core.tenement",
+  "pk": "042c472e-0243-4d98-8c82-fd74ce50381b",
+  "fields": {
+    "name": "ML-6180/56",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "8b897b2f-882b-4abd-a3ed-390cd08add20",
+    "geom": "SRID=4326;MULTIPOLYGON (((123.53492735158358 -34.383421356819035, 123.63492735158357 -34.383421356819035, 123.63492735158357 -34.28342135681904, 123.53492735158358 -34.28342135681904, 123.53492735158358 -34.383421356819035)))",
+    "created_at": "2026-04-07T14:00:34.595Z",
+    "updated_at": "2026-04-07T14:00:34.595Z"
+  }
+},
+{
+  "model": "core.tenement",
+  "pk": "0a566f00-4af3-45fc-aadf-c476ace95df5",
+  "fields": {
+    "name": "ML-8906/84",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "c52d133d-9901-4093-b869-081103b5cdb8",
+    "geom": "SRID=4326;MULTIPOLYGON (((129.71993345962974 -32.352734000319984, 129.81993345962977 -32.352734000319984, 129.81993345962977 -32.25273400031999, 129.71993345962974 -32.25273400031999, 129.71993345962974 -32.352734000319984)))",
+    "created_at": "2026-04-07T14:00:34.587Z",
+    "updated_at": "2026-04-07T14:00:34.587Z"
+  }
+},
+{
+  "model": "core.tenement",
+  "pk": "14fe4a58-fbf6-48ea-92d7-843003826b28",
+  "fields": {
+    "name": "ML-2611/94",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "c52d133d-9901-4093-b869-081103b5cdb8",
+    "geom": "SRID=4326;MULTIPOLYGON (((119.12320295663558 -19.750646392179124, 119.22320295663557 -19.750646392179124, 119.22320295663557 -19.650646392179123, 119.12320295663558 -19.650646392179123, 119.12320295663558 -19.750646392179124)))",
+    "created_at": "2026-04-07T14:00:34.588Z",
+    "updated_at": "2026-04-07T14:00:34.588Z"
+  }
+},
+{
+  "model": "core.tenement",
+  "pk": "1991f659-10db-4036-8a2b-cb5dd7167b2b",
+  "fields": {
+    "name": "ML-7385/89",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "6e3d7586-8a39-489a-80b7-0c9a39196330",
+    "geom": "SRID=4326;MULTIPOLYGON (((140.83146019787716 -24.129397759885244, 140.9314601978772 -24.129397759885244, 140.9314601978772 -24.029397759885242, 140.83146019787716 -24.029397759885242, 140.83146019787716 -24.129397759885244)))",
+    "created_at": "2026-04-07T14:00:34.591Z",
+    "updated_at": "2026-04-07T14:00:34.591Z"
+  }
+},
+{
+  "model": "core.tenement",
+  "pk": "1f6c686c-1339-4ccc-940b-fee4f398e251",
+  "fields": {
+    "name": "ML-1182/60",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "631020fd-90df-4450-8c68-8571aecdbf84",
+    "geom": "SRID=4326;MULTIPOLYGON (((123.02652424522418 -22.213459343841947, 123.12652424522418 -22.213459343841947, 123.12652424522418 -22.113459343841946, 123.02652424522418 -22.113459343841946, 123.02652424522418 -22.213459343841947)))",
+    "created_at": "2026-04-07T14:00:34.599Z",
+    "updated_at": "2026-04-07T14:00:34.599Z"
+  }
+},
+{
+  "model": "core.tenement",
+  "pk": "261d1b07-956f-4c7f-877e-46a2b333a31d",
+  "fields": {
+    "name": "ML-1234/46",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "0c6341aa-b21c-497c-a4eb-23993ec24474",
+    "geom": "SRID=4326;MULTIPOLYGON (((138.71256152574094 -32.32787624816153, 138.81256152574096 -32.32787624816153, 138.81256152574096 -32.227876248161536, 138.71256152574094 -32.227876248161536, 138.71256152574094 -32.32787624816153)))",
+    "created_at": "2026-04-07T14:00:34.593Z",
+    "updated_at": "2026-04-07T14:00:34.593Z"
+  }
+},
+{
+  "model": "core.tenement",
+  "pk": "63daa87b-f300-498a-9bb1-83ea7ada08f0",
+  "fields": {
+    "name": "ML-2597/20",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "74b431c3-2011-4398-8af9-604a682911b5",
+    "geom": "SRID=4326;MULTIPOLYGON (((116.56993646339986 -31.892867269552276, 116.66993646339985 -31.892867269552276, 116.66993646339985 -31.792867269552275, 116.56993646339986 -31.792867269552275, 116.56993646339986 -31.892867269552276)))",
+    "created_at": "2026-04-07T14:00:34.603Z",
+    "updated_at": "2026-04-07T14:00:34.603Z"
+  }
+},
+{
+  "model": "core.tenement",
+  "pk": "6401f892-fc7d-46fe-8945-8c46593b3a98",
+  "fields": {
+    "name": "ML-3366/50",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "8b897b2f-882b-4abd-a3ed-390cd08add20",
+    "geom": "SRID=4326;MULTIPOLYGON (((126.23765629197821 -32.32320091944959, 126.3376562919782 -32.32320091944959, 126.3376562919782 -32.223200919449596, 126.23765629197821 -32.223200919449596, 126.23765629197821 -32.32320091944959)))",
+    "created_at": "2026-04-07T14:00:34.594Z",
+    "updated_at": "2026-04-07T14:00:34.594Z"
+  }
+},
+{
+  "model": "core.tenement",
+  "pk": "6bb22d46-b421-4700-b3b7-6b31df5e8bc4",
+  "fields": {
+    "name": "ML-4766/80",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "0c6341aa-b21c-497c-a4eb-23993ec24474",
+    "geom": "SRID=4326;MULTIPOLYGON (((131.00968941333358 -34.92598127298971, 131.1096894133336 -34.92598127298971, 131.1096894133336 -34.825981272989715, 131.00968941333358 -34.825981272989715, 131.00968941333358 -34.92598127298971)))",
+    "created_at": "2026-04-07T14:00:34.592Z",
+    "updated_at": "2026-04-07T14:00:34.592Z"
+  }
+},
+{
+  "model": "core.tenement",
+  "pk": "78f15bf4-5321-411c-89e6-cb94edb486c6",
+  "fields": {
+    "name": "ML-6156/53",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "6e3d7586-8a39-489a-80b7-0c9a39196330",
+    "geom": "SRID=4326;MULTIPOLYGON (((131.6382353145215 -22.606805620564213, 131.73823531452152 -22.606805620564213, 131.73823531452152 -22.50680562056421, 131.6382353145215 -22.50680562056421, 131.6382353145215 -22.606805620564213)))",
+    "created_at": "2026-04-07T14:00:34.590Z",
+    "updated_at": "2026-04-07T14:00:34.590Z"
+  }
+},
+{
+  "model": "core.tenement",
+  "pk": "7e6e18ec-88ce-41fd-b51f-b00991415d2b",
+  "fields": {
+    "name": "ML-3246/78",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "455142e3-459c-4859-b8c6-4185fd911d18",
+    "geom": "SRID=4326;MULTIPOLYGON (((128.04113919908204 -22.004137518954142, 128.14113919908206 -22.004137518954142, 128.14113919908206 -21.90413751895414, 128.04113919908204 -21.90413751895414, 128.04113919908204 -22.004137518954142)))",
+    "created_at": "2026-04-07T14:00:34.597Z",
+    "updated_at": "2026-04-07T14:00:34.597Z"
+  }
+},
+{
+  "model": "core.tenement",
+  "pk": "9239fa9d-76f6-479c-b17b-91cfb74f12ea",
+  "fields": {
+    "name": "ML-8500/04",
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "process": "455142e3-459c-4859-b8c6-4185fd911d18",
+    "geom": "SRID=4326;MULTIPOLYGON (((128.67572524416224 -29.15271762749444, 128.77572524416226 -29.15271762749444, 128.77572524416226 -29.052717627494438, 128.67572524416224 -29.052717627494438, 128.67572524416224 -29.15271762749444)))",
+    "created_at": "2026-04-07T14:00:34.596Z",
+    "updated_at": "2026-04-07T14:00:34.596Z"
+  }
+},
+{
+  "model": "core.tenement",
+  "pk": "9bce58ba-dd82-4402-8e23-15faa8d6210e",
+  "fields": {
+    "name": "ML-3014/50",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "74b431c3-2011-4398-8af9-604a682911b5",
+    "geom": "SRID=4326;MULTIPOLYGON (((117.19531987320096 -32.922301717857636, 117.29531987320095 -32.922301717857636, 117.29531987320095 -32.82230171785764, 117.19531987320096 -32.82230171785764, 117.19531987320096 -32.922301717857636)))",
+    "created_at": "2026-04-07T14:00:34.604Z",
+    "updated_at": "2026-04-07T14:00:34.604Z"
+  }
+},
+{
+  "model": "core.tenement",
+  "pk": "ac72bed1-a1de-4695-b29a-f8b7cebc1a60",
+  "fields": {
+    "name": "ML-8729/29",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "b1e83e2d-0fa2-4061-9479-fc0ec531253b",
+    "geom": "SRID=4326;MULTIPOLYGON (((126.85198549781431 -24.565974271002336, 126.9519854978143 -24.565974271002336, 126.9519854978143 -24.465974271002334, 126.85198549781431 -24.465974271002334, 126.85198549781431 -24.565974271002336)))",
+    "created_at": "2026-04-07T14:00:34.601Z",
+    "updated_at": "2026-04-07T14:00:34.601Z"
+  }
+},
+{
+  "model": "core.tenement",
+  "pk": "ae520dc5-8a1d-454b-8844-65a94cb5100d",
+  "fields": {
+    "name": "ML-8211/74",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "88742fa9-bdeb-4f37-87aa-38e65d1244a8",
+    "geom": "SRID=4326;MULTIPOLYGON (((124.74930860975813 -25.488013860319665, 124.84930860975813 -25.488013860319665, 124.84930860975813 -25.388013860319663, 124.74930860975813 -25.388013860319663, 124.74930860975813 -25.488013860319665)))",
+    "created_at": "2026-04-07T14:00:34.582Z",
+    "updated_at": "2026-04-07T14:00:34.582Z"
+  }
+},
+{
+  "model": "core.tenement",
+  "pk": "c3f845b0-becc-41e9-992e-86906197cd0a",
+  "fields": {
+    "name": "ML-5627/69",
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "process": "88742fa9-bdeb-4f37-87aa-38e65d1244a8",
+    "geom": "SRID=4326;MULTIPOLYGON (((131.65530895885578 -33.806702704790844, 131.7553089588558 -33.806702704790844, 131.7553089588558 -33.70670270479085, 131.65530895885578 -33.70670270479085, 131.65530895885578 -33.806702704790844)))",
+    "created_at": "2026-04-07T14:00:34.585Z",
+    "updated_at": "2026-04-07T14:00:34.585Z"
+  }
+},
+{
+  "model": "core.tenement",
+  "pk": "e2a61010-847d-40f1-b533-ffe1a727837c",
+  "fields": {
+    "name": "ML-5841/77",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "b1e83e2d-0fa2-4061-9479-fc0ec531253b",
+    "geom": "SRID=4326;MULTIPOLYGON (((129.48997504850777 -31.163878622810014, 129.5899750485078 -31.163878622810014, 129.5899750485078 -31.063878622810012, 129.48997504850777 -31.063878622810012, 129.48997504850777 -31.163878622810014)))",
+    "created_at": "2026-04-07T14:00:34.602Z",
+    "updated_at": "2026-04-07T14:00:34.602Z"
+  }
+},
+{
+  "model": "core.tenement",
+  "pk": "fdc5fc8b-0fc7-4caa-8265-78fe9ae87ed7",
+  "fields": {
+    "name": "ML-5893/71",
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "process": "631020fd-90df-4450-8c68-8571aecdbf84",
+    "geom": "SRID=4326;MULTIPOLYGON (((130.74983714384902 -32.801089472463396, 130.84983714384904 -32.801089472463396, 130.84983714384904 -32.7010894724634, 130.74983714384902 -32.7010894724634, 130.74983714384902 -32.801089472463396)))",
+    "created_at": "2026-04-07T14:00:34.598Z",
+    "updated_at": "2026-04-07T14:00:34.598Z"
+  }
+},
+{
+  "model": "core.userprofile",
+  "pk": 274,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "organisation": null,
+    "role": "VIEWER",
+    "clearance_level": "INTERNAL",
+    "department": "",
+    "phone": "",
+    "employee_id": null,
+    "can_approve_jorc": false,
+    "can_approve_valmin": false,
+    "created_at": "2026-04-07T14:00:33.169Z",
+    "updated_at": "2026-04-07T14:00:33.269Z"
+  }
+},
+{
+  "model": "core.userprofile",
+  "pk": 275,
+  "fields": {
+    "user": [
+      "david.hamilton.9309"
+    ],
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "role": "MANAGER",
+    "clearance_level": "CONFIDENTIAL",
+    "department": "Mining Ops",
+    "phone": "(498)425-1869",
+    "employee_id": "EMP-4370",
+    "can_approve_jorc": true,
+    "can_approve_valmin": true,
+    "created_at": "2026-04-07T14:00:33.369Z",
+    "updated_at": "2026-04-07T14:00:33.373Z"
+  }
+},
+{
+  "model": "core.userprofile",
+  "pk": 276,
+  "fields": {
+    "user": [
+      "jennifer.lee.5696"
+    ],
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "role": "FIELD_TECH",
+    "clearance_level": "RESTRICTED",
+    "department": "Mining Ops",
+    "phone": "4756086002",
+    "employee_id": "EMP-2630",
+    "can_approve_jorc": false,
+    "can_approve_valmin": false,
+    "created_at": "2026-04-07T14:00:33.472Z",
+    "updated_at": "2026-04-07T14:00:33.476Z"
+  }
+},
+{
+  "model": "core.userprofile",
+  "pk": 277,
+  "fields": {
+    "user": [
+      "denise.rodriguez.9571"
+    ],
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "role": "GEOLOGIST",
+    "clearance_level": "RESTRICTED",
+    "department": "Compliance",
+    "phone": "001-663-889-5031x7382",
+    "employee_id": "EMP-9490",
+    "can_approve_jorc": false,
+    "can_approve_valmin": false,
+    "created_at": "2026-04-07T14:00:33.575Z",
+    "updated_at": "2026-04-07T14:00:33.578Z"
+  }
+},
+{
+  "model": "core.userprofile",
+  "pk": 278,
+  "fields": {
+    "user": [
+      "sabrina.anderson.2789"
+    ],
+    "organisation": "859ea289-2ebe-4581-9535-6ac2d1df0feb",
+    "role": "FIELD_TECH",
+    "clearance_level": "INTERNAL",
+    "department": "Compliance",
+    "phone": "2232585265",
+    "employee_id": "EMP-1997",
+    "can_approve_jorc": false,
+    "can_approve_valmin": false,
+    "created_at": "2026-04-07T14:00:33.678Z",
+    "updated_at": "2026-04-07T14:00:33.681Z"
+  }
+},
+{
+  "model": "core.userprofile",
+  "pk": 279,
+  "fields": {
+    "user": [
+      "jennifer.miller.3040"
+    ],
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "role": "MANAGER",
+    "clearance_level": "PUBLIC",
+    "department": "Environment",
+    "phone": "001-553-781-7900x75968",
+    "employee_id": "EMP-2955",
+    "can_approve_jorc": true,
+    "can_approve_valmin": true,
+    "created_at": "2026-04-07T14:00:33.780Z",
+    "updated_at": "2026-04-07T14:00:33.783Z"
+  }
+},
+{
+  "model": "core.userprofile",
+  "pk": 280,
+  "fields": {
+    "user": [
+      "angela.miller.2802"
+    ],
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "role": "FIELD_TECH",
+    "clearance_level": "INTERNAL",
+    "department": "Mining Ops",
+    "phone": "232.424.2818",
+    "employee_id": "EMP-1052",
+    "can_approve_jorc": false,
+    "can_approve_valmin": false,
+    "created_at": "2026-04-07T14:00:33.885Z",
+    "updated_at": "2026-04-07T14:00:33.889Z"
+  }
+},
+{
+  "model": "core.userprofile",
+  "pk": 281,
+  "fields": {
+    "user": [
+      "diane.blackwell.1670"
+    ],
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "role": "GEOLOGIST",
+    "clearance_level": "INTERNAL",
+    "department": "Compliance",
+    "phone": "461.576.2320x55262",
+    "employee_id": "EMP-7770",
+    "can_approve_jorc": false,
+    "can_approve_valmin": false,
+    "created_at": "2026-04-07T14:00:33.988Z",
+    "updated_at": "2026-04-07T14:00:33.992Z"
+  }
+},
+{
+  "model": "core.userprofile",
+  "pk": 282,
+  "fields": {
+    "user": [
+      "william.butler.2068"
+    ],
+    "organisation": "dc590ba6-ce28-433e-9679-838ade152314",
+    "role": "GEOLOGIST",
+    "clearance_level": "RESTRICTED",
+    "department": "Compliance",
+    "phone": "+1-273-699-3283x5942",
+    "employee_id": "EMP-7993",
+    "can_approve_jorc": false,
+    "can_approve_valmin": false,
+    "created_at": "2026-04-07T14:00:34.091Z",
+    "updated_at": "2026-04-07T14:00:34.095Z"
+  }
+},
+{
+  "model": "core.userprofile",
+  "pk": 283,
+  "fields": {
+    "user": [
+      "bradley.lloyd.8880"
+    ],
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "role": "MANAGER",
+    "clearance_level": "PUBLIC",
+    "department": "Environment",
+    "phone": "612-950-4756",
+    "employee_id": "EMP-5330",
+    "can_approve_jorc": true,
+    "can_approve_valmin": true,
+    "created_at": "2026-04-07T14:00:34.195Z",
+    "updated_at": "2026-04-07T14:00:34.198Z"
+  }
+},
+{
+  "model": "core.userprofile",
+  "pk": 284,
+  "fields": {
+    "user": [
+      "larry.vasquez.925"
+    ],
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "role": "GEOLOGIST",
+    "clearance_level": "PUBLIC",
+    "department": "Mining Ops",
+    "phone": "903.452.0101x936",
+    "employee_id": "EMP-5466",
+    "can_approve_jorc": false,
+    "can_approve_valmin": false,
+    "created_at": "2026-04-07T14:00:34.298Z",
+    "updated_at": "2026-04-07T14:00:34.301Z"
+  }
+},
+{
+  "model": "core.userprofile",
+  "pk": 285,
+  "fields": {
+    "user": [
+      "michael.valenzuela.5265"
+    ],
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "role": "ANALYST",
+    "clearance_level": "PUBLIC",
+    "department": "Geology",
+    "phone": "494-650-6321",
+    "employee_id": "EMP-4805",
+    "can_approve_jorc": false,
+    "can_approve_valmin": false,
+    "created_at": "2026-04-07T14:00:34.401Z",
+    "updated_at": "2026-04-07T14:00:34.404Z"
+  }
+},
+{
+  "model": "core.userprofile",
+  "pk": 286,
+  "fields": {
+    "user": [
+      "marvin.harris.2555"
+    ],
+    "organisation": "402122a1-3b88-493c-8529-b4c5d95b585a",
+    "role": "FIELD_TECH",
+    "clearance_level": "INTERNAL",
+    "department": "Geology",
+    "phone": "705.465.0317x29349",
+    "employee_id": "EMP-5654",
+    "can_approve_jorc": false,
+    "can_approve_valmin": false,
+    "created_at": "2026-04-07T14:00:34.503Z",
+    "updated_at": "2026-04-07T14:00:34.507Z"
+  }
+}
+]

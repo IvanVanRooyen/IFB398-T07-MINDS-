@@ -1,55 +1,50 @@
 # core/views.py
 from __future__ import annotations
-from pydoc import doc
+
+import io
+import logging
+import re
+from types import SimpleNamespace
 
 from django.apps import apps
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_POST
+from django.contrib import messages
+from django.core.cache import cache
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.core.exceptions import PermissionDenied
-from django.http import Http404, HttpResponse, JsonResponse, HttpResponseBadRequest
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.views.decorators.http import require_GET, require_http_methods
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.http import HttpResponse
-from django.views.decorators.http import require_POST
-from django.core.cache import cache
-from django.shortcuts import render, get_object_or_404, redirect
-from core.models import Document
-from core.ai.report_service import generate_project_report
-from .ai.granite_client import GraniteClient
-
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib import messages
-from core.models import Document
-
-from types import SimpleNamespace
-import logging
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
+from docx import Document as DocxDocument
+from docx.shared import Pt
+from opentelemetry import metrics, trace
+from reportlab.lib import colors
 
 # Exporting report
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm
-from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.enums import TA_LEFT
-from docx import Document as DocxDocument
-from docx.shared import Pt, RGBColor
-import re, io
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
+from core.ai.report_service import generate_project_report
+
+from .ai.granite_client import GraniteClient
 from .forms import DocumentForm, DocumentSearchForm
+from .instrument import instrument
 from .models import Document, Process, SavedReport
-from .utils import sha256_file, extract_text, chunk_text
-
 from .tagging import TAG_LABEL
-
+from .utils import chunk_text, extract_text, sha256_file
 
 # ---------- Helpers ----------
+tracer = trace.get_tracer(__name__)
+meter = metrics.get_meter(__name__)
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 
+@instrument
 def _get_model(app_label: str, model_name: str):
     """
     Best-effort dynamic model fetch (lets views work even if model doesn’t exist yet).
@@ -60,6 +55,7 @@ def _get_model(app_label: str, model_name: str):
         return None
 
 
+@instrument
 def _count_model(app_label: str, model_name: str, where_clause: str = None) -> int:
     mdl = _get_model(app_label, model_name)
     if mdl is None:
@@ -67,6 +63,7 @@ def _count_model(app_label: str, model_name: str, where_clause: str = None) -> i
     return mdl.objects.count()
 
 
+@instrument
 def _paginate(queryset, request, per_page: int = 20):
     paginator = Paginator(queryset, per_page)
     page_number = request.GET.get("page")
@@ -76,6 +73,7 @@ def _paginate(queryset, request, per_page: int = 20):
 # ---------- Landing / Dashboard ----------
 
 
+@instrument
 @require_GET
 def home(request):
     """
@@ -90,11 +88,13 @@ def home(request):
     )
 
 
+@instrument
 @require_GET
 def dashboard(request):
     """
     Dashboard cards + quick links. Works even if domain models aren’t ready yet.
     """
+
     metrics = {
         "project_count": Process.objects.count(),
         "document_count": Document.objects.count(),
@@ -111,6 +111,7 @@ def dashboard(request):
 
 
 # Optional: HTMX endpoint to refresh stats without reloading the whole page
+@instrument
 @require_GET
 def stats_partial(request):
     ctx = {
@@ -131,9 +132,8 @@ DOCS_CACHE_TTL = 120  # 2 minutes
 
 # ---------- Documents ----------
 
-log = logging.getLogger(__name__)
 
-
+@instrument
 def _get_clearance_level(request) -> str:
     """return the requesting user's clearance level string, defaulting to PUBLIC"""
     if request.user.is_authenticated and hasattr(request.user, "profile"):
@@ -141,11 +141,15 @@ def _get_clearance_level(request) -> str:
     return "PUBLIC"
 
 
+@instrument
 def _report_cache_key(process_id: str, clearance_level: str, latest_doc_ts) -> str:
-    doc_fingerprint = latest_doc_ts.strftime("%Y%m%d%H%M%S%f") if latest_doc_ts else "empty"
+    doc_fingerprint = (
+        latest_doc_ts.strftime("%Y%m%d%H%M%S%f") if latest_doc_ts else "empty"
+    )
     return f"report:v1:{process_id}:{clearance_level}:{doc_fingerprint}"
 
 
+@instrument
 def _get_cached_report_md(process_id: str, clearance_level: str) -> str:
     """
     return the cached report markdown for this project + clearance combination, generating and caching if not already existing
@@ -154,8 +158,7 @@ def _get_cached_report_md(process_id: str, clearance_level: str) -> str:
     so the cache self-invalidates whenever a new document is added to the project
     """
     latest_doc_ts = (
-        Document.objects
-        .filter(process_id=process_id)
+        Document.objects.filter(process_id=process_id)
         .order_by("-created_at")
         .values_list("created_at", flat=True)
         .first()
@@ -168,7 +171,9 @@ def _get_cached_report_md(process_id: str, clearance_level: str) -> str:
         cache.set(cache_key, md, 86400)  # 24 hours
     return md
 
+
 # @login_required
+@instrument
 @require_http_methods(["GET", "POST"])
 def upload_doc(request):
     """
@@ -176,13 +181,15 @@ def upload_doc(request):
     """
     if request.method == "POST":
         form = DocumentForm(request.POST, request.FILES)
-        log.debug("FILES keys: %s", list(request.FILES.keys()))  # debug: ensure 'file' is present
+        log.debug(
+            "FILES keys: %s", list(request.FILES.keys())
+        )  # debug: ensure 'file' is present
         if form.is_valid():
             doc = form.save(commit=False)
             # Only set if user is authenticated (created_by is nullable)
             if request.user.is_authenticated:
                 doc.created_by = request.user
-            
+
             # Give extracted text a safe default in case extraction fails, to avoid null issues in search
             doc.extracted_text = ""
 
@@ -191,9 +198,12 @@ def upload_doc(request):
                 doc.checksum_sha256 = sha256_file(doc.file)
                 doc.extracted_text = extract_text(doc.file) or ""
 
-            if doc.checksum_sha256 and Document.objects.filter(
-                checksum_sha256=doc.checksum_sha256
-            ).exists():
+            if (
+                doc.checksum_sha256
+                and Document.objects.filter(
+                    checksum_sha256=doc.checksum_sha256
+                ).exists()
+            ):
                 # Duplicate detected — re-render with error + keep their form state
                 docs = Document.objects.order_by("-created_at")[:20]
                 return render(
@@ -208,36 +218,42 @@ def upload_doc(request):
 
             doc.extracted_text = doc.extracted_text or ""
 
-            #Debug
+            # Debug
             print("BEFORE SAVE extracted_text:", repr(doc.extracted_text))
             print("BEFORE SAVE type:", type(doc.extracted_text))
-            print("BEFORE SAVE dict:", {
-                "title": doc.title,
-                "doc_type": doc.doc_type,
-                "confidentiality": doc.confidentiality,
-                "organisation_id": doc.organisation_id,
-                "process_id": doc.process_id,
-                "created_by_id": doc.created_by_id,
-                "extracted_text": repr(doc.extracted_text),
-            })
+            print(
+                "BEFORE SAVE dict:",
+                {
+                    "title": doc.title,
+                    "doc_type": doc.doc_type,
+                    "confidentiality": doc.confidentiality,
+                    "organisation_id": doc.organisation_id,
+                    "process_id": doc.process_id,
+                    "created_by_id": doc.created_by_id,
+                    "extracted_text": repr(doc.extracted_text),
+                },
+            )
 
             doc.save()
             # form.save_m2m()
             # Build text chunks for RAG retrieval
             if doc.extracted_text:
                 from .models import DocumentChunk
+
                 chunks = chunk_text(doc.extracted_text)
-                DocumentChunk.objects.bulk_create([
-                    DocumentChunk(
-                    document=doc,
-                    chunk_index=i,
-                    text=chunk,
-                    process=doc.process,
-                    doc_type=doc.doc_type,
-                    timestamp=doc.timestamp,
-                    )
-                    for i, chunk in enumerate(chunks)
-                ])
+                DocumentChunk.objects.bulk_create(
+                    [
+                        DocumentChunk(
+                            document=doc,
+                            chunk_index=i,
+                            text=chunk,
+                            process=doc.process,
+                            doc_type=doc.doc_type,
+                            timestamp=doc.timestamp,
+                        )
+                        for i, chunk in enumerate(chunks)
+                    ]
+                )
 
             # Invalidate the unfiltered document list cache so the new doc appears immediately
             cache.delete(DOCS_CACHE_KEY)
@@ -266,24 +282,32 @@ def upload_doc(request):
             return render(
                 request,
                 "core/upload.html",
-                {"form": form, "docs": docs, "error": "Please correct the errors below."},
+                {
+                    "form": form,
+                    "docs": docs,
+                    "error": "Please correct the errors below.",
+                },
             )
-    
+
     # GET
     form = DocumentForm()
     docs = Document.objects.order_by("-created_at")[:20]
     return render(request, "core/upload.html", {"form": form, "docs": docs})
 
 
+@instrument
 @require_GET
 def documents(request):
     """
     Document library with search + tag + pagination.
     """
+
+    log.debug("debug log level")
+    log.info("info log level")
+
     # Build doc_type choices from whatever is actually in the DB
     existing_types = (
-        Document.objects
-        .exclude(doc_type="")
+        Document.objects.exclude(doc_type="")
         .exclude(doc_type__isnull=True)
         .values_list("doc_type", flat=True)
         .distinct()
@@ -293,11 +317,12 @@ def documents(request):
     type_choices = [("", "All types")] + [(t, t) for t in existing_types]
 
     form = DocumentSearchForm(request.GET or None, doc_type_choices=type_choices)
-    qs = Document.objects.select_related("process", "organisation").order_by("-created_at")
+    qs = Document.objects.select_related("process", "organisation").order_by(
+        "-created_at"
+    )
 
     q_value = ""
     if form.is_valid():
-
         # Full-text : title, doc_type, confidentiality, project name, org
         q = form.cleaned_data.get("q", "").strip()
 
@@ -315,34 +340,44 @@ def documents(request):
         process = form.cleaned_data.get("process")
         if process:
             qs = qs.filter(process=process)
- 
+
         # Date range (inclusive, on the document's own date)
         date_from = form.cleaned_data.get("date_from")
         if date_from:
             qs = qs.filter(timestamp__gte=date_from)
- 
+
         date_to = form.cleaned_data.get("date_to")
         if date_to:
             qs = qs.filter(timestamp__lte=date_to)
- 
+
         # Metadata
         doc_type = form.cleaned_data.get("doc_type")
         if doc_type:
             qs = qs.filter(doc_type__iexact=doc_type)
- 
+
         confidentiality = form.cleaned_data.get("confidentiality")
         if confidentiality:
             qs = qs.filter(confidentiality__iexact=confidentiality)
- 
+
         tag = form.cleaned_data.get("tag")
         if tag:
             try:
                 qs = qs.filter(tags__contains=[int(tag)])
             except (TypeError, ValueError):
                 pass
- 
-    filters_active = any(request.GET.get(f) for f in
-                         ["q", "process", "date_from", "date_to", "doc_type", "confidentiality", "tag"])
+
+    filters_active = any(
+        request.GET.get(f)
+        for f in [
+            "q",
+            "process",
+            "date_from",
+            "date_to",
+            "doc_type",
+            "confidentiality",
+            "tag",
+        ]
+    )
 
     page_num = request.GET.get("page", "1")
 
@@ -362,45 +397,67 @@ def documents(request):
                 previous_page_number=cached["prev_page_number"],
                 next_page_number=cached["next_page_number"],
             )
-            return render(request, "core/documents.html", {
-                "form": form,
-                "page": page_proxy,
-                "q": "",
-                "filters_active": False,
-            })
+            return render(
+                request,
+                "core/documents.html",
+                {
+                    "form": form,
+                    "page": page_proxy,
+                    "q": "",
+                    "filters_active": False,
+                },
+            )
 
     page = _paginate(qs, request, per_page=24)
 
     # cache only the unfiltered page-1 result abd Store a plain dict rather than the Page object to avoid serialising the full queryset into Redis
     if not filters_active and page_num == "1":
-        cache.set(DOCS_CACHE_KEY, {
-            "docs": list(page.object_list),
-            "num_pages": page.paginator.num_pages,
-            "has_next": page.has_next(),
-            "has_previous": page.has_previous(),
-            "next_page_number": page.next_page_number() if page.has_next() else None,
-            "prev_page_number": page.previous_page_number() if page.has_previous() else None,
-        }, DOCS_CACHE_TTL)
+        cache.set(
+            DOCS_CACHE_KEY,
+            {
+                "docs": list(page.object_list),
+                "num_pages": page.paginator.num_pages,
+                "has_next": page.has_next(),
+                "has_previous": page.has_previous(),
+                "next_page_number": page.next_page_number()
+                if page.has_next()
+                else None,
+                "prev_page_number": page.previous_page_number()
+                if page.has_previous()
+                else None,
+            },
+            DOCS_CACHE_TTL,
+        )
 
-    return render(request, "core/documents.html", {
-        "form": form,
-        "page": page,
-        "q": q_value,
-        "filters_active": filters_active,
-    })
+    return render(
+        request,
+        "core/documents.html",
+        {
+            "form": form,
+            "page": page,
+            "q": q_value,
+            "filters_active": filters_active,
+        },
+    )
 
 
+@instrument
 @require_GET
 def document_detail(request, pk):
     doc = get_object_or_404(Document, pk=pk)
     # Resolve tag integers to their human-readable labels
     tag_labels = [TAG_LABEL.get(t, f"Tag {t}") for t in (doc.tags or [])]
-    return render(request, "core/document_detail.html", {
-        "doc": doc,
-        "tag_labels": tag_labels,
-        })
+    return render(
+        request,
+        "core/document_detail.html",
+        {
+            "doc": doc,
+            "tag_labels": tag_labels,
+        },
+    )
 
 
+@instrument
 @require_http_methods(["POST", "DELETE"])
 def delete_document(request, pk):
     """
@@ -419,21 +476,23 @@ def delete_document(request, pk):
         cache.delete(DOCS_CACHE_KEY)
 
         # Return JSON response for HTMX/AJAX requests
-        if request.headers.get('HX-Request'):
-            return JsonResponse({
-                "success": True,
-                "message": f"Document '{doc_title}' deleted successfully."
-            })
+        if request.headers.get("HX-Request"):
+            return JsonResponse(
+                {
+                    "success": True,
+                    "message": f"Document '{doc_title}' deleted successfully.",
+                }
+            )
 
         # Redirect for regular form submissions
         return redirect("upload")
 
     except Exception as e:
-        if request.headers.get('HX-Request'):
-            return JsonResponse({
-                "success": False,
-                "message": f"Error deleting document: {str(e)}"
-            }, status=500)
+        if request.headers.get("HX-Request"):
+            return JsonResponse(
+                {"success": False, "message": f"Error deleting document: {str(e)}"},
+                status=500,
+            )
 
         # For regular requests, redirect with error (would need messages framework)
         return redirect("upload")
@@ -442,6 +501,7 @@ def delete_document(request, pk):
 # ---------- Projects / Domain pages (safe even if models are missing) ----------
 
 
+@instrument
 @require_GET
 def prospects(request):
     Prospect = _get_model("core", "Prospect")
@@ -454,6 +514,7 @@ def prospects(request):
     )
 
 
+@instrument
 @require_GET
 def drillholes(request):
     Drillhole = _get_model("core", "Drillhole")
@@ -466,6 +527,7 @@ def drillholes(request):
     )
 
 
+@instrument
 @require_GET
 def tenements(request):
     Tenement = _get_model("core", "Tenement")
@@ -481,6 +543,7 @@ def tenements(request):
 # ---------- AI / Map / Utilities ----------
 
 
+@instrument
 @require_GET
 def ai_insights(request):
     """
@@ -493,7 +556,9 @@ def ai_insights(request):
         {
             "recent_docs": Document.objects.order_by("-created_at")[:12],
             "recent_projects": Process.objects.order_by("-created_at")[:8],
-            "recent_reports": SavedReport.objects.select_related("process").order_by("-created_at")[:10],
+            "recent_reports": SavedReport.objects.select_related("process").order_by(
+                "-created_at"
+            )[:10],
         },
     )
 
@@ -514,6 +579,7 @@ def healthcheck(request):
     return JsonResponse({"status": "ok"})
 
 
+@instrument
 @require_GET
 def project_report(request, process_id: str):
     if not Process.objects.filter(pk=process_id).exists():
@@ -538,6 +604,8 @@ def project_report(request, process_id: str):
         content_type="text/html",
     )
 
+
+@instrument
 @require_GET
 def project_report_pdf(request, process_id: str):
     if not Process.objects.filter(pk=process_id).exists():
@@ -548,43 +616,71 @@ def project_report_pdf(request, process_id: str):
     process = Process.objects.get(pk=process_id)
 
     buf = io.BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=A4,
-                            leftMargin=2*cm, rightMargin=2*cm,
-                            topMargin=2*cm, bottomMargin=2*cm)
+    doc = SimpleDocTemplate(
+        buf,
+        pagesize=A4,
+        leftMargin=2 * cm,
+        rightMargin=2 * cm,
+        topMargin=2 * cm,
+        bottomMargin=2 * cm,
+    )
 
     styles = getSampleStyleSheet()
     # Custom styles
-    h1 = ParagraphStyle('h1', parent=styles['Heading1'], textColor=colors.HexColor('#0e7490'), spaceAfter=10)
-    h2 = ParagraphStyle('h2', parent=styles['Heading2'], textColor=colors.HexColor('#155e75'), spaceAfter=6)
-    h3 = ParagraphStyle('h3', parent=styles['Heading3'], textColor=colors.HexColor('#1e4d5c'), spaceAfter=4)
-    body = ParagraphStyle('body', parent=styles['Normal'], spaceAfter=6, leading=16)
-    bullet = ParagraphStyle('bullet', parent=styles['Normal'], leftIndent=20, spaceAfter=4,
-                             bulletIndent=10, leading=16)
+    h1 = ParagraphStyle(
+        "h1",
+        parent=styles["Heading1"],
+        textColor=colors.HexColor("#0e7490"),
+        spaceAfter=10,
+    )
+    h2 = ParagraphStyle(
+        "h2",
+        parent=styles["Heading2"],
+        textColor=colors.HexColor("#155e75"),
+        spaceAfter=6,
+    )
+    h3 = ParagraphStyle(
+        "h3",
+        parent=styles["Heading3"],
+        textColor=colors.HexColor("#1e4d5c"),
+        spaceAfter=4,
+    )
+    body = ParagraphStyle("body", parent=styles["Normal"], spaceAfter=6, leading=16)
+    bullet = ParagraphStyle(
+        "bullet",
+        parent=styles["Normal"],
+        leftIndent=20,
+        spaceAfter=4,
+        bulletIndent=10,
+        leading=16,
+    )
 
     story = []
     for line in md_text.splitlines():
-        if line.startswith('### '):
+        if line.startswith("### "):
             story.append(Paragraph(line[4:], h3))
-        elif line.startswith('## '):
+        elif line.startswith("## "):
             story.append(Paragraph(line[3:], h2))
-        elif line.startswith('# '):
+        elif line.startswith("# "):
             story.append(Paragraph(line[2:], h1))
-        elif line.startswith('- ') or line.startswith('* '):
-            story.append(Paragraph(f'• {line[2:]}', bullet))
-        elif re.match(r'^\d+\. ', line):
-            story.append(Paragraph(re.sub(r'^\d+\. ', '', line), bullet))
-        elif line.strip() == '':
+        elif line.startswith("- ") or line.startswith("* "):
+            story.append(Paragraph(f"• {line[2:]}", bullet))
+        elif re.match(r"^\d+\. ", line):
+            story.append(Paragraph(re.sub(r"^\d+\. ", "", line), bullet))
+        elif line.strip() == "":
             story.append(Spacer(1, 8))
         else:
             story.append(Paragraph(line, body))
 
     doc.build(story)
     buf.seek(0)
-    slug = re.sub(r'[^\w-]', '_', process.name or str(process_id))
-    response = HttpResponse(buf.getvalue(), content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{slug}_report.pdf"'
+    slug = re.sub(r"[^\w-]", "_", process.name or str(process_id))
+    response = HttpResponse(buf.getvalue(), content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="{slug}_report.pdf"'
     return response
 
+
+@instrument
 @require_GET
 def project_report_docx(request, process_id: str):
     if not Process.objects.filter(pk=process_id).exists():
@@ -626,26 +722,40 @@ def project_report_docx(request, process_id: str):
     response["Content-Disposition"] = f'attachment; filename="{slug}_report.docx"'
     return response
 
+
+@instrument
 def document_analysis_detail(request, pk):
     document = get_object_or_404(Document, pk=pk)
 
-    analysis_text = getattr(document, "analysis_text", "") or "No insights available yet."
+    analysis_text = (
+        getattr(document, "analysis_text", "") or "No insights available yet."
+    )
 
-    return render(request, "core/document_analysis_detail.html", {
-        "document": document,
-        "analysis": analysis_text,
-    })
+    return render(
+        request,
+        "core/document_analysis_detail.html",
+        {
+            "document": document,
+            "analysis": analysis_text,
+        },
+    )
 
+
+@instrument
 @require_POST
 def save_document_analysis(request, pk):
     return HttpResponse("Save document analysis placeholder")
 
+
+@instrument
 def export_document_analysis(request, pk):
     return HttpResponse("Export document analysis placeholder")
+
 
 # ---------- GeoJSON API Endpoints for Map Viewer ----------
 
 
+@instrument
 @require_GET
 def geojson_projects(request):
     """
@@ -653,27 +763,32 @@ def geojson_projects(request):
     Returns all processes with geometry for da map
     """
     from django.core.serializers import serialize
+
     from .models import Process
 
     # Only include processes with geometry
-    processes = Process.objects.filter(geom__isnull=False).select_related('organisation')
+    processes = Process.objects.filter(geom__isnull=False).select_related(
+        "organisation"
+    )
 
     if not processes.exists():
         return JsonResponse({"type": "FeatureCollection", "features": []})
 
     # Use GeoDjangos built in serialiser (lets us take coordinates and translate into GeoJSOn text for geodata)
     geojson_data = serialize(
-        'geojson',
+        "geojson",
         processes,
-        geometry_field='geom',
-        fields=('name', 'mode', 'commodity', 'organisation')
+        geometry_field="geom",
+        fields=("name", "mode", "commodity", "organisation"),
     )
 
     # Parse and return as JSON (serialise returns a string )
     import json
+
     return JsonResponse(json.loads(geojson_data), safe=False)
 
 
+@instrument
 @require_GET
 def geojson_tenements(request):
     """
@@ -681,97 +796,120 @@ def geojson_tenements(request):
     Returns all tenements with geometry for map visualisation
     """
     from django.core.serializers import serialize
+
     from .models import Tenement
 
-    tenements = Tenement.objects.filter(geom__isnull=False).select_related('organisation', 'process')
+    tenements = Tenement.objects.filter(geom__isnull=False).select_related(
+        "organisation", "process"
+    )
 
     if not tenements.exists():
         return JsonResponse({"type": "FeatureCollection", "features": []})
 
     geojson_data = serialize(
-        'geojson',
+        "geojson",
         tenements,
-        geometry_field='geom',
-        fields=('name', 'organisation', 'process')
+        geometry_field="geom",
+        fields=("name", "organisation", "process"),
     )
 
     import json
+
     return JsonResponse(json.loads(geojson_data), safe=False)
 
 
+@instrument
 @require_GET
 def geojson_prospects(request):
     """
     GeoJSON endpoint for Prospect locations
-    Returns all prospects with geometry 
+    Returns all prospects with geometry
     """
     from django.core.serializers import serialize
+
     from .models import Prospect
 
-    prospects = Prospect.objects.filter(geom__isnull=False).select_related('organisation', 'process')
+    prospects = Prospect.objects.filter(geom__isnull=False).select_related(
+        "organisation", "process"
+    )
 
     if not prospects.exists():
         return JsonResponse({"type": "FeatureCollection", "features": []})
 
     geojson_data = serialize(
-        'geojson',
+        "geojson",
         prospects,
-        geometry_field='geom',
-        fields=('name', 'organisation', 'process')
+        geometry_field="geom",
+        fields=("name", "organisation", "process"),
     )
 
     import json
+
     return JsonResponse(json.loads(geojson_data), safe=False)
 
 
+@instrument
 @require_GET
 def geojson_drillholes(request):
     """
     GeoJSON endpoint for Drillhole collar locations
-    Returns all drillholes with collar locations 
+    Returns all drillholes with collar locations
     """
     from django.core.serializers import serialize
+
     from .models import Drillhole
 
-    drillholes = Drillhole.objects.filter(collar_location__isnull=False).select_related('organisation', 'process')
+    drillholes = Drillhole.objects.filter(collar_location__isnull=False).select_related(
+        "organisation", "process"
+    )
 
     if not drillholes.exists():
         return JsonResponse({"type": "FeatureCollection", "features": []})
 
     geojson_data = serialize(
-        'geojson',
+        "geojson",
         drillholes,
-        geometry_field='collar_location',
-        fields=('name', 'depth', 'azimuth', 'dip', 'organisation', 'process')
+        geometry_field="collar_location",
+        fields=("name", "depth", "azimuth", "dip", "organisation", "process"),
     )
 
     import json
+
     return JsonResponse(json.loads(geojson_data), safe=False)
+
 
 # ---------- AI Report Generation & Document Analysis Pages ----------
 
+
+@instrument
 def report_list_page(request):
     clearance_rank = {"PUBLIC": 0, "INTERNAL": 1, "CONFIDENTIAL": 2, "JORC_APPROVED": 3}
     user_clearance = _get_clearance_level(request)
     user_rank = clearance_rank.get(user_clearance, 0)
 
-    accessible_levels = [lvl for lvl, rank in clearance_rank.items() if rank <= user_rank]
+    accessible_levels = [
+        lvl for lvl, rank in clearance_rank.items() if rank <= user_rank
+    ]
     recent_reports = (
-        SavedReport.objects
-        .filter(clearance_level__in=accessible_levels)
+        SavedReport.objects.filter(clearance_level__in=accessible_levels)
         .select_related("process")
         .order_by("-created_at")[:20]
     )
     recent_projects = Process.objects.order_by("-created_at")[:20]
-    all_documents   = Document.objects.select_related("process").order_by("-created_at")
+    all_documents = Document.objects.select_related("process").order_by("-created_at")
 
-    return render(request, "core/report_list.html", {
-        "recent_reports":  recent_reports,
-        "recent_projects": recent_projects,
-        "all_documents":   all_documents,
-    })
+    return render(
+        request,
+        "core/report_list.html",
+        {
+            "recent_reports": recent_reports,
+            "recent_projects": recent_projects,
+            "all_documents": all_documents,
+        },
+    )
 
 
+@instrument
 def generate_report(request):
     """
     POST: generate (or retrieve cached) report for a process and redirect to the editor.
@@ -780,7 +918,7 @@ def generate_report(request):
     if request.method != "POST":
         return redirect("report_list")
 
-    process_id   = request.POST.get("process_id", "").strip()
+    process_id = request.POST.get("process_id", "").strip()
     report_title = request.POST.get("report_title", "").strip()
 
     if not process_id:
@@ -804,6 +942,7 @@ def generate_report(request):
     return redirect(redirect_url)
 
 
+@instrument
 def report_editor(request, process_id):
     """
     Serve the report editor page for a process
@@ -821,21 +960,26 @@ def report_editor(request, process_id):
         log.error("Report editor cache miss for process %s: %s", process_id, e)
         md = f"# {process.name or 'Project'} Report\n\nReport generation failed: {e}"
 
-    custom_title  = request.GET.get("title", "").strip()
+    custom_title = request.GET.get("title", "").strip()
     default_title = custom_title or f"{process.name or 'Project'} Report"
 
-    return render(request, "core/report_editor.html", {
-        "process": process,
-        "markdown_content": md,
-        "default_title": default_title,
-        "saved_report": None,
-        "save_url": reverse("save_report"),
-        "export_url": reverse("export_report"),
-    })
+    return render(
+        request,
+        "core/report_editor.html",
+        {
+            "process": process,
+            "markdown_content": md,
+            "default_title": default_title,
+            "saved_report": None,
+            "save_url": reverse("save_report"),
+            "export_url": reverse("export_report"),
+        },
+    )
 
 
+@instrument
 def saved_report_editor(request, report_id):
-    """ serve the report editor page for an existing saved report """
+    """serve the report editor page for an existing saved report"""
     report = get_object_or_404(
         SavedReport.objects.select_related("process", "organisation"),
         pk=report_id,
@@ -843,19 +987,26 @@ def saved_report_editor(request, report_id):
 
     user_clearance = _get_clearance_level(request)
     clearance_rank = {"PUBLIC": 0, "INTERNAL": 1, "CONFIDENTIAL": 2, "JORC_APPROVED": 3}
-    if clearance_rank.get(user_clearance, 0) < clearance_rank.get(report.clearance_level, 1):
+    if clearance_rank.get(user_clearance, 0) < clearance_rank.get(
+        report.clearance_level, 1
+    ):
         raise PermissionDenied
 
-    return render(request, "core/report_editor.html", {
-        "process": report.process,
-        "markdown_content": report.content_md,
-        "default_title": report.title,
-        "saved_report": report,
-        "save_url": reverse("update_saved_report", kwargs={"report_id": report_id}),
-        "export_url": reverse("export_report"),
-    })
+    return render(
+        request,
+        "core/report_editor.html",
+        {
+            "process": report.process,
+            "markdown_content": report.content_md,
+            "default_title": report.title,
+            "saved_report": report,
+            "save_url": reverse("update_saved_report", kwargs={"report_id": report_id}),
+            "export_url": reverse("export_report"),
+        },
+    )
 
 
+@instrument
 @require_POST
 def save_report(request):
     """
@@ -863,13 +1014,17 @@ def save_report(request):
     returns JSON: {success: true, report_id: "...", redirect_url: "..."}
     """
     process_id = request.POST.get("process_id", "").strip()
-    title      = request.POST.get("title", "").strip()
+    title = request.POST.get("title", "").strip()
     content_md = request.POST.get("content_md", "").strip()
 
     if not title:
-        return JsonResponse({"success": False, "error": "Title is required."}, status=400)
+        return JsonResponse(
+            {"success": False, "error": "Title is required."}, status=400
+        )
     if not content_md:
-        return JsonResponse({"success": False, "error": "Report content is empty."}, status=400)
+        return JsonResponse(
+            {"success": False, "error": "Report content is empty."}, status=400
+        )
 
     process = None
     organisation = None
@@ -892,13 +1047,18 @@ def save_report(request):
         created_by=created_by,
     )
 
-    return JsonResponse({
-        "success": True,
-        "report_id": str(report.id),
-        "redirect_url": reverse("saved_report_editor", kwargs={"report_id": report.id}),
-    })
+    return JsonResponse(
+        {
+            "success": True,
+            "report_id": str(report.id),
+            "redirect_url": reverse(
+                "saved_report_editor", kwargs={"report_id": report.id}
+            ),
+        }
+    )
 
 
+@instrument
 @require_POST
 def update_saved_report(request, report_id):
     """
@@ -909,23 +1069,30 @@ def update_saved_report(request, report_id):
 
     is_admin = hasattr(request.user, "profile") and request.user.profile.role == "ADMIN"
     if report.created_by != request.user and not is_admin:
-        return JsonResponse({"success": False, "error": "Permission denied."}, status=403)
+        return JsonResponse(
+            {"success": False, "error": "Permission denied."}, status=403
+        )
 
-    title      = request.POST.get("title", "").strip()
+    title = request.POST.get("title", "").strip()
     content_md = request.POST.get("content_md", "").strip()
 
     if not title:
-        return JsonResponse({"success": False, "error": "Title is required."}, status=400)
+        return JsonResponse(
+            {"success": False, "error": "Title is required."}, status=400
+        )
     if not content_md:
-        return JsonResponse({"success": False, "error": "Report content is empty."}, status=400)
+        return JsonResponse(
+            {"success": False, "error": "Report content is empty."}, status=400
+        )
 
-    report.title      = title
+    report.title = title
     report.content_md = content_md
     report.save(update_fields=["title", "content_md", "updated_at"])
 
     return JsonResponse({"success": True})
 
 
+@instrument
 @require_POST
 def export_report(request):
     """
@@ -933,24 +1100,51 @@ def export_report(request):
     POST params:
         format — "pdf" or "docx"
         content_md — the markdown string to render
-        title — used as the filename 
+        title — used as the filename
     """
-    fmt       = request.POST.get("format", "pdf").lower()
-    md_text   = request.POST.get("content_md", "")
-    title     = request.POST.get("title", "report")
-    slug      = re.sub(r"[^\w-]", "_", title)
+    fmt = request.POST.get("format", "pdf").lower()
+    md_text = request.POST.get("content_md", "")
+    title = request.POST.get("title", "report")
+    slug = re.sub(r"[^\w-]", "_", title)
 
     if fmt == "pdf":
         buf = io.BytesIO()
-        doc = SimpleDocTemplate(buf, pagesize=A4,
-                                leftMargin=2*cm, rightMargin=2*cm,
-                                topMargin=2*cm, bottomMargin=2*cm)
+        doc = SimpleDocTemplate(
+            buf,
+            pagesize=A4,
+            leftMargin=2 * cm,
+            rightMargin=2 * cm,
+            topMargin=2 * cm,
+            bottomMargin=2 * cm,
+        )
         styles = getSampleStyleSheet()
-        h1     = ParagraphStyle("h1", parent=styles["Heading1"], textColor=colors.HexColor("#0e7490"), spaceAfter=10)
-        h2     = ParagraphStyle("h2", parent=styles["Heading2"], textColor=colors.HexColor("#155e75"), spaceAfter=6)
-        h3     = ParagraphStyle("h3", parent=styles["Heading3"], textColor=colors.HexColor("#1e4d5c"), spaceAfter=4)
-        body   = ParagraphStyle("body", parent=styles["Normal"], spaceAfter=6, leading=16)
-        bullet = ParagraphStyle("bullet", parent=styles["Normal"], leftIndent=20, spaceAfter=4, bulletIndent=10, leading=16)
+        h1 = ParagraphStyle(
+            "h1",
+            parent=styles["Heading1"],
+            textColor=colors.HexColor("#0e7490"),
+            spaceAfter=10,
+        )
+        h2 = ParagraphStyle(
+            "h2",
+            parent=styles["Heading2"],
+            textColor=colors.HexColor("#155e75"),
+            spaceAfter=6,
+        )
+        h3 = ParagraphStyle(
+            "h3",
+            parent=styles["Heading3"],
+            textColor=colors.HexColor("#1e4d5c"),
+            spaceAfter=4,
+        )
+        body = ParagraphStyle("body", parent=styles["Normal"], spaceAfter=6, leading=16)
+        bullet = ParagraphStyle(
+            "bullet",
+            parent=styles["Normal"],
+            leftIndent=20,
+            spaceAfter=4,
+            bulletIndent=10,
+            leading=16,
+        )
 
         story = []
         for line in md_text.splitlines():
@@ -1010,18 +1204,31 @@ def export_report(request):
     return JsonResponse({"error": "Invalid format. Use 'pdf' or 'docx'."}, status=400)
 
 
+@instrument
 def report_detail(request, report_id):
-    return render(request, "core/report_detail.html", {
-        "report_id": report_id,
-    })
+    return render(
+        request,
+        "core/report_detail.html",
+        {
+            "report_id": report_id,
+        },
+    )
 
 
+@instrument
 def document_analysis_page(request):
-    return render(request, "core/document_analysis.html", {
-        "recent_docs": Document.objects.select_related("process").order_by("-created_at"),
-    })
+    return render(
+        request,
+        "core/document_analysis.html",
+        {
+            "recent_docs": Document.objects.select_related("process").order_by(
+                "-created_at"
+            ),
+        },
+    )
 
 
+@instrument
 def analyze_document(request, pk):
     document = get_object_or_404(Document, pk=pk)
 
@@ -1074,6 +1281,8 @@ Document text:
         messages.error(request, f"Analysis failed: {e}")
         return redirect("document_analysis_page")
 
+
+@instrument
 @require_GET
 def export_document_analysis(request, pk):
     document = get_object_or_404(Document, pk=pk)
@@ -1091,17 +1300,39 @@ def export_document_analysis(request, pk):
         doc = SimpleDocTemplate(
             buf,
             pagesize=A4,
-            leftMargin=2*cm,
-            rightMargin=2*cm,
-            topMargin=2*cm,
-            bottomMargin=2*cm,
+            leftMargin=2 * cm,
+            rightMargin=2 * cm,
+            topMargin=2 * cm,
+            bottomMargin=2 * cm,
         )
         styles = getSampleStyleSheet()
-        h1 = ParagraphStyle("h1", parent=styles["Heading1"], textColor=colors.HexColor("#0e7490"), spaceAfter=10)
-        h2 = ParagraphStyle("h2", parent=styles["Heading2"], textColor=colors.HexColor("#155e75"), spaceAfter=6)
-        h3 = ParagraphStyle("h3", parent=styles["Heading3"], textColor=colors.HexColor("#1e4d5c"), spaceAfter=4)
+        h1 = ParagraphStyle(
+            "h1",
+            parent=styles["Heading1"],
+            textColor=colors.HexColor("#0e7490"),
+            spaceAfter=10,
+        )
+        h2 = ParagraphStyle(
+            "h2",
+            parent=styles["Heading2"],
+            textColor=colors.HexColor("#155e75"),
+            spaceAfter=6,
+        )
+        h3 = ParagraphStyle(
+            "h3",
+            parent=styles["Heading3"],
+            textColor=colors.HexColor("#1e4d5c"),
+            spaceAfter=4,
+        )
         body = ParagraphStyle("body", parent=styles["Normal"], spaceAfter=6, leading=16)
-        bullet = ParagraphStyle("bullet", parent=styles["Normal"], leftIndent=20, spaceAfter=4, bulletIndent=10, leading=16)
+        bullet = ParagraphStyle(
+            "bullet",
+            parent=styles["Normal"],
+            leftIndent=20,
+            spaceAfter=4,
+            bulletIndent=10,
+            leading=16,
+        )
 
         story = []
         for line in md_text.splitlines():
@@ -1159,3 +1390,4 @@ def export_document_analysis(request, pk):
         return response
 
     return JsonResponse({"error": "Invalid format. Use 'pdf' or 'docx'."}, status=400)
+
