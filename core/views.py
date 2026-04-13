@@ -9,22 +9,13 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponse, JsonResponse, HttpResponseBadRequest
-from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods
-from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.http import HttpResponse
-from django.views.decorators.http import require_POST
 from django.core.cache import cache
 from django.shortcuts import render, get_object_or_404, redirect
-from core.models import Document
 from core.ai.report_service import generate_project_report
 from .ai.granite_client import GraniteClient
-
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib import messages
-from core.models import Document
 
 from types import SimpleNamespace
 import logging
@@ -41,7 +32,7 @@ from docx.shared import Pt, RGBColor
 import re, io
 
 from .forms import DocumentForm, DocumentSearchForm
-from .models import Document, Process, SavedReport
+from .models import Document, Process, SavedReport, AuditLog, log_audit
 from .utils import sha256_file, extract_text, chunk_text
 
 from .tagging import TAG_LABEL
@@ -514,29 +505,7 @@ def healthcheck(request):
     return JsonResponse({"status": "ok"})
 
 
-@require_GET
-def project_report(request, process_id: str):
-    if not Process.objects.filter(pk=process_id).exists():
-        raise Http404("Project not found")
 
-    clearance_level = _get_clearance_level(request)
-
-    try:
-        md = _get_cached_report_md(process_id, clearance_level)
-    except Exception as e:
-        log.error("Report generation failed: %s", e)
-        md = f"Report generation failed: {e}"
-
-    if not md:
-        md = "Report returned empty — check logs."
-
-    if request.GET.get("format") == "json":
-        return JsonResponse({"markdown": md})
-
-    return HttpResponse(
-        f"<html><body><pre style='white-space:pre-wrap'>{md}</pre></body></html>",
-        content_type="text/html",
-    )
 
 @require_GET
 def project_report_pdf(request, process_id: str):
@@ -792,16 +761,39 @@ def generate_report(request):
 
     clearance_level = _get_clearance_level(request)
     try:
-        _get_cached_report_md(process_id, clearance_level)
+        process = get_object_or_404(Process, pk=process_id)
+        md = _get_cached_report_md(process_id, clearance_level)
     except Exception as e:
         log.error("Report generation failed during generate_report: %s", e)
         messages.error(request, f"Report generation failed: {e}")
         return redirect("report_list")
 
-    redirect_url = reverse("report_editor", kwargs={"process_id": process_id})
-    if report_title:
-        redirect_url += f"?title={report_title}"
-    return redirect(redirect_url)
+    import hashlib
+    title = report_title or f"{process.name or 'Project'} Report"
+    existing = SavedReport.objects.filter(
+        process=process, title=title
+    ).order_by("-version_number").first()
+
+    if existing:
+        SavedReport.create_version(
+            parent=existing,
+            content_md=md,
+            user=request.user,
+            reason=SavedReport.ChangeReason.REGENERATED,
+        )
+    else:
+        SavedReport.objects.create(
+            process=process,
+            organisation=process.organisation,
+            title=title,
+            content_md=md,
+            content_hash=hashlib.sha256(md.encode()).hexdigest(),
+            created_by=request.user,
+            version_number=1,
+            change_reason=SavedReport.ChangeReason.GENERATED,
+        )
+
+    return redirect(reverse("report_editor", kwargs={"process_id": process_id}))
 
 
 def report_editor(request, process_id):
@@ -883,18 +875,34 @@ def save_report(request):
     clearance_level = _get_clearance_level(request)
     created_by = request.user if request.user.is_authenticated else None
 
-    report = SavedReport.objects.create(
-        process=process,
-        organisation=organisation,
-        title=title,
-        content_md=content_md,
-        clearance_level=clearance_level,
-        created_by=created_by,
-    )
+    existing = SavedReport.objects.filter(
+        process=process, title=title
+    ).order_by("-version_number").first()
 
+    if existing:
+        report = SavedReport.create_version(
+            parent=existing,
+            content_md=content_md,
+            user=created_by,
+            reason=SavedReport.ChangeReason.MANUAL_EDIT,
+        )
+    else:
+        import hashlib
+        report = SavedReport.objects.create(
+            process=process,
+            organisation=organisation,
+            title=title,
+            content_md=content_md,
+            content_hash=hashlib.sha256(content_md.encode()).hexdigest(),
+            clearance_level=clearance_level,
+            created_by=created_by,
+            version_number=1,
+            change_reason=SavedReport.ChangeReason.GENERATED,
+        )
     return JsonResponse({
         "success": True,
         "report_id": str(report.id),
+        "version_number": report.version_number,
         "redirect_url": reverse("saved_report_editor", kwargs={"report_id": report.id}),
     })
 
@@ -919,11 +927,78 @@ def update_saved_report(request, report_id):
     if not content_md:
         return JsonResponse({"success": False, "error": "Report content is empty."}, status=400)
 
-    report.title      = title
-    report.content_md = content_md
-    report.save(update_fields=["title", "content_md", "updated_at"])
+    new_version = SavedReport.create_version(
+        parent=report,
+        content_md=content_md,
+        user=request.user,
+        reason=SavedReport.ChangeReason.MANUAL_EDIT,
+    )
+    return JsonResponse({
+        "success": True,
+        "new_version_id": str(new_version.id),
+        "version_number": new_version.version_number,
+    })
 
-    return JsonResponse({"success": True})
+# @login_required
+def report_history(request, process_id):
+    """Show all versions of reports for a process, grouped by title."""
+    # Get the latest version of each distinct report title
+    reports = (
+        SavedReport.objects
+        .filter(process_id=process_id)
+        .order_by("title", "-version_number")
+    )
+    # Group by title to show each report with its version chain
+    from itertools import groupby
+    grouped = {
+        title: list(versions)
+        for title, versions in groupby(reports, key=lambda r: r.title)
+    }
+    return render(request, "core/report_history.html", {"grouped": grouped, "process_id": process_id})
+
+# @login_required
+def report_version_detail(request, report_id):
+    """View a specific report version."""
+    report = get_object_or_404(SavedReport, pk=report_id)
+    all_versions = SavedReport.objects.filter(
+        process=report.process, title=report.title
+    ).order_by("-version_number")
+
+    log_audit(
+        user=request.user,
+        action=AuditLog.ActionType.VIEW,
+        obj=report,
+        description=f"Viewed '{report.title}' v{report.version_number}",
+        ip_address=request.META.get("REMOTE_ADDR"),
+        user_agent=request.META.get("HTTP_USER_AGENT", ""),
+    )
+    return render(request, "core/report_version_detail.html", {
+        "report": report,
+        "all_versions": all_versions,
+    })
+
+@require_GET
+def all_reports_history(request):
+    """Show all saved reports grouped by project."""
+    from itertools import groupby
+
+    reports = (
+        SavedReport.objects
+        .select_related("process")
+        .order_by("process__name", "title", "-version_number")
+    )
+
+    grouped = {}
+    for report in reports:
+        project_name = report.process.name if report.process else "No Project"
+        process_id = str(report.process.id) if report.process else None
+        if project_name not in grouped:
+            grouped[project_name] = {"process_id": process_id, "titles": {}}
+        if report.title not in grouped[project_name]["titles"]:
+             grouped[project_name]["titles"][report.title] = []
+        grouped[project_name]["titles"][report.title].append(report)
+
+    return render(request, "core/all_reports_history.html", {"grouped": grouped})
 
 
 @require_POST

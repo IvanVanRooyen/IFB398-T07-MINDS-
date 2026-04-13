@@ -12,16 +12,21 @@ urlpatterns = [
     path("documents/<uuid:pk>/delete/", views.delete_document, name="delete_document"),
     path("map/", views.map_view, name="map_view"),
     path("ai-insights/", views.ai_insights, name="ai_insights"),
-
     path("upload/", views.upload_doc, name="upload"),
-    path("ai/report/<uuid:process_id>/", views.project_report, name="project_report"),
-    path("ai/report/<uuid:process_id>/pdf/",  views.project_report_pdf,  name="project_report_pdf"),
+
+    # PDF / DOCX direct download by process
+    path("ai/report/<uuid:process_id>/pdf/", views.project_report_pdf,  name="project_report_pdf"),
     path("ai/report/<uuid:process_id>/docx/", views.project_report_docx, name="project_report_docx"),
+
+    # Report History
+    path("process/<uuid:process_id>/reports/history/", views.report_history, name="report_history"),
+    path("reports/<uuid:report_id>/version/", views.report_version_detail, name="report_version_detail"),
 
     # AI Routes
     path("ai/reports/", views.report_list_page, name="report_list"),
     path("ai/reports/generate/", views.generate_report, name="generate_report"),
     path("ai/reports/<uuid:report_id>/", views.report_detail, name="report_detail"),
+    path("ai/reports/history/", views.all_reports_history, name="all_reports_history"),
 
     # Report Editor 
     path("ai/reports/editor/<uuid:process_id>/", views.report_editor, name="report_editor"),

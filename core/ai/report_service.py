@@ -6,7 +6,7 @@ from typing import Iterable
 from django.db.models import QuerySet
 from django.utils.timezone import localtime
 
-from ..models import Process, Document
+from ..models import Process, Document, SavedReport, AuditLog, log_audit
 from .granite_client import GraniteClient
 from .retrieval import retrieve_context
 
@@ -191,3 +191,40 @@ Granite unavailable. Minimal context below:
 
 You can retry when the model service is reachable.
 """
+
+def save_report(process, organisation, title, content_md, user, reason="GENERATED", summary=""):
+    import hashlib
+    content_hash = hashlib.sha256(content_md.encode()).hexdigest()
+
+    # Check if a report already exists for this process+title
+    existing = SavedReport.objects.filter(
+        process=process, title=title
+    ).order_by("-version_number").first()
+
+    if existing:
+        # Create a new version
+        report = SavedReport.create_version(
+            parent=existing,
+            content_md=content_md,
+            user=user,
+            reason=reason,
+            summary=summary,
+        )
+    else:
+        # First version ever
+        report = SavedReport.objects.create(
+            process=process,
+            organisation=organisation,
+            title=title,
+            content_md=content_md,
+            content_hash=content_hash,
+            clearance_level="INTERNAL",
+            created_by=user,
+            version_number=1,
+            change_reason=reason,
+            change_summary=summary,
+        )
+
+    log_audit(user=user, action=AuditLog.ActionType.CREATE, obj=report,
+              description=f"Saved '{title}' v{report.version_number}")
+    return report

@@ -74,6 +74,26 @@
           </a>
         </div>
       </div>
+
+      <!-- Report History -->
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center text-2xl">
+            🕓
+          </div>
+          <div>
+            <h2 class="text-xl font-semibold">Report History</h2>
+            <p class="text-sm text-gray-600">Browse past versions by project</p>
+          </div>
+        </div>
+        <p class="text-gray-700 mb-4">
+          View all previously generated reports, track changes over time, and restore any past version.
+        </p>
+        <a href="{% url 'all_reports_history' %}"
+          class="block text-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
+          View All Reports
+        </a>
+      </div>
     </div>
 
     <!-- Recently Generated Reports -->
@@ -89,7 +109,12 @@
               <div class="flex-1">
                 <h3 class="font-medium text-gray-900">{{ report.title }}</h3>
                 <p class="text-sm text-gray-600">
-                  {{ report.created_at|date:"M d, Y, g:i a" }}{% if report.process %} &mdash; {{ report.process.name }}{% endif %}
+                  {{ report.created_at|date:"M d, Y, g:i a" }}
+                  {% if report.process %} &mdash; {{ report.process.name }}{% endif %}
+                  &mdash; <span class="text-xs bg-gray-100 px-1.5 py-0.5 rounded">v{{ report.version_number }}</span>
+                  {% if report.change_reason %}
+                    <span class="text-xs text-gray-400">{{ report.get_change_reason_display }}</span>
+                  {% endif %}
                 </p>
               </div>
               <a href="{% url 'saved_report_editor' report.id %}"
@@ -128,6 +153,10 @@
                     Preview
                   </button>
                 </form>
+                <a href="{% url 'report_history' project.id %}"
+                  class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm">
+                  History
+                </a>
                 <a href="{% url 'project_report_pdf' project.id %}"
                   class="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
                   PDF ↓

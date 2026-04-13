@@ -375,6 +375,11 @@ class UserProfile(models.Model):
 class SavedReport(models.Model):
     """An AI generated report, editable and savable into the database."""
 
+    class ChangeReason(models.TextChoices):
+        GENERATED   = "GENERATED",   _("AI Generated")
+        MANUAL_EDIT = "MANUAL_EDIT", _("Manual Edit")
+        REGENERATED = "REGENERATED", _("Regenerated")
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     process = models.ForeignKey(
         Process, on_delete=models.SET_NULL, null=True, blank=True, related_name="saved_reports"
@@ -398,6 +403,15 @@ class SavedReport(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    version_number = models.PositiveIntegerField(default=1)
+    content_hash   = models.CharField(max_length=64, blank=True)
+    change_reason  = models.CharField(
+        max_length=16, choices=ChangeReason.choices, default=ChangeReason.GENERATED
+    )
+    change_summary = models.TextField(blank=True)
+    parent_version = models.ForeignKey(
+        'self', null=True, blank=True, on_delete=models.SET_NULL, related_name='child_versions'
+    )
 
     class Meta:
         db_table = "saved_reports"
@@ -405,6 +419,29 @@ class SavedReport(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.created_at:%Y-%m-%d})"
+    
+    @classmethod
+    def create_version(cls, parent: 'SavedReport', content_md: str, user, reason: str, summary=""):
+        import hashlib
+        content_hash = hashlib.sha256(content_md.encode()).hexdigest()
+
+        # Don't save if content hasn't changed
+        if parent.content_hash == content_hash:
+            return parent
+
+        return cls.objects.create(
+            process=parent.process,
+            organisation=parent.organisation,
+            title=parent.title,
+            content_md=content_md,
+            content_hash=content_hash,
+            clearance_level=parent.clearance_level,
+            created_by=user,
+            version_number=parent.version_number + 1,
+            change_reason=reason,
+            change_summary=summary,
+            parent_version=parent,
+        )
 
 
 # Autocreate profile when user is created

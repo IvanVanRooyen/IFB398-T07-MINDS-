@@ -85,6 +85,12 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 # directory for generated PDFs
 TEST_MEDIA_ROOT = Path(BASE_DIR) / "media" / ".tests"
 
+TIME_ZONE = 'Australia/Brisbane'
+USE_TZ = True
+
+# Apply timezone globally
+USE_L10N = True
+
 # MinIO storage configuration (Django 5.x STORAGES format)
 STORAGES = {
     "default": {
