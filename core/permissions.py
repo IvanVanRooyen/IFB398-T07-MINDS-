@@ -1,33 +1,365 @@
-
-#Permission decorators and utilities for role-based and attribute-based access control.
-#This will be the implementation for JORC/VALMIN compliance and audit trail requirements.
-
 from functools import wraps
-from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseForbidden
 
-from .models import UserProfile, log_audit, AuditLog
+from django.core.exceptions import PermissionDenied
+
+from .models import UserProfile, log_audit, AuditLog, DocumentView
+
+
+# ---- ROLE SETS ----
+
+EXPLORATION_ROLES = {
+    UserProfile.RoleChoices.GEOLOGIST_EXPL,
+    UserProfile.RoleChoices.FIELD_LEAD,
+    UserProfile.RoleChoices.DATA_MANAGER,
+    UserProfile.RoleChoices.COMPETENT_PERSON,
+}
+
+MINING_ROLES = {
+    UserProfile.RoleChoices.GEOLOGIST_MINE,
+    UserProfile.RoleChoices.METALLURGIST,
+    UserProfile.RoleChoices.OPS_MANAGER,
+}
+
+MANAGEMENT_ROLES = {
+    UserProfile.RoleChoices.FIELD_LEAD,
+    UserProfile.RoleChoices.DATA_MANAGER,
+    UserProfile.RoleChoices.COMPETENT_PERSON,
+    UserProfile.RoleChoices.OPS_MANAGER,
+    UserProfile.RoleChoices.ADMIN,
+}
+
+UPLOAD_ROLES = {
+    UserProfile.RoleChoices.GEOLOGIST_EXPL,
+    UserProfile.RoleChoices.FIELD_LEAD,
+    UserProfile.RoleChoices.DATA_MANAGER,
+    UserProfile.RoleChoices.COMPETENT_PERSON,
+    UserProfile.RoleChoices.GEOLOGIST_MINE,
+    UserProfile.RoleChoices.METALLURGIST,
+    UserProfile.RoleChoices.OPS_MANAGER,
+    UserProfile.RoleChoices.ADMIN,
+}
+
+REPORT_ROLES = {
+    UserProfile.RoleChoices.GEOLOGIST_EXPL,
+    UserProfile.RoleChoices.FIELD_LEAD,
+    UserProfile.RoleChoices.DATA_MANAGER,
+    UserProfile.RoleChoices.COMPETENT_PERSON,
+    UserProfile.RoleChoices.GEOLOGIST_MINE,
+    UserProfile.RoleChoices.METALLURGIST,
+    UserProfile.RoleChoices.OPS_MANAGER,
+    UserProfile.RoleChoices.ADMIN,
+}
+
+DELETE_ROLES = {
+    UserProfile.RoleChoices.DATA_MANAGER,
+    UserProfile.RoleChoices.ADMIN,
+}
+
+VIEW_ROLES = {
+    UserProfile.RoleChoices.GEOLOGIST_EXPL,
+    UserProfile.RoleChoices.FIELD_LEAD,
+    UserProfile.RoleChoices.DATA_MANAGER,
+    UserProfile.RoleChoices.COMPETENT_PERSON,
+    UserProfile.RoleChoices.GEOLOGIST_MINE,
+    UserProfile.RoleChoices.METALLURGIST,
+    UserProfile.RoleChoices.OPS_MANAGER,
+    UserProfile.RoleChoices.ADMIN,
+    UserProfile.RoleChoices.VIEWER,
+}
+
+
+# ---- CLEARANCE HELPERS ----
+
+CLEARANCE_RANK = {
+    "PUBLIC": 0,
+    "INTERNAL": 1,
+    "CONFIDENTIAL": 2,
+    # Keep this here temporarily so old data does not break anything
+    "JORC_APPROVED": 3,
+}
+
+DOCUMENT_CONFIDENTIALITY_RANK = {
+    "public": 0,
+    "internal": 1,
+    "confidential": 2,
+    # Keep for backwards compatibility if old rows exist
+    "jorc_restricted": 3,
+}
+
+
+# ---- BASIC USER / ROLE HELPERS ----
+
+def is_authenticated_with_profile(user) -> bool:
+    return bool(user and user.is_authenticated and hasattr(user, "profile"))
+
+
+def get_user_profile(user):
+    if not is_authenticated_with_profile(user):
+        return None
+    return user.profile
+
+
+def get_user_role(user):
+    profile = get_user_profile(user)
+    return profile.role if profile else None
+
+
+def get_user_clearance(user) -> str:
+    profile = get_user_profile(user)
+    if not profile:
+        return "PUBLIC"
+    return profile.clearance_level or "PUBLIC"
+
+
+def has_role(user, *allowed_roles) -> bool:
+    role = get_user_role(user)
+    return role in allowed_roles
+
+
+def has_any_role(user, allowed_roles) -> bool:
+    role = get_user_role(user)
+    return role in allowed_roles
+
+
+def is_admin(user) -> bool:
+    return get_user_role(user) == UserProfile.RoleChoices.ADMIN
+
+
+def is_viewer(user) -> bool:
+    return get_user_role(user) == UserProfile.RoleChoices.VIEWER
+
+
+def is_exploration_user(user) -> bool:
+    return has_any_role(user, EXPLORATION_ROLES)
+
+
+def is_mining_user(user) -> bool:
+    return has_any_role(user, MINING_ROLES)
+
+
+def is_management_user(user) -> bool:
+    return has_any_role(user, MANAGEMENT_ROLES)
+
+
+# ---- CLEARANCE / ORG HELPERS ----
+
+def has_clearance(user, min_level: str) -> bool:
+    user_rank = CLEARANCE_RANK.get(get_user_clearance(user), 0)
+    required_rank = CLEARANCE_RANK.get(min_level, 0)
+    return user_rank >= required_rank
+
+
+def document_confidentiality_rank(document) -> int:
+    value = (getattr(document, "confidentiality", None) or "internal").lower()
+    return DOCUMENT_CONFIDENTIALITY_RANK.get(value, 1)
+
+
+def user_clearance_rank(user) -> int:
+    return CLEARANCE_RANK.get(get_user_clearance(user), 0)
+
+
+def belongs_to_same_organisation(user, obj) -> bool:
+    profile = get_user_profile(user)
+    if not profile:
+        return False
+
+    user_org = getattr(profile, "organisation", None)
+    obj_org = getattr(obj, "organisation", None)
+
+    # If object has no organisation, allow access
+    if obj_org is None:
+        return True
+
+    # If user has no organisation, only admins should pass
+    if user_org is None:
+        return is_admin(user)
+
+    return user_org == obj_org
+
+
+# ---- DOMAIN HELPERS ----
+
+def user_matches_process_mode(user, obj) -> bool:
+    """
+    Enforce exploration/mining split where possible.
+
+    Accepts objects that either:
+    - have a direct `mode`, or
+    - have a related `process.mode`
+
+    If mode cannot be determined, this helper allows access and leaves
+    the decision to role/clearance/org checks.
+    """
+    if is_admin(user):
+        return True
+
+    mode = getattr(obj, "mode", None)
+
+    if mode is None:
+        process = getattr(obj, "process", None)
+        mode = getattr(process, "mode", None)
+
+    if mode is None:
+        return True
+
+    if mode == "PROJECT":
+        return is_exploration_user(user)
+
+    if mode == "OPERATION":
+        return is_mining_user(user)
+
+    return True
+
+
+# ---- OBJECT ACCESS CHECKS ----
+
+def can_access_document(user, document) -> bool:
+    if not is_authenticated_with_profile(user):
+        return False
+
+    if not has_any_role(user, VIEW_ROLES):
+        return False
+
+    if not belongs_to_same_organisation(user, document):
+        return False
+
+    if user_clearance_rank(user) < document_confidentiality_rank(document):
+        return False
+
+    if not user_matches_process_mode(user, document):
+        return False
+
+    return True
+
+
+def can_upload_document(user, process=None) -> bool:
+    if not is_authenticated_with_profile(user):
+        return False
+
+    if not has_any_role(user, UPLOAD_ROLES):
+        return False
+
+    if process is not None:
+        if not belongs_to_same_organisation(user, process):
+            return False
+        if not user_matches_process_mode(user, process):
+            return False
+
+    return True
+
+
+def can_delete_document(user, document) -> bool:
+    if not is_authenticated_with_profile(user):
+        return False
+
+    if not has_any_role(user, DELETE_ROLES):
+        return False
+
+    if not belongs_to_same_organisation(user, document):
+        return False
+
+    return True
+
+
+def can_generate_report(user, process) -> bool:
+    if not is_authenticated_with_profile(user):
+        return False
+
+    if not has_any_role(user, REPORT_ROLES):
+        return False
+
+    if not belongs_to_same_organisation(user, process):
+        return False
+
+    if not user_matches_process_mode(user, process):
+        return False
+
+    return True
+
+
+def can_view_report(user, report) -> bool:
+    if not is_authenticated_with_profile(user):
+        return False
+
+    if not has_any_role(user, VIEW_ROLES):
+        return False
+
+    if not belongs_to_same_organisation(user, report):
+        return False
+
+    report_rank = CLEARANCE_RANK.get(getattr(report, "clearance_level", "INTERNAL"), 1)
+    if user_clearance_rank(user) < report_rank:
+        return False
+
+    if not user_matches_process_mode(user, report):
+        return False
+
+    return True
+
+
+def can_edit_report(user, report) -> bool:
+    if not can_view_report(user, report):
+        return False
+
+    if is_admin(user):
+        return True
+
+    return report.created_by == user
+
+
+# ---- DECORATORS ----
 
 
 def role_required(*allowed_roles):
-    # Decorator to checks if user has one of the allowed roles.
-
-    #Usage:
-        #@role_required(UserProfile.RoleChoices.FIELD_LEAD, UserProfile.RoleChoices.ADMIN)
-        #def approve_document(request, doc_id):
-            
     def decorator(view_func):
         @wraps(view_func)
         def wrapper(request, *args, **kwargs):
-            if not request.user.is_authenticated:
+            if not is_authenticated_with_profile(request.user):
                 raise PermissionDenied("Authentication required")
 
-            if not hasattr(request.user, 'profile'):
-                raise PermissionDenied("User profile not found")
+            if not has_role(request.user, *allowed_roles):
+                raise PermissionDenied("You do not have permission for this action.")
 
-            user_role = request.user.profile.role
-            if user_role not in allowed_roles:
-                raise PermissionDenied(f"Role {user_role} not authorized for this action")
+            return view_func(request, *args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def exploration_required(view_func):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not is_authenticated_with_profile(request.user):
+            raise PermissionDenied("Authentication required")
+
+        if not (is_exploration_user(request.user) or is_admin(request.user)):
+            raise PermissionDenied("Exploration access required.")
+
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+def mining_required(view_func):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not is_authenticated_with_profile(request.user):
+            raise PermissionDenied("Authentication required")
+
+        if not (is_mining_user(request.user) or is_admin(request.user)):
+            raise PermissionDenied("Mining access required.")
+
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+def clearance_required(min_level):
+    def decorator(view_func):
+        @wraps(view_func)
+        def wrapper(request, *args, **kwargs):
+            if not is_authenticated_with_profile(request.user):
+                raise PermissionDenied("Authentication required")
+
+            if not has_clearance(request.user, min_level):
+                raise PermissionDenied("Insufficient clearance level.")
 
             return view_func(request, *args, **kwargs)
         return wrapper
@@ -35,148 +367,57 @@ def role_required(*allowed_roles):
 
 
 def organisation_access_required(view_func):
-    #Decorator to ensure user can only access their organisation data.
-    #Adds user_organisation to request object.
-
-    #Usage:
-        #@organisation_access_required
-        #def view_documents(request):
-            # Documents will be filtered by request.user_organisation
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
-        if not request.user.is_authenticated:
+        if not is_authenticated_with_profile(request.user):
             raise PermissionDenied("Authentication required")
 
-        if not hasattr(request.user, 'profile'):
-            raise PermissionDenied("User profile not found")
-
-        # Add organisation filter to request
         request.user_organisation = request.user.profile.organisation
         return view_func(request, *args, **kwargs)
     return wrapper
 
 
-def clearance_required(min_level):
-    #Decorator to check if user has sufficient clearance
 
-    #Usage:
-        #@clearance_required(UserProfile.ClearanceLevel.JORC_APPROVED)
-        #def view_jorc_report(request, report_id):
+# ---- AUDIT HELPERS ----
 
-    clearance_hierarchy = {
-        UserProfile.ClearanceLevel.PUBLIC: 0,
-        UserProfile.ClearanceLevel.INTERNAL: 1,
-        UserProfile.ClearanceLevel.CONFIDENTIAL: 2,
-        UserProfile.ClearanceLevel.JORC_APPROVED: 3,
-    }
 
-    def decorator(view_func):
-        @wraps(view_func)
-        def wrapper(request, *args, **kwargs):
-            if not request.user.is_authenticated:
-                raise PermissionDenied("Authentication required")
-
-            if not hasattr(request.user, 'profile'):
-                raise PermissionDenied("User profile not found")
-
-            user_level = clearance_hierarchy.get(request.user.profile.clearance_level, 0)
-            required_level = clearance_hierarchy.get(min_level, 0)
-
-            if user_level < required_level:
-                raise PermissionDenied(f"Insufficient clearance level")
-
-            return view_func(request, *args, **kwargs)
-        return wrapper
-    return decorator
+def get_user_ip(request):
+    ip_address = request.META.get("HTTP_X_FORWARDED_FOR")
+    if ip_address:
+        return ip_address.split(",")[0]
+    return request.META.get("REMOTE_ADDR")
 
 
 def log_view_access(model_class):
-    #Decorator to automatically log when users view objects for audit trail
-
-    #Usage:
-        #@log_view_access(Document)
-        #def view_document(request, doc_id):
-            #doc = get_object_or_404(Document, pk=doc_id)
-
     def decorator(view_func):
         @wraps(view_func)
         def wrapper(request, *args, **kwargs):
             response = view_func(request, *args, **kwargs)
 
-            # Try to get object ID from kwargs
-            obj_id = kwargs.get('pk') or kwargs.get('id') or kwargs.get('doc_id')
-
+            obj_id = kwargs.get("pk") or kwargs.get("id") or kwargs.get("doc_id")
             if obj_id and request.user.is_authenticated:
                 try:
                     obj = model_class.objects.get(pk=obj_id)
+                    ip_address = get_user_ip(request)
 
-                    # Get IP address
-                    ip_address = request.META.get('HTTP_X_FORWARDED_FOR')
-                    if ip_address:
-                        ip_address = ip_address.split(',')[0]
-                    else:
-                        ip_address = request.META.get('REMOTE_ADDR')
-
-                    # Log the view
                     log_audit(
                         user=request.user,
                         action=AuditLog.ActionType.VIEW,
                         obj=obj,
                         description=f"User viewed {model_class.__name__}",
                         ip_address=ip_address,
-                        user_agent=request.META.get('HTTP_USER_AGENT', '')[:500]
+                        user_agent=request.META.get("HTTP_USER_AGENT", "")[:500],
                     )
 
-                    # Also create DocumentView record if it's a Document
-                    if model_class.__name__ == 'Document':
-                        from .models import DocumentView
+                    if model_class.__name__ == "Document":
                         DocumentView.objects.create(
                             user=request.user,
                             document=obj,
-                            ip_address=ip_address
+                            ip_address=ip_address,
                         )
                 except model_class.DoesNotExist:
-                    pass  # Object not found, view will handle 404
+                    pass
 
             return response
         return wrapper
     return decorator
-
-
-def can_approve_workflow(user, workflow_type):
-    #Check if a user can approve a specific workflow type
-
-    #Args:
-        #user: Django User instance
-        #workflow_type: ApprovalWorkflow.WorkflowType choice
-
-    #Returns:
-        #bool: True if user can approve False otherwise
-
-    if not hasattr(user, 'profile'):
-        return False
-
-    from .models import ApprovalWorkflow
-
-    if workflow_type == ApprovalWorkflow.WorkflowType.JORC:
-        return user.profile.can_approve_jorc
-    elif workflow_type == ApprovalWorkflow.WorkflowType.VALMIN:
-        return user.profile.can_approve_valmin
-    else:
-        # General approval - check role
-        return user.profile.role in [
-            UserProfile.RoleChoices.FIELD_LEAD,
-            UserProfile.RoleChoices.DATA_MANAGER,
-            UserProfile.RoleChoices.OPERATIONS_MANAGER,
-            UserProfile.RoleChoices.ADMIN,
-        ]
-
-
-def get_user_ip(request):
-    #Extract user IP address from request
-    ip_address = request.META.get('HTTP_X_FORWARDED_FOR')
-    if ip_address:
-        ip_address = ip_address.split(',')[0]
-    else:
-        ip_address = request.META.get('REMOTE_ADDR')
-    return ip_address
