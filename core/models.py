@@ -278,26 +278,25 @@ class DocumentChunk(models.Model):
 class UserProfile(models.Model):
     """Extended user attributes for mining/exploration governance"""
 
-    class RoleChoices(models.TextChoices):
-        # Exploration roles
-        GEOLOGIST_EXPL = "GEOLOGIST_EXPL", _("Geologist (Exploration)")
-        FIELD_LEAD = "FIELD_LEAD", _("Field Lead")
-        DATA_MANAGER = "DATA_MANAGER", _("Data Manager")
+    def is_exploration_role(self):
+        return self.role in [
+            self.RoleChoices.GEOLOGIST_EXPL,
+            self.RoleChoices.FIELD_LEAD,
+            self.RoleChoices.DATA_MANAGER,
+            self.RoleChoices.COMPETENT_PERSON,
+        ]
 
-        # Mining roles
-        GEOLOGIST_MINE = "GEOLOGIST_MINE", _("Mine Geologist")
-        METALLURGIST = "METALLURGIST", _("Metallurgist")
-        OPERATIONS_MANAGER = "OPS_MANAGER", _("Operations Manager")
-
-        # Admin/Other
-        ADMIN = "ADMIN", _("Administrator")
-        VIEWER = "VIEWER", _("Viewer Only")
+    def is_mining_role(self):
+        return self.role in [
+            self.RoleChoices.GEOLOGIST_MINE,
+            self.RoleChoices.METALLURGIST,
+            self.RoleChoices.OPS_MANAGER,
+        ]
 
     class ClearanceLevel(models.TextChoices):
         PUBLIC = "PUBLIC", _("Public")
         INTERNAL = "INTERNAL", _("Internal")
         CONFIDENTIAL = "CONFIDENTIAL", _("Confidential")
-        JORC_APPROVED = "JORC_APPROVED", _("JORC Approved Personnel")
 
     # Core fields
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
@@ -563,7 +562,8 @@ class ApprovalWorkflow(models.Model):
             return profile.role in [
                 UserProfile.RoleChoices.FIELD_LEAD,
                 UserProfile.RoleChoices.DATA_MANAGER,
-                UserProfile.RoleChoices.OPERATIONS_MANAGER,
+                UserProfile.RoleChoices.COMPETENT_PERSON,
+                UserProfile.RoleChoices.OPS_MANAGER,
                 UserProfile.RoleChoices.ADMIN,
             ]
 

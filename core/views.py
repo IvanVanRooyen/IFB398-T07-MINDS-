@@ -32,11 +32,20 @@ from docx.shared import Pt, RGBColor
 import re, io
 
 from .forms import DocumentForm, DocumentSearchForm
-from .models import Document, Process, SavedReport, AuditLog, log_audit
+from .models import Document, Process, SavedReport, AuditLog, log_audit, UserProfile
 from .utils import sha256_file, extract_text, chunk_text
 
 from .tagging import TAG_LABEL
 
+from .permissions import (
+    can_access_document,
+    can_upload_document,
+    can_delete_document,
+    can_generate_report,
+    can_view_report,
+    can_edit_report,
+    role_required,
+)
 
 # ---------- Helpers ----------
 
@@ -159,13 +168,23 @@ def _get_cached_report_md(process_id: str, clearance_level: str) -> str:
         cache.set(cache_key, md, 86400)  # 24 hours
     return md
 
-# @login_required
+@login_required
 @require_http_methods(["GET", "POST"])
 def upload_doc(request):
     """
     Upload with SHA-256 de-duplication (your original logic, with tiny polish).
     """
     if request.method == "POST":
+
+        # Permission Check
+        process_id = request.POST.get("process")
+        process = None
+        if process_id:
+            process = Process.objects.filter(pk=process_id).first()
+
+        if not can_upload_document(request.user, process=process):
+            raise PermissionDenied("You do not have permission to upload documents.")
+
         form = DocumentForm(request.POST, request.FILES)
         log.debug("FILES keys: %s", list(request.FILES.keys()))  # debug: ensure 'file' is present
         if form.is_valid():
@@ -286,6 +305,31 @@ def documents(request):
     form = DocumentSearchForm(request.GET or None, doc_type_choices=type_choices)
     qs = Document.objects.select_related("process", "organisation").order_by("-created_at")
 
+    if not request.user.is_authenticated or not hasattr(request.user, "profile"):
+        qs = Document.objects.none()
+    else:
+        profile = request.user.profile
+
+        qs = qs.filter(
+            Q(organisation=profile.organisation) | Q(organisation__isnull=True)
+        )
+
+        allowed_confidentialities = ["public"]
+
+        if profile.clearance_level in ["INTERNAL", "CONFIDENTIAL", "JORC_APPROVED"]:
+            allowed_confidentialities.append("internal")
+
+        if profile.clearance_level in ["CONFIDENTIAL", "JORC_APPROVED"]:
+            allowed_confidentialities.append("confidential")
+
+        qs = qs.filter(confidentiality__in=allowed_confidentialities)
+
+        if profile.role != UserProfile.RoleChoices.ADMIN:
+            if profile.is_exploration_role():
+                qs = qs.filter(Q(process__mode="PROJECT") | Q(process__isnull=True))
+            elif profile.is_mining_role():
+                qs = qs.filter(Q(process__mode="OPERATION") | Q(process__isnull=True))
+
     q_value = ""
     if form.is_valid():
 
@@ -384,12 +428,15 @@ def documents(request):
 @require_GET
 def document_detail(request, pk):
     doc = get_object_or_404(Document, pk=pk)
-    # Resolve tag integers to their human-readable labels
+
+    if not can_access_document(request.user, doc):
+        raise PermissionDenied("You do not have permission to view this document.")
+
     tag_labels = [TAG_LABEL.get(t, f"Tag {t}") for t in (doc.tags or [])]
     return render(request, "core/document_detail.html", {
         "doc": doc,
         "tag_labels": tag_labels,
-        })
+    })
 
 
 @require_http_methods(["POST", "DELETE"])
@@ -399,6 +446,10 @@ def delete_document(request, pk):
     """
     doc = get_object_or_404(Document, pk=pk)
 
+    # Permission check
+    if not can_delete_document(request.user, doc):
+        raise PermissionDenied("You do not have permission to delete this document.")
+    
     # Store title for success message
     doc_title = doc.title
 
@@ -509,12 +560,14 @@ def healthcheck(request):
 
 @require_GET
 def project_report_pdf(request, process_id: str):
-    if not Process.objects.filter(pk=process_id).exists():
-        raise Http404("Project not found")
+    process = get_object_or_404(Process, pk=process_id)
+
+    # Permission check
+    if not can_generate_report(request.user, process):
+        raise PermissionDenied("You do not have permission to export this report.")
 
     clearance_level = _get_clearance_level(request)
     md_text = _get_cached_report_md(process_id, clearance_level)
-    process = Process.objects.get(pk=process_id)
 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=A4,
@@ -556,12 +609,14 @@ def project_report_pdf(request, process_id: str):
 
 @require_GET
 def project_report_docx(request, process_id: str):
-    if not Process.objects.filter(pk=process_id).exists():
-        raise Http404("Project not found")
+    process = get_object_or_404(Process, pk=process_id)
+
+    # Permission check
+    if not can_generate_report(request.user, process):
+        raise PermissionDenied("You do not have permission to export this report.")
 
     clearance_level = _get_clearance_level(request)
     md_text = _get_cached_report_md(process_id, clearance_level)
-    process = Process.objects.get(pk=process_id)
 
     doc = DocxDocument()
     style = doc.styles["Normal"]
@@ -598,6 +653,10 @@ def project_report_docx(request, process_id: str):
 def document_analysis_detail(request, pk):
     document = get_object_or_404(Document, pk=pk)
 
+    # Permission check
+    if not can_access_document(request.user, document):
+        raise PermissionDenied
+    
     analysis_text = getattr(document, "analysis_text", "") or "No insights available yet."
 
     return render(request, "core/document_analysis_detail.html", {
@@ -725,19 +784,31 @@ def report_list_page(request):
     user_rank = clearance_rank.get(user_clearance, 0)
 
     accessible_levels = [lvl for lvl, rank in clearance_rank.items() if rank <= user_rank]
+
     recent_reports = (
         SavedReport.objects
         .filter(clearance_level__in=accessible_levels)
         .select_related("process")
-        .order_by("-created_at")[:20]
+        .order_by("-created_at")
     )
+
+    if request.user.is_authenticated and hasattr(request.user, "profile"):
+        profile = request.user.profile
+        recent_reports = recent_reports.filter(
+            Q(organisation=profile.organisation) | Q(organisation__isnull=True)
+        )
+    else:
+        recent_reports = SavedReport.objects.none()
+
+    recent_reports = recent_reports[:20]
+
     recent_projects = Process.objects.order_by("-created_at")[:20]
-    all_documents   = Document.objects.select_related("process").order_by("-created_at")
+    all_documents = Document.objects.select_related("process").order_by("-created_at")
 
     return render(request, "core/report_list.html", {
-        "recent_reports":  recent_reports,
+        "recent_reports": recent_reports,
         "recent_projects": recent_projects,
-        "all_documents":   all_documents,
+        "all_documents": all_documents,
     })
 
 
@@ -756,13 +827,16 @@ def generate_report(request):
         messages.error(request, "No project selected.")
         return redirect("report_list")
 
-    if not Process.objects.filter(pk=process_id).exists():
-        raise Http404("Project not found")
+    process = get_object_or_404(Process, pk=process_id)
+
+    # Permission check
+    if not can_generate_report(request.user, process):
+        raise PermissionDenied("You do not have permission to generate reports for this process.")
 
     clearance_level = _get_clearance_level(request)
     try:
-        process = get_object_or_404(Process, pk=process_id)
         md = _get_cached_report_md(process_id, clearance_level)
+
     except Exception as e:
         log.error("Report generation failed during generate_report: %s", e)
         messages.error(request, f"Report generation failed: {e}")
@@ -806,6 +880,10 @@ def report_editor(request, process_id):
     except Process.DoesNotExist:
         raise Http404("Project not found")
 
+    # Permission check
+    if not can_generate_report(request.user, process):
+        raise PermissionDenied("You do not have permission to access this report editor.")
+    
     clearance_level = _get_clearance_level(request)
     try:
         md = _get_cached_report_md(str(process_id), clearance_level)
@@ -833,9 +911,7 @@ def saved_report_editor(request, report_id):
         pk=report_id,
     )
 
-    user_clearance = _get_clearance_level(request)
-    clearance_rank = {"PUBLIC": 0, "INTERNAL": 1, "CONFIDENTIAL": 2, "JORC_APPROVED": 3}
-    if clearance_rank.get(user_clearance, 0) < clearance_rank.get(report.clearance_level, 1):
+    if not can_view_report(request.user, report):
         raise PermissionDenied
 
     return render(request, "core/report_editor.html", {
@@ -915,8 +991,7 @@ def update_saved_report(request, report_id):
     """
     report = get_object_or_404(SavedReport, pk=report_id)
 
-    is_admin = hasattr(request.user, "profile") and request.user.profile.role == "ADMIN"
-    if report.created_by != request.user and not is_admin:
+    if not can_edit_report(request.user, report):
         return JsonResponse({"success": False, "error": "Permission denied."}, status=403)
 
     title      = request.POST.get("title", "").strip()
@@ -939,7 +1014,7 @@ def update_saved_report(request, report_id):
         "version_number": new_version.version_number,
     })
 
-# @login_required
+@login_required
 def report_history(request, process_id):
     """Show all versions of reports for a process, grouped by title."""
     # Get the latest version of each distinct report title
@@ -956,7 +1031,7 @@ def report_history(request, process_id):
     }
     return render(request, "core/report_history.html", {"grouped": grouped, "process_id": process_id})
 
-# @login_required
+@login_required
 def report_version_detail(request, report_id):
     """View a specific report version."""
     report = get_object_or_404(SavedReport, pk=report_id)
@@ -1100,6 +1175,10 @@ def document_analysis_page(request):
 def analyze_document(request, pk):
     document = get_object_or_404(Document, pk=pk)
 
+    # Permission check
+    if not can_access_document(request.user, document):
+        raise PermissionDenied
+    
     text = (document.extracted_text or "").strip()
     if not text:
         messages.error(request, "This document has no extracted text to analyse.")
@@ -1153,6 +1232,10 @@ Document text:
 def export_document_analysis(request, pk):
     document = get_object_or_404(Document, pk=pk)
 
+    # Permission check
+    if not can_access_document(request.user, document):
+        raise PermissionDenied
+    
     md_text = (document.analysis_text or "").strip()
     if not md_text:
         return JsonResponse({"error": "No analysis available to export."}, status=400)
