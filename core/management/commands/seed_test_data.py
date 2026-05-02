@@ -28,6 +28,7 @@ from reportlab.platypus import (
 from core.models import (
     ApprovalWorkflow,
     AuditLog,
+    DocLink,
     Document,
     DocumentView,
     Drillhole,
@@ -218,6 +219,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"{msg}"))
 
     FLUSH_MODELS = [
+        DocLink,
         DocumentView,
         AuditLog,
         ApprovalWorkflow,
@@ -391,14 +393,43 @@ class Command(BaseCommand):
         return holes
 
     def _create_prospects(self, processes):
+        MINERALISATION_STYLES = [
+            "shear-hosted gold", "orogenic gold", "porphyry copper-gold",
+            "IOCG", "epithermal gold-silver", "skarn", "VMS", "sediment-hosted copper",
+        ]
+        EXPLORATION_TARGETS = [
+            "extend the known resource along strike",
+            "test the depth extent of the mineralised corridor",
+            "identify additional lodes beneath the transported cover",
+            "delineate the footprint of the anomaly for drill targeting",
+            "confirm continuity of the high-grade shoot identified in Phase 1",
+        ]
+
         prospects = []
         for proc in processes:
             for _ in range(NUM_PROSPECTS_PER_PROCESS):
+                style = random.choice(MINERALISATION_STYLES)
+                commodity = proc.commodity or "gold"
+                hypothesis = (
+                    f"Structural mapping and geochemical sampling indicate a {style} "
+                    f"mineralisation system associated with the regional fault corridor. "
+                    f"Elevated {commodity} values in rock chips and soils define a "
+                    f"{round(random.uniform(0.5, 4.0), 1)} km trend with anomalous "
+                    f"pathfinder elements suggestive of a significant discovery."
+                )
+                objective = (
+                    f"The primary objective is to {random.choice(EXPLORATION_TARGETS)} "
+                    f"and establish an inferred resource base sufficient to support a "
+                    f"maiden drilling programme. Secondary objective: assess metallurgical "
+                    f"recovery potential for {commodity}."
+                )
                 pr = Prospect.objects.create(
                     id=uuid.uuid4(),
                     name=f"{fake.last_name()} {random.choice(['Lode', 'Reef', 'Deposit', 'Zone'])}",
                     organisation=proc.organisation,
                     process=proc,
+                    hypothesis=hypothesis,
+                    objective=objective,
                     geom=random_point(),
                 )
                 prospects.append(pr)

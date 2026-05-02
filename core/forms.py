@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import ModelForm
-from .models import Document, Process
+from .models import Document, Process, Prospect
 from .tagging import TAG_CHOICES
 
 class DocumentForm(ModelForm):
@@ -111,3 +111,25 @@ class DocumentSearchForm(forms.Form):
         if d_from and d_to and d_from > d_to:
             raise forms.ValidationError("'From' date cannot be after 'To' date.")
         return cleaned
+
+
+class ProspectForm(ModelForm):
+    class Meta:
+        model = Prospect
+        fields = ["name", "organisation", "process", "hypothesis", "objective"]
+        widgets = {
+            "name": forms.TextInput(attrs={
+                "class": "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
+                "placeholder": "Prospect name",
+            }),
+            "hypothesis": forms.Textarea(attrs={
+                "rows": 4,
+                "class": "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
+                "placeholder": "Describe the geological hypothesis for this prospect...",
+            }),
+            "objective": forms.Textarea(attrs={
+                "rows": 3,
+                "class": "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
+                "placeholder": "State the exploration objective...",
+            }),
+        }

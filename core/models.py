@@ -124,16 +124,37 @@ class Prospect(models.Model):
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     process = models.ForeignKey(Process, on_delete=models.CASCADE)
 
-    # Geospatial field - prospect location (point) or area (polygon)
+    hypothesis = models.TextField()
+    objective = models.TextField()
+
+    # Geospatial field — prospect location (point) or area (polygon)
     geom = models.PointField(srid=4326, null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def clean(self):
+        errors = {}
+        if not self.hypothesis or not self.hypothesis.strip():
+            errors["hypothesis"] = "A geological hypothesis is required."
+        if not self.objective or not self.objective.strip():
+            errors["objective"] = "An exploration objective is required."
+        if not self.geom:
+            errors["geom"] = "A mapped location is required."
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
     def __repr__(self):
         return (
             f"Prospect(id={self.id},name={self.name},organisation={self.organisation},"
-            f"process={self.process},created_at={self.created_at},updated_at={self.updated_at}"
+            f"process={self.process},created_at={self.created_at},updated_at={self.updated_at})"
         )
 
 
@@ -587,6 +608,43 @@ class DocumentView(models.Model):
 
     def __str__(self):
         return f"{self.user.username} viewed {self.document.title} at {self.viewed_at}"
+
+# DOCUMENT–ENTITY LINKING ---------------------------------
+
+class DocLink(models.Model):
+    """Generic document-to-entity attachment for Confluence-style traceability."""
+    document = models.ForeignKey(
+        Document,
+        on_delete=models.CASCADE,
+        related_name="links",
+    )
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.UUIDField()
+    content_object = GenericForeignKey("content_type", "object_id")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "doc_links"
+        indexes = [
+            models.Index(fields=["content_type", "object_id"]),
+            models.Index(fields=["document"]),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["document", "content_type", "object_id"],
+                name="unique_doc_link",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.document.title} → {self.content_object}"
+
 
 # HELPER FUNCTIONS ---------------------------------
 

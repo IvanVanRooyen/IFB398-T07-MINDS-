@@ -5,6 +5,13 @@ urlpatterns = [
     path("", views.dashboard, name="dashboard"),
     path("home/", views.home, name="home"),
     path("prospects/", views.prospects, name="prospects"),
+    path("prospects/<uuid:pk>/", views.prospect_detail, name="prospect_detail"),
+
+    # DocLink routes
+    path("doclinks/picker/", views.doc_link_picker, name="doc_link_picker"),
+    path("doclinks/create/", views.create_doc_link, name="create_doc_link"),
+    path("doclinks/<int:pk>/delete/", views.delete_doc_link, name="delete_doc_link"),
+
     path("drillholes/", views.drillholes, name="drillholes"),
     path("tenements/", views.tenements, name="tenements"),
     path("documents/", views.documents, name="documents"),

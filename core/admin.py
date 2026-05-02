@@ -4,7 +4,7 @@ from django.contrib.gis.admin import GISModelAdmin
 
 from .models import (
     Process, Document, Organisation, Prospect, Tenement, Drillhole,
-    UserProfile, AuditLog, ApprovalWorkflow, DocumentView, SavedReport
+    UserProfile, AuditLog, ApprovalWorkflow, DocumentView, SavedReport, DocLink
 )
 
 # CORE MODELS ---------------------------------
@@ -29,10 +29,26 @@ class DocumentAdmin(djadmin.ModelAdmin):
     readonly_fields = ("checksum_sha256", "created_at", "updated_at")
 
 @djadmin.register(Prospect)
-class ProspectAdmin(GISModelAdmin):  # Changed to GISModelAdmin for map widget (also did the same for Tenement & Drillhole)
+class ProspectAdmin(GISModelAdmin):
     list_display = ("name", "organisation", "process", "created_at")
     list_filter = ("organisation",)
-    search_fields = ("name",)
+    search_fields = ("name", "hypothesis", "objective")
+    readonly_fields = ("created_at", "updated_at")
+    fieldsets = (
+        ("Identity", {
+            "fields": ("name", "organisation", "process"),
+        }),
+        ("Scientific Rationale", {
+            "fields": ("hypothesis", "objective"),
+        }),
+        ("Geometry", {
+            "fields": ("geom",),
+        }),
+        ("Timestamps", {
+            "fields": ("created_at", "updated_at"),
+            "classes": ("collapse",),
+        }),
+    )
 
 @djadmin.register(Tenement)
 class TenementAdmin(GISModelAdmin):  
@@ -128,3 +144,11 @@ class DocumentViewAdmin(djadmin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False  # View records should be immutable
+
+
+@djadmin.register(DocLink)
+class DocLinkAdmin(djadmin.ModelAdmin):
+    list_display = ("document", "content_type", "object_id", "created_by", "created_at")
+    list_filter = ("content_type", "created_at")
+    search_fields = ("document__title",)
+    readonly_fields = ("created_at",)

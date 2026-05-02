@@ -31,8 +31,9 @@ from docx import Document as DocxDocument
 from docx.shared import Pt, RGBColor
 import re, io
 
+from django.contrib.contenttypes.models import ContentType
 from .forms import DocumentForm, DocumentSearchForm
-from .models import Document, Process, SavedReport, AuditLog, log_audit
+from .models import Document, Process, SavedReport, AuditLog, log_audit, Prospect, DocLink
 from .utils import sha256_file, extract_text, chunk_text
 
 from .tagging import TAG_LABEL
@@ -443,6 +444,113 @@ def prospects(request):
         "core/prospects.html",
         {"page": page, "model_exists": Prospect is not None},
     )
+
+
+def prospect_detail(request, pk):
+    prospect = get_object_or_404(Prospect, pk=pk)
+    doc_links = DocLink.objects.filter(
+        content_type=ContentType.objects.get_for_model(Prospect),
+        object_id=prospect.pk,
+    ).select_related("document", "created_by").order_by("-created_at")
+    return render(request, "core/prospect_detail.html", {
+        "prospect": prospect,
+        "doc_links": doc_links,
+    })
+
+
+# ---------- DocLink Views ----------
+
+_LINKABLE_MODELS = {
+    "prospect": ("core", "prospect"),
+    "tenement": ("core", "tenement"),
+    "drillhole": ("core", "drillhole"),
+    "process": ("core", "process"),
+}
+
+
+@require_http_methods(["GET"])
+def doc_link_picker(request):
+    """HTMX partial: render the document picker modal for linking a document to an entity."""
+    content_type_label = request.GET.get("content_type", "")
+    object_id = request.GET.get("object_id", "")
+
+    if content_type_label not in _LINKABLE_MODELS:
+        return HttpResponseBadRequest("Invalid content type.")
+
+    documents = Document.objects.order_by("-created_at")[:100]
+    return render(request, "core/partials/doc_link_picker.html", {
+        "documents": documents,
+        "content_type_label": content_type_label,
+        "object_id": object_id,
+    })
+
+
+@require_POST
+def create_doc_link(request):
+    """Create a DocLink between a document and a target entity. Returns updated linked-documents section."""
+    document_id = request.POST.get("document_id")
+    content_type_label = request.POST.get("content_type_label")
+    object_id = request.POST.get("object_id")
+
+    if not all([document_id, content_type_label, object_id]):
+        return HttpResponseBadRequest("Missing required fields.")
+
+    if content_type_label not in _LINKABLE_MODELS:
+        return HttpResponseBadRequest("Invalid content type.")
+
+    app_label, model_name = _LINKABLE_MODELS[content_type_label]
+    try:
+        ct = ContentType.objects.get(app_label=app_label, model=model_name)
+    except ContentType.DoesNotExist:
+        return HttpResponseBadRequest("Content type not found.")
+
+    document = get_object_or_404(Document, pk=document_id)
+
+    DocLink.objects.get_or_create(
+        document=document,
+        content_type=ct,
+        object_id=object_id,
+        defaults={"created_by": request.user if request.user.is_authenticated else None},
+    )
+
+    if content_type_label == "prospect":
+        prospect = get_object_or_404(Prospect, pk=object_id)
+        doc_links = DocLink.objects.filter(
+            content_type=ct,
+            object_id=object_id,
+        ).select_related("document", "created_by").order_by("-created_at")
+        return render(request, "core/partials/linked_documents.html", {
+            "entity": prospect,
+            "doc_links": doc_links,
+            "content_type_label": content_type_label,
+        })
+
+    return HttpResponse(status=204)
+
+
+@require_POST
+def delete_doc_link(request, pk):
+    """Delete a DocLink record and re-render the linked documents section."""
+    link = get_object_or_404(DocLink, pk=pk)
+    ct = link.content_type
+    object_id = link.object_id
+    content_type_label = ct.model
+
+    link.delete()
+
+    if content_type_label == "prospect":
+        prospect = get_object_or_404(Prospect, pk=object_id)
+        doc_links = DocLink.objects.filter(
+            content_type=ct,
+            object_id=object_id,
+        ).select_related("document", "created_by").order_by("-created_at")
+        return render(request, "core/partials/linked_documents.html", {
+            "entity": prospect,
+            "doc_links": doc_links,
+            "content_type_label": content_type_label,
+        })
+
+    return HttpResponse(status=204)
 
 
 @require_GET
