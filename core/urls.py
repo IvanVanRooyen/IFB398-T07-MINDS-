@@ -5,6 +5,13 @@ urlpatterns = [
     path("", views.dashboard, name="dashboard"),
     path("home/", views.home, name="home"),
     path("prospects/", views.prospects, name="prospects"),
+    path("prospects/<uuid:pk>/", views.prospect_detail, name="prospect_detail"),
+
+    # DocLink routes
+    path("doclinks/picker/", views.doc_link_picker, name="doc_link_picker"),
+    path("doclinks/create/", views.create_doc_link, name="create_doc_link"),
+    path("doclinks/<int:pk>/delete/", views.delete_doc_link, name="delete_doc_link"),
+
     path("drillholes/", views.drillholes, name="drillholes"),
     path("tenements/", views.tenements, name="tenements"),
     path("documents/", views.documents, name="documents"),
@@ -12,16 +19,21 @@ urlpatterns = [
     path("documents/<uuid:pk>/delete/", views.delete_document, name="delete_document"),
     path("map/", views.map_view, name="map_view"),
     path("ai-insights/", views.ai_insights, name="ai_insights"),
-
     path("upload/", views.upload_doc, name="upload"),
-    path("ai/report/<uuid:process_id>/", views.project_report, name="project_report"),
-    path("ai/report/<uuid:process_id>/pdf/",  views.project_report_pdf,  name="project_report_pdf"),
+
+    # PDF / DOCX direct download by process
+    path("ai/report/<uuid:process_id>/pdf/", views.project_report_pdf,  name="project_report_pdf"),
     path("ai/report/<uuid:process_id>/docx/", views.project_report_docx, name="project_report_docx"),
+
+    # Report History
+    path("process/<uuid:process_id>/reports/history/", views.report_history, name="report_history"),
+    path("reports/<uuid:report_id>/version/", views.report_version_detail, name="report_version_detail"),
 
     # AI Routes
     path("ai/reports/", views.report_list_page, name="report_list"),
     path("ai/reports/generate/", views.generate_report, name="generate_report"),
     path("ai/reports/<uuid:report_id>/", views.report_detail, name="report_detail"),
+    path("ai/reports/history/", views.all_reports_history, name="all_reports_history"),
 
     # Report Editor 
     path("ai/reports/editor/<uuid:process_id>/", views.report_editor, name="report_editor"),
@@ -45,4 +57,5 @@ urlpatterns = [
     path("api/geojson/tenements/", views.geojson_tenements, name="geojson_tenements"),
     path("api/geojson/prospects/", views.geojson_prospects, name="geojson_prospects"),
     path("api/geojson/drillholes/", views.geojson_drillholes, name="geojson_drillholes"),
+    path("api/spatial-search/", views.spatial_search, name="spatial_search"),
 ]

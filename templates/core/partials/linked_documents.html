@@ -1,0 +1,43 @@
+<!-- Partial for HTMX out-of-band swap of the linked documents section -->
+<div id="linked-documents" class="bg-white rounded-xl shadow max-w-4xl p-6">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-lg font-semibold">Linked Documents</h2>
+    <button
+      hx-get="{% url 'doc_link_picker' %}?content_type={{ content_type_label }}&object_id={{ entity.pk }}"
+      hx-target="#link-modal-container"
+      hx-swap="innerHTML"
+      class="px-4 py-2 bg-cyan-600 text-white text-sm rounded-lg hover:bg-cyan-700">
+      + Link Document
+    </button>
+  </div>
+
+  <div id="link-modal-container"></div>
+
+  {% if doc_links %}
+    <ul class="divide-y divide-gray-100">
+      {% for link in doc_links %}
+      <li class="py-3 flex items-center justify-between">
+        <div>
+          <a href="{% url 'document_detail' link.document.pk %}" class="font-medium text-cyan-700 hover:underline">
+            {{ link.document.title }}
+          </a>
+          <span class="ml-2 text-xs text-gray-400">{{ link.document.doc_type }}</span>
+          <p class="text-xs text-gray-400 mt-0.5">
+            Linked {{ link.created_at|date:"M d, Y" }}{% if link.created_by %} by {{ link.created_by.username }}{% endif %}
+          </p>
+        </div>
+        <form hx-post="{% url 'delete_doc_link' link.pk %}"
+              hx-target="#linked-documents"
+              hx-swap="outerHTML"
+              method="post"
+              class="inline">
+          {% csrf_token %}
+          <button type="submit" class="text-red-400 hover:text-red-600 text-sm">Remove</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-gray-400 text-sm">No documents linked yet. Use the button above to attach evidence documents.</p>
+  {% endif %}
+</div>

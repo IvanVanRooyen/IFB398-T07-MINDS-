@@ -139,8 +139,8 @@
             ← Back to Documents
           </a>
           {% if doc.process %}
-            <a href="{% url 'project_report' doc.process.id %}" class="text-cyan-600 hover:underline">
-              🤖 Generate AI Report for {{ doc.process.name }}
+            <a href="{% url 'report_editor' doc.process.id %}" class="text-cyan-600 hover:underline">
+              🤖 AI Report for {{ doc.process.name }}
             </a>
           {% endif %}
         </div>

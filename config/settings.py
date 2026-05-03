@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.gis",
+    "django.contrib.postgres",
     "django_htmx",
     "core",
 ]
@@ -76,7 +77,9 @@ CACHES = {
 }
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB - we might need to make this larger after testing 
-LOGIN_URL = "/admin/login/"  
+LOGIN_URL = "/auth/login/"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/auth/login/"
 
 STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
@@ -84,6 +87,12 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # directory for generated PDFs
 TEST_MEDIA_ROOT = Path(BASE_DIR) / "media" / ".tests"
+
+TIME_ZONE = 'Australia/Brisbane'
+USE_TZ = True
+
+# Apply timezone globally
+USE_L10N = True
 
 # MinIO storage configuration (Django 5.x STORAGES format)
 STORAGES = {
