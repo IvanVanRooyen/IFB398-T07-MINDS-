@@ -20,6 +20,15 @@
           config.allowUnfree = true;
         };
 
+        rm-docker-imgs = pkgs.writeShellScriptBin "rm-docker-imgs" ''
+          for img in $(docker image ls --all --format "{{ .ID }}"); do 
+            docker rmi "$img"
+          done
+        
+          echo "------------------------------"
+          echo "all docker containers removed."
+        '';
+
         postGISPatch = pkgs.postgresql17Packages.postgis.overrideAttrs (prev: {
           postInstall = (prev.postInstall or "") + ''
             find $out -name "postgis*" -type f -executable | while read script; do
@@ -49,6 +58,10 @@
           buildInputs = with pkgs; [
             # nodejs
             bun
+            redis
+            rm-docker-imgs
+
+            go
 
             ruff
             pyright
