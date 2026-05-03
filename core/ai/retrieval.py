@@ -1,7 +1,5 @@
 from __future__ import annotations
-
 from django.db.models import Q
-
 from ..models import DocumentChunk, Process
 
 # mirrrors the hierarchy used in UserProfile.can_access_document and report_service.py
@@ -42,7 +40,8 @@ def query_chunks(
     # clearance filter, only surface chunks from documents that caller can see
     user_level = _CLEARANCE_LEVELS.get(clearance_level, 1)
     accessible_confidentiality = [
-        conf for conf, level in _CONFIDENTIALITY_MAP.items() if level <= user_level
+        conf for conf, level in _CONFIDENTIALITY_MAP.items()
+        if level <= user_level
     ]
     qs = qs.filter(document__confidentiality__in=accessible_confidentiality)
 
@@ -66,7 +65,6 @@ def query_chunks(
 
     return list(qs[:max_chunks])
 
-
 def format_chunks_for_prompt(chunks: list[DocumentChunk]) -> str:
     """
     Format retrieved chunks into a text block for an LLM prompt.
@@ -74,7 +72,7 @@ def format_chunks_for_prompt(chunks: list[DocumentChunk]) -> str:
     """
     if not chunks:
         return "No relevant document content found."
-
+    
     lines = []
     current_doc = None
 
@@ -88,9 +86,8 @@ def format_chunks_for_prompt(chunks: list[DocumentChunk]) -> str:
                 f"| date: {doc.timestamp or 'unknown'} ---"
             )
         lines.append(chunk.text)
-
+    
     return "\n".join(lines)
-
 
 def retrieve_context(
     query: str,
@@ -99,12 +96,8 @@ def retrieve_context(
     **kwargs,
 ) -> str:
     """
-    Convenience wrapper - retrieve chunks and format in one call.
+    Convenience wrapper — retrieve chunks and format in one call.
     Used in report_service.py.
     """
-    chunks = query_chunks(
-        query, process=process, clearance_level=clearance_level, **kwargs
-    )
-
+    chunks = query_chunks(query, process=process, clearance_level=clearance_level, **kwargs)
     return format_chunks_for_prompt(chunks)
-

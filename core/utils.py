@@ -1,7 +1,8 @@
 import hashlib
+import pdfplumber
 import logging
 
-import pdfplumber
+from django.contrib.gis.db import models
 
 
 def sha256_file(django_file) -> str:
@@ -23,9 +24,7 @@ def sha256_file(django_file) -> str:
     django_file.seek(pos)  # restore pointer
     return h.hexdigest()
 
-
 log = logging.getLogger(__name__)
-
 
 def extract_text(file_field) -> str:
     """
@@ -49,7 +48,6 @@ def extract_text(file_field) -> str:
 
         if lower_name.endswith(".docx"):
             from docx import Document as DocxDocument
-
             doc = DocxDocument(io.BytesIO(raw))
             paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
             return "\n".join(paragraphs)
@@ -57,25 +55,20 @@ def extract_text(file_field) -> str:
         return ""
 
     except Exception as e:
-        log.warning(
-            "Text extraction failed for %s: %s",
-            getattr(file_field, "name", "unknown"),
-            e,
-        )
+        log.warning("Text extraction failed for %s: %s", getattr(file_field, "name", "unknown"), e)
         return ""
-
-
+    
 def chunk_text(text: str, chunk_size: int = 500, overlap: int = 50) -> list[str]:
     """
     Split text into overlapping chunks for RAG retrieval
 
     chunk_size: number of words per chunk
-    overlap: words repeated at the start of the next chunk so sentences split accross a
+    overlap: words repeated at the start of the next chunk so sentences split accross a 
              boundary are not lost.
     """
     if not text or not text.strip():
         return []
-
+    
     words = text.split()
     chunks = []
     start = 0
@@ -86,5 +79,37 @@ def chunk_text(text: str, chunk_size: int = 500, overlap: int = 50) -> list[str]
         if chunk.strip():
             chunks.append(chunk)
         start += chunk_size - overlap
-
+    
     return chunks
+
+# class AutoConstraintMeta(type(models.Model)):
+#     """
+#     Metaclass to automatically generate constraints for choice field validation
+#     """
+#
+#     def __new__(mcs, name, bases, namespace, **kwargs):
+#         cls: models.Model = super().__new__(mcs, name, bases, namespace, **kwargs)
+#
+#         if namespace.get("Meta") and getattr(namespace["Meta"], "abstract", False):
+#             return cls
+#
+#         if not hasattr(cls._meta, "constraints"):
+#             cls._meta.constraints = []
+#
+#         for field in cls._meta.fields:
+#             if field.choices and not any(
+#                 field.name in str(c.check) for c in cls._meta.constraints
+#             ):
+#                 constraint = choice_constraint(
+#                     field.name,
+#                     field.choices,
+#                     f"valid_{cls._meta.db_table}_{field.name}",
+#                 )
+#                 cls._meta.constraints.append(constraint)
+#
+#         return cls
+
+
+# class AutoConstrainedModel(ValidatedChoiceModel,):
+#     class Meta:
+#         abstract = True

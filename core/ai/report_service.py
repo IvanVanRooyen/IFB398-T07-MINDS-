@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import logging
 from datetime import datetime
 from typing import Iterable
@@ -7,7 +6,7 @@ from typing import Iterable
 from django.db.models import QuerySet
 from django.utils.timezone import localtime
 
-from ..models import Document, Process
+from ..models import Process, Document, SavedReport, AuditLog, log_audit
 from .granite_client import GraniteClient
 from .retrieval import retrieve_context
 
@@ -29,7 +28,6 @@ CONFIDENTIALITY_MAP = {
     "jorc_restricted": 3,
 }
 
-
 def _fmt_dt(dt):
     if not dt:
         return ""
@@ -38,12 +36,10 @@ def _fmt_dt(dt):
     except Exception:
         return str(dt)
 
-
 def _fmt_user(user):
     if not user:
         return ""
     return getattr(user, "username", str(user))
-
 
 def fetch_process_bundle(process_id: str, clearance_level: str = "INTERNAL") -> dict:
     """
@@ -57,13 +53,13 @@ def fetch_process_bundle(process_id: str, clearance_level: str = "INTERNAL") -> 
 
     user_level = CLEARANCE_LEVELS.get(clearance_level, 1)
     accessible_confidentiality = [
-        conf for conf, level in CONFIDENTIALITY_MAP.items() if level <= user_level
+        conf for conf, level in CONFIDENTIALITY_MAP.items()
+        if level <= user_level
     ]
 
     docs: QuerySet[Document] = (
-        Document.objects.filter(
-            process=proc, confidentiality__in=accessible_confidentiality
-        )
+        Document.objects
+        .filter(process=proc, confidentiality__in=accessible_confidentiality)
         .select_related("created_by", "organisation", "process")
         .order_by("-timestamp", "-created_at")[:50]
         .only(
@@ -86,7 +82,6 @@ def fetch_process_bundle(process_id: str, clearance_level: str = "INTERNAL") -> 
         "process": proc,
         "docs": list(docs),
     }
-
 
 def build_structured_context(bundle: dict) -> str:
     """
@@ -123,16 +118,12 @@ def build_structured_context(bundle: dict) -> str:
 
     return "\n".join(lines)
 
-
 REPORT_SYSTEM_INSTRUCTIONS = """You are a technical writer generating concise mining/exploration project reports.
 Write clearly and factually, using only the provided context. If data is missing, say so briefly.
 Output Markdown. Keep it structured with headings.
 Audience: internal stakeholders (technical + managerial)."""
 
-
-def build_prompt(
-    context: str, as_of: str | None = None, sections: Iterable[str] | None = None
-) -> str:
+def build_prompt(context: str, as_of: str | None = None, sections: Iterable[str] | None = None) -> str:
     sections = sections or [
         "1. Project Summary",
         "2. Key Documents & Evidence",
@@ -160,7 +151,6 @@ Style:
 - Keep to ~400–700 words.
 """
 
-
 def generate_project_report(process_id: str, clearance_level: str = "INTERNAL") -> str:
     """
     Orchestrates: fetch → structure → call Granite → return Markdown.
@@ -179,7 +169,7 @@ def generate_project_report(process_id: str, clearance_level: str = "INTERNAL") 
         query=f"{p.name or ''} {p.commodity or ''}".strip(),
         process=p,
         clearance_level=clearance_level,
-        max_chunks=8,
+        max_chunks=8
     )
 
     full_context = f"{metadata_ctx}\n\nDOCUMENT CONTENT EXCERPTS:\n{content_ctx}"
@@ -190,9 +180,7 @@ def generate_project_report(process_id: str, clearance_level: str = "INTERNAL") 
         text = client.complete(prompt)
         return text
     except Exception as e:
-        log.error(
-            "Granite call failed for process %s: %s", process_id, e, exc_info=True
-        )
+        log.error("Granite call failed for process %s: %s", process_id, e, exc_info=True)
         return f"""# {p.name or "Project"} - Auto Report (Fallback)
 
 Granite unavailable. Minimal context below:
@@ -203,3 +191,40 @@ Granite unavailable. Minimal context below:
 
 You can retry when the model service is reachable.
 """
+
+def save_report(process, organisation, title, content_md, user, reason="GENERATED", summary=""):
+    import hashlib
+    content_hash = hashlib.sha256(content_md.encode()).hexdigest()
+
+    # Check if a report already exists for this process+title
+    existing = SavedReport.objects.filter(
+        process=process, title=title
+    ).order_by("-version_number").first()
+
+    if existing:
+        # Create a new version
+        report = SavedReport.create_version(
+            parent=existing,
+            content_md=content_md,
+            user=user,
+            reason=reason,
+            summary=summary,
+        )
+    else:
+        # First version ever
+        report = SavedReport.objects.create(
+            process=process,
+            organisation=organisation,
+            title=title,
+            content_md=content_md,
+            content_hash=content_hash,
+            clearance_level="INTERNAL",
+            created_by=user,
+            version_number=1,
+            change_reason=reason,
+            change_summary=summary,
+        )
+
+    log_audit(user=user, action=AuditLog.ActionType.CREATE, obj=report,
+              description=f"Saved '{title}' v{report.version_number}")
+    return report

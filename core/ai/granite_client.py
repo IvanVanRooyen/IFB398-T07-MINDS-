@@ -1,10 +1,7 @@
-import logging
 import os
-
 import requests
-
+import logging
 log = logging.getLogger(__name__)
-
 
 class GraniteClient:
     """
@@ -14,16 +11,14 @@ class GraniteClient:
       - HF:      HF_INFERENCE_URL=https://api-inference.huggingface.co/models/ibm-granite/...
                  HF_TOKEN=...
     """
-
     def __init__(self, backend=None):
         self.backend = backend or os.getenv("GRANITE_BACKEND", "ollama").lower()
         self.model = os.getenv("GRANITE_MODEL", "granite3.2:8b-instruct-fp16")
         self.timeout = int(os.getenv("GRANITE_TIMEOUT", "120"))
 
         if self.backend == "ollama":
-            # base = os.getenv("OLLAMA_URL", "http://localhost:9110")
-            base = "http://localhost:9110"
-            self.url = f"{base}/generate"
+            base = os.getenv("OLLAMA_URL", "http://localhost:11434")
+            self.url = f"{base}/api/generate"
         elif self.backend == "hf":
             self.url = os.getenv("HF_INFERENCE_URL")
             self.hf_token = os.getenv("HF_TOKEN")
@@ -45,14 +40,10 @@ class GraniteClient:
             data = r.json()
             log.debug("Ollama response keys: %s", list(data.keys()))
             log.debug("Ollama response text: %s", data.get("response", "")[:100])
-
+            result = data.get("response", "")
             return data.get("response", "")
 
-        headers = (
-            {"Authorization": f"Bearer {self.hf_token}"}
-            if getattr(self, "hf_token", None)
-            else {}
-        )
+        headers = {"Authorization": f"Bearer {self.hf_token}"} if getattr(self, "hf_token", None) else {}
         r = requests.post(
             self.url,
             headers=headers,
