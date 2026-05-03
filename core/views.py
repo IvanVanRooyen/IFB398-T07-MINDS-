@@ -32,6 +32,7 @@ from docx.shared import Pt, RGBColor
 import re, io
 
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.search import SearchQuery, SearchRank
 from .forms import DocumentForm, DocumentSearchForm
 from .models import Document, Process, SavedReport, AuditLog, log_audit, Prospect, DocLink, UserProfile
 from .permissions import role_required, clearance_required, log_view_access
@@ -345,13 +346,18 @@ def documents(request):
         q = form.cleaned_data.get("q", "").strip()
 
         if q:
-            qs = qs.filter(
-                Q(title__icontains=q)
-                | Q(doc_type__icontains=q)
-                | Q(confidentiality__icontains=q)
-                | Q(process__name__icontains=q)
-                | Q(organisation__name__icontains=q)
-                | Q(extracted_text__icontains=q)
+            search_query = SearchQuery(q, search_type='websearch', config='english')
+            qs = (
+                qs
+                .annotate(rank=SearchRank('search_tsv', search_query))
+                .filter(
+                    Q(search_tsv=search_query)
+                    | Q(doc_type__icontains=q)
+                    | Q(confidentiality__icontains=q)
+                    | Q(process__name__icontains=q)
+                    | Q(organisation__name__icontains=q)
+                )
+                .order_by('-rank', '-created_at')
             )
 
         # Project

@@ -7,6 +7,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.search import SearchVectorField
 from django.core.exceptions import ValidationError
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -221,6 +222,7 @@ class Document(models.Model):
     )
 
     checksum_sha256 = models.CharField(max_length=64, db_index=True, blank=True)
+    search_tsv = SearchVectorField(null=True, blank=True)   # populated by DB trigger
     extracted_text = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -285,9 +287,9 @@ class DocumentChunk(models.Model):
     class Meta:
         ordering = ["document", "chunk_index"]
         indexes = [
-            models.Index(fields=["process"]),
-            models.Index(fields=["doc_type"]),
-            models.Index(fields=["timestamp"]),
+            models.Index(fields=["process"], name='core_docume_process_f5b3f3_idx'),
+            models.Index(fields=["doc_type"], name='core_docume_doc_typ_499972_idx'),
+            models.Index(fields=["timestamp"], name='core_docume_timesta_294cd6_idx'),
         ]
     
     def __str__(self):
@@ -513,9 +515,9 @@ class AuditLog(models.Model):
         db_table = 'audit_logs'
         ordering = ['-timestamp']
         indexes = [
-            models.Index(fields=['content_type', 'object_id']),
-            models.Index(fields=['user', 'action']),
-            models.Index(fields=['timestamp']),
+            models.Index(fields=['content_type', 'object_id'], name='audit_logs_content_b0ef47_idx'),
+            models.Index(fields=['user', 'action'], name='audit_logs_user_id_d685f3_idx'),
+            models.Index(fields=['timestamp'], name='audit_logs_timesta_423be6_idx'),
         ]
 
     def __str__(self):
@@ -602,8 +604,8 @@ class DocumentView(models.Model):
         db_table = 'document_views'
         ordering = ['-viewed_at']
         indexes = [
-            models.Index(fields=['document', 'user']),
-            models.Index(fields=['viewed_at']),
+            models.Index(fields=['document', 'user'], name='document_vi_documen_dcb332_idx'),
+            models.Index(fields=['viewed_at'], name='document_vi_viewed__659188_idx'),
         ]
 
     def __str__(self):
@@ -632,8 +634,8 @@ class DocLink(models.Model):
     class Meta:
         db_table = "doc_links"
         indexes = [
-            models.Index(fields=["content_type", "object_id"]),
-            models.Index(fields=["document"]),
+            models.Index(fields=["content_type", "object_id"], name="doc_links_ct_obj_idx"),
+            models.Index(fields=["document"], name="doc_links_document_idx"),
         ]
         constraints = [
             models.UniqueConstraint(
