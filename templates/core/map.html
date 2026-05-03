@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
 {% load static %}
+
+{# Hidden CSRF token for spatial search fetch() POSTs #}
+<form id="csrf-holder" class="hidden">{% csrf_token %}</form>
+
 <div class="flex min-h-screen">
 
   <!-- Sidebar -->
@@ -45,14 +49,57 @@
   <!-- Main Content -->
   <main class="flex-1 p-6 bg-gray-50">
 
-    <div class="mb-4">
-      <h1 class="text-3xl font-bold">🗺️ Map View</h1>
-      <p class="text-gray-600 mt-2">Geospatial visualisation of projects, tenements, prospects, and drillholes</p>
+    <div class="mb-4 flex items-start justify-between flex-wrap gap-2">
+      <div>
+        <h1 class="text-3xl font-bold">🗺️ Map View</h1>
+        <p class="text-gray-600 mt-2">Geospatial visualisation of projects, tenements, prospects, and drillholes</p>
+      </div>
+      <!-- Draw mode controls -->
+      <div class="flex items-center gap-2 mt-1">
+        <button id="btn-draw"
+                onclick="startDrawing()"
+                class="px-4 py-2 text-sm font-semibold text-white bg-cyan-600 rounded-lg hover:bg-cyan-700 transition">
+          Draw Search Area
+        </button>
+        <button id="btn-finish-draw"
+                onclick="finishDrawing()"
+                class="hidden px-4 py-2 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition">
+          Finish Polygon
+        </button>
+        <button id="btn-cancel-draw"
+                onclick="cancelDrawing()"
+                class="hidden px-4 py-2 text-sm font-semibold text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition">
+          Cancel
+        </button>
+        <button id="btn-clear-search"
+                onclick="clearSearch()"
+                class="hidden px-4 py-2 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 transition">
+          Clear Selection
+        </button>
+      </div>
+    </div>
+
+    <!-- Drawing hint banner (shown only while drawing) -->
+    <div id="draw-hint"
+         class="hidden mb-3 px-4 py-2 bg-cyan-50 border border-cyan-200 text-cyan-800 text-sm rounded-lg">
+      Click on the map to add polygon points. Click <strong>Finish Polygon</strong> when done (min. 3 points).
+      Press <kbd class="bg-white border border-cyan-300 px-1 rounded text-xs">Esc</kbd> to cancel.
     </div>
 
     <!-- Map Container -->
     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
       <div id="map" class="w-full" style="height: 600px;"></div>
+    </div>
+
+    <!-- Spatial Search Results Panel (hidden until a search is run) -->
+    <div id="spatial-results-panel" class="hidden mt-4 bg-white rounded-xl shadow-lg p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-semibold text-gray-800">Search Results</h3>
+        <button onclick="clearSearch()" class="text-xs text-gray-400 hover:text-gray-600">Dismiss</button>
+      </div>
+      <div id="spatial-results-content">
+        <!-- Populated by spatial_search view HTML partial -->
+      </div>
     </div>
 
     <!-- Map Controls -->
@@ -80,47 +127,39 @@
       </div>
 
       <div class="bg-white rounded-lg shadow p-4">
-        <h3 class="font-semibold mb-3">ℹ️ Map Info</h3>
+        <h3 class="font-semibold mb-3">🔍 Spatial Search</h3>
         <div class="text-sm text-gray-600 space-y-1">
-          <p>Click features for details</p>
-          <p>Scroll to zoom</p>
-          <p>Drag to pan</p>
+          <p>Click <strong>Draw Search Area</strong> above the map, then click points on the map to define a polygon.</p>
+          <p>Hit <strong>Finish Polygon</strong> to run the search.</p>
         </div>
       </div>
 
       <div class="bg-white rounded-lg shadow p-4">
         <h3 class="font-semibold mb-3">🎨 Legend</h3>
         <div class="text-sm text-gray-700 space-y-2">
-          <div class="flex items-center gap-2">
-            <div class="w-4 h-4 bg-cyan-600 rounded"></div>
-            <span>Projects</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <div class="w-4 h-4 bg-purple-600 rounded"></div>
-            <span>Tenements</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <div class="w-4 h-4 bg-red-600 rounded-full"></div>
-            <span>Prospects</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <div class="w-4 h-4 bg-blue-600 rounded-full"></div>
-            <span>Drillholes</span>
-          </div>
+          <div class="flex items-center gap-2"><div class="w-4 h-4 bg-cyan-600 rounded"></div><span>Projects</span></div>
+          <div class="flex items-center gap-2"><div class="w-4 h-4 bg-purple-600 rounded"></div><span>Tenements</span></div>
+          <div class="flex items-center gap-2"><div class="w-4 h-4 bg-red-600 rounded-full"></div><span>Prospects</span></div>
+          <div class="flex items-center gap-2"><div class="w-4 h-4 bg-blue-600 rounded-full"></div><span>Drillholes</span></div>
         </div>
       </div>
     </div>
   </main>
 </div>
 
-<!-- MapLibre GL JS -->
-<!-- these are some pretty great free map endpoints I found  -->
-
-<link href='https://unpkg.com/maplibre-gl@5.5.0/dist/maplibre-gl.css' rel='stylesheet' /> 
+<!-- MapLibre GL JS only — no third-party draw plugin -->
+<link href='https://unpkg.com/maplibre-gl@5.5.0/dist/maplibre-gl.css' rel='stylesheet' />
 <script src='https://unpkg.com/maplibre-gl@5.5.0/dist/maplibre-gl.js'></script>
 
 <script>
-// Initialise the MapLibre map
+const SPATIAL_SEARCH_URL = "{% url 'spatial_search' %}";
+const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+// ---------- Draw state ----------
+let isDrawing = false;
+let drawPoints = [];   // array of [lng, lat] pairs
+
+// ---------- Map initialisation ----------
 const map = new maplibregl.Map({
     container: 'map',
     style: {
@@ -128,232 +167,241 @@ const map = new maplibregl.Map({
         sources: {
             'satellite': {
                 type: 'raster',
-                tiles: [
-                    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-                ],
+                tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
                 tileSize: 256,
                 attribution: '© Esri, Maxar, Earthstar Geographics'
             },
             'labels': {
                 type: 'raster',
-                tiles: [
-                    'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'
-                ],
+                tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'],
                 tileSize: 256,
                 attribution: '© Esri'
             }
         },
         layers: [
-            {
-                id: 'satellite-layer',
-                type: 'raster',
-                source: 'satellite',
-                minzoom: 0,
-                maxzoom: 22
-            },
-            {
-                id: 'labels-layer',
-                type: 'raster',
-                source: 'labels',
-                minzoom: 0,
-                maxzoom: 22
-            }
+            { id: 'satellite-layer', type: 'raster', source: 'satellite', minzoom: 0, maxzoom: 22 },
+            { id: 'labels-layer',    type: 'raster', source: 'labels',    minzoom: 0, maxzoom: 22 }
         ]
     },
-    center: [133.7751, -25.2744], // Australia center
+    center: [133.7751, -25.2744],
     zoom: 4
 });
 
-// Add navigation controls
 map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
-// Wait for map to load before trying adding layers
+// ---------- Map click handler (used in draw mode) ----------
+map.on('click', (e) => {
+    if (!isDrawing) return;
+    drawPoints.push([e.lngLat.lng, e.lngLat.lat]);
+    updateDrawLayer();
+});
+
+// ESC cancels drawing
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isDrawing) cancelDrawing();
+});
+
+// ---------- Draw mode functions ----------
+function startDrawing() {
+    isDrawing = true;
+    drawPoints = [];
+    updateDrawLayer();
+    map.getCanvas().style.cursor = 'crosshair';
+    document.getElementById('btn-draw').classList.add('hidden');
+    document.getElementById('btn-finish-draw').classList.remove('hidden');
+    document.getElementById('btn-cancel-draw').classList.remove('hidden');
+    document.getElementById('btn-clear-search').classList.add('hidden');
+    document.getElementById('draw-hint').classList.remove('hidden');
+    document.getElementById('spatial-results-panel').classList.add('hidden');
+}
+
+function finishDrawing() {
+    if (drawPoints.length < 3) {
+        alert('Add at least 3 points before finishing.');
+        return;
+    }
+    isDrawing = false;
+    map.getCanvas().style.cursor = '';
+
+    document.getElementById('btn-finish-draw').classList.add('hidden');
+    document.getElementById('btn-cancel-draw').classList.add('hidden');
+    document.getElementById('btn-clear-search').classList.remove('hidden');
+    document.getElementById('draw-hint').classList.add('hidden');
+
+    // Close the polygon ring
+    const ring = [...drawPoints, drawPoints[0]];
+    const geometry = { type: 'Polygon', coordinates: [ring] };
+
+    // Show the closed polygon on the map
+    map.getSource('draw-source').setData({
+        type: 'FeatureCollection',
+        features: [{ type: 'Feature', geometry, properties: {} }]
+    });
+
+    runSpatialSearch(geometry);
+}
+
+function cancelDrawing() {
+    isDrawing = false;
+    drawPoints = [];
+    map.getCanvas().style.cursor = '';
+    updateDrawLayer();
+    document.getElementById('btn-draw').classList.remove('hidden');
+    document.getElementById('btn-finish-draw').classList.add('hidden');
+    document.getElementById('btn-cancel-draw').classList.add('hidden');
+    document.getElementById('draw-hint').classList.add('hidden');
+}
+
+function clearSearch() {
+    drawPoints = [];
+    isDrawing = false;
+    map.getCanvas().style.cursor = '';
+    updateDrawLayer();
+    document.getElementById('btn-draw').classList.remove('hidden');
+    document.getElementById('btn-finish-draw').classList.add('hidden');
+    document.getElementById('btn-cancel-draw').classList.add('hidden');
+    document.getElementById('btn-clear-search').classList.add('hidden');
+    document.getElementById('draw-hint').classList.add('hidden');
+    document.getElementById('spatial-results-panel').classList.add('hidden');
+    document.getElementById('spatial-results-content').innerHTML = '';
+}
+
+function updateDrawLayer() {
+    if (!map.getSource('draw-source')) return;
+    const features = [];
+
+    if (drawPoints.length > 0) {
+        // Vertex dots
+        drawPoints.forEach(pt => features.push({
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: pt },
+            properties: {}
+        }));
+        // Line connecting points so far
+        if (drawPoints.length > 1) {
+            features.push({
+                type: 'Feature',
+                geometry: { type: 'LineString', coordinates: drawPoints },
+                properties: {}
+            });
+        }
+    }
+
+    map.getSource('draw-source').setData({ type: 'FeatureCollection', features });
+}
+
+// ---------- Spatial search fetch ----------
+function runSpatialSearch(geometry) {
+    document.getElementById('spatial-results-content').innerHTML =
+        '<p class="text-gray-400 text-sm text-center py-4">Searching...</p>';
+    document.getElementById('spatial-results-panel').classList.remove('hidden');
+
+    fetch(SPATIAL_SEARCH_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        body: JSON.stringify({ geometry }),
+    })
+    .then(r => { if (!r.ok) throw new Error(`Server error ${r.status}`); return r.text(); })
+    .then(html => { document.getElementById('spatial-results-content').innerHTML = html; })
+    .catch(err => {
+        document.getElementById('spatial-results-content').innerHTML =
+            `<p class="text-red-500 text-sm text-center py-4">Search failed: ${err.message}</p>`;
+    });
+}
+
+// ---------- Data layers ----------
 map.on('load', () => {
-    // Add Projects layer 
-    map.addSource('projects-source', {
-        type: 'geojson',
-        data: "{% url 'geojson_projects' %}"
-    });
 
-    // Projects fill layer
-    map.addLayer({
-        id: 'projects-fill',
-        type: 'fill',
-        source: 'projects-source',
-        paint: {
-            'fill-color': '#0e7490', // Cyan
-            'fill-opacity': 0.3
-        }
-    });
+    // Projects
+    map.addSource('projects-source', { type: 'geojson', data: "{% url 'geojson_projects' %}" });
+    map.addLayer({ id: 'projects-fill',    type: 'fill', source: 'projects-source', paint: { 'fill-color': '#0e7490', 'fill-opacity': 0.3 } });
+    map.addLayer({ id: 'projects-outline', type: 'line', source: 'projects-source', paint: { 'line-color': '#0e7490', 'line-width': 2 } });
 
-    // Projects outline layer
-    map.addLayer({
-        id: 'projects-outline',
-        type: 'line',
-        source: 'projects-source',
-        paint: {
-            'line-color': '#0e7490',
-            'line-width': 2
-        }
-    });
+    // Tenements
+    map.addSource('tenements-source', { type: 'geojson', data: "{% url 'geojson_tenements' %}" });
+    map.addLayer({ id: 'tenements-fill',    type: 'fill', source: 'tenements-source', paint: { 'fill-color': '#9333ea', 'fill-opacity': 0.25 } });
+    map.addLayer({ id: 'tenements-outline', type: 'line', source: 'tenements-source', paint: { 'line-color': '#9333ea', 'line-width': 2, 'line-dasharray': [2,2] } });
 
-    // Add Tenements layer (MultiPolygon)
-    map.addSource('tenements-source', {
-        type: 'geojson',
-        data: "{% url 'geojson_tenements' %}"
-    });
+    // Prospects
+    map.addSource('prospects-source', { type: 'geojson', data: "{% url 'geojson_prospects' %}" });
+    map.addLayer({ id: 'prospects-layer', type: 'circle', source: 'prospects-source',
+        paint: { 'circle-radius': 8, 'circle-color': '#dc2626', 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } });
 
-    // Tenements fill layer
-    map.addLayer({
-        id: 'tenements-fill',
-        type: 'fill',
-        source: 'tenements-source',
-        paint: {
-            'fill-color': '#9333ea', // Purple
-            'fill-opacity': 0.25
-        }
-    });
+    // Drillholes
+    map.addSource('drillholes-source', { type: 'geojson', data: "{% url 'geojson_drillholes' %}" });
+    map.addLayer({ id: 'drillholes-layer', type: 'circle', source: 'drillholes-source',
+        paint: { 'circle-radius': 5, 'circle-color': '#2563eb', 'circle-stroke-width': 1, 'circle-stroke-color': '#ffffff' } });
 
-    // Tenements outline layer
-    map.addLayer({
-        id: 'tenements-outline',
-        type: 'line',
-        source: 'tenements-source',
-        paint: {
-            'line-color': '#9333ea',
-            'line-width': 2,
-            'line-dasharray': [2, 2]
-        }
-    });
-
-    // Add Prospects layer (Point)
-    map.addSource('prospects-source', {
-        type: 'geojson',
-        data: "{% url 'geojson_prospects' %}"
-    });
+    // Draw overlay layers (rendered above all data layers)
+    map.addSource('draw-source', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
 
     map.addLayer({
-        id: 'prospects-layer',
-        type: 'circle',
-        source: 'prospects-source',
-        paint: {
-            'circle-radius': 8,
-            'circle-color': '#dc2626', // Red
-            'circle-stroke-width': 2,
-            'circle-stroke-color': '#ffffff'
-        }
+        id: 'draw-fill', type: 'fill', source: 'draw-source',
+        filter: ['==', '$type', 'Polygon'],
+        paint: { 'fill-color': '#3b82f6', 'fill-opacity': 0.15 }
     });
-
-    // Add Drillholes layer (Point)
-    map.addSource('drillholes-source', {
-        type: 'geojson',
-        data: "{% url 'geojson_drillholes' %}"
-    });
-
     map.addLayer({
-        id: 'drillholes-layer',
-        type: 'circle',
-        source: 'drillholes-source',
-        paint: {
-            'circle-radius': 5,
-            'circle-color': '#2563eb', // Blue
-            'circle-stroke-width': 1,
-            'circle-stroke-color': '#ffffff'
-        }
+        id: 'draw-line', type: 'line', source: 'draw-source',
+        filter: ['any', ['==', '$type', 'LineString'], ['==', '$type', 'Polygon']],
+        paint: { 'line-color': '#3b82f6', 'line-width': 2, 'line-dasharray': [3, 1] }
+    });
+    map.addLayer({
+        id: 'draw-points', type: 'circle', source: 'draw-source',
+        filter: ['==', '$type', 'Point'],
+        paint: { 'circle-radius': 5, 'circle-color': '#3b82f6', 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' }
     });
 
-    // Layer toggle handlers
-    document.getElementById('toggle-projects').addEventListener('change', (e) => {
-        const visibility = e.target.checked ? 'visible' : 'none';
-        map.setLayoutProperty('projects-fill', 'visibility', visibility);
-        map.setLayoutProperty('projects-outline', 'visibility', visibility);
+    // --- Layer toggles ---
+    document.getElementById('toggle-projects').addEventListener('change', e => {
+        const v = e.target.checked ? 'visible' : 'none';
+        map.setLayoutProperty('projects-fill', 'visibility', v);
+        map.setLayoutProperty('projects-outline', 'visibility', v);
     });
-
-    document.getElementById('toggle-tenements').addEventListener('change', (e) => {
-        const visibility = e.target.checked ? 'visible' : 'none';
-        map.setLayoutProperty('tenements-fill', 'visibility', visibility);
-        map.setLayoutProperty('tenements-outline', 'visibility', visibility);
+    document.getElementById('toggle-tenements').addEventListener('change', e => {
+        const v = e.target.checked ? 'visible' : 'none';
+        map.setLayoutProperty('tenements-fill', 'visibility', v);
+        map.setLayoutProperty('tenements-outline', 'visibility', v);
     });
+    document.getElementById('toggle-prospects').addEventListener('change', e =>
+        map.setLayoutProperty('prospects-layer', 'visibility', e.target.checked ? 'visible' : 'none'));
+    document.getElementById('toggle-drillholes').addEventListener('change', e =>
+        map.setLayoutProperty('drillholes-layer', 'visibility', e.target.checked ? 'visible' : 'none'));
 
-    document.getElementById('toggle-prospects').addEventListener('change', (e) => {
-        const visibility = e.target.checked ? 'visible' : 'none';
-        map.setLayoutProperty('prospects-layer', 'visibility', visibility);
+    // --- Popups ---
+    map.on('click', 'projects-fill', e => {
+        if (isDrawing) return;
+        const p = e.features[0].properties;
+        new maplibregl.Popup().setLngLat(e.lngLat)
+            .setHTML(`<div style="font-family:sans-serif"><h3 style="font-weight:bold;margin-bottom:8px">Project: ${p.name||'Unnamed'}</h3><p><strong>Type:</strong> ${p.mode||'N/A'}</p><p><strong>Commodity:</strong> ${p.commodity||'N/A'}</p></div>`)
+            .addTo(map);
     });
-
-    document.getElementById('toggle-drillholes').addEventListener('change', (e) => {
-        const visibility = e.target.checked ? 'visible' : 'none';
-        map.setLayoutProperty('drillholes-layer', 'visibility', visibility);
+    map.on('click', 'tenements-fill', e => {
+        if (isDrawing) return;
+        const p = e.features[0].properties;
+        new maplibregl.Popup().setLngLat(e.lngLat)
+            .setHTML(`<div style="font-family:sans-serif"><h3 style="font-weight:bold;margin-bottom:8px">Tenement: ${p.name||'Unnamed'}</h3></div>`)
+            .addTo(map);
     });
-
-    // Click handlers for popups - Projects
-    map.on('click', 'projects-fill', (e) => {
-        const props = e.features[0].properties;
-        new maplibregl.Popup()
-            .setLngLat(e.lngLat)
-            .setHTML(`
-                <div style="font-family: sans-serif;">
-                    <h3 style="font-weight: bold; margin-bottom: 8px;">Project: ${props.name || 'Unnamed'}</h3>
-                    <p style="margin: 4px 0;"><strong>Type:</strong> ${props.mode || 'N/A'}</p>
-                    <p style="margin: 4px 0;"><strong>Commodity:</strong> ${props.commodity || 'N/A'}</p>
-                </div>
-            `)
+    map.on('click', 'prospects-layer', e => {
+        if (isDrawing) return;
+        const p = e.features[0].properties;
+        new maplibregl.Popup().setLngLat(e.lngLat)
+            .setHTML(`<div style="font-family:sans-serif"><h3 style="font-weight:bold;margin-bottom:8px">Prospect: ${p.name||'Unnamed'}</h3></div>`)
+            .addTo(map);
+    });
+    map.on('click', 'drillholes-layer', e => {
+        if (isDrawing) return;
+        const p = e.features[0].properties;
+        new maplibregl.Popup().setLngLat(e.lngLat)
+            .setHTML(`<div style="font-family:sans-serif"><h3 style="font-weight:bold;margin-bottom:8px">Drillhole: ${p.name||'Unnamed'}</h3><p><strong>Depth:</strong> ${p.depth?p.depth+'m':'N/A'}</p><p><strong>Azimuth:</strong> ${p.azimuth?p.azimuth+'°':'N/A'}</p><p><strong>Dip:</strong> ${p.dip?p.dip+'°':'N/A'}</p></div>`)
             .addTo(map);
     });
 
-    // Click handlers for popups - Tenements
-    map.on('click', 'tenements-fill', (e) => {
-        const props = e.features[0].properties;
-        new maplibregl.Popup()
-            .setLngLat(e.lngLat)
-            .setHTML(`
-                <div style="font-family: sans-serif;">
-                    <h3 style="font-weight: bold; margin-bottom: 8px;">Tenement: ${props.name || 'Unnamed'}</h3>
-                </div>
-            `)
-            .addTo(map);
+    // Pointer cursor on hover (suppressed during drawing)
+    ['projects-fill','tenements-fill','prospects-layer','drillholes-layer'].forEach(id => {
+        map.on('mouseenter', id, () => { if (!isDrawing) map.getCanvas().style.cursor = 'pointer'; });
+        map.on('mouseleave', id, () => { if (!isDrawing) map.getCanvas().style.cursor = ''; });
     });
-
-    // Click handlers for popups - Prospects
-    map.on('click', 'prospects-layer', (e) => {
-        const props = e.features[0].properties;
-        new maplibregl.Popup()
-            .setLngLat(e.lngLat)
-            .setHTML(`
-                <div style="font-family: sans-serif;">
-                    <h3 style="font-weight: bold; margin-bottom: 8px;">Prospect: ${props.name || 'Unnamed'}</h3>
-                </div>
-            `)
-            .addTo(map);
-    });
-
-    // Click handlers for popups - Drillholes
-    map.on('click', 'drillholes-layer', (e) => {
-        const props = e.features[0].properties;
-        new maplibregl.Popup()
-            .setLngLat(e.lngLat)
-            .setHTML(`
-                <div style="font-family: sans-serif;">
-                    <h3 style="font-weight: bold; margin-bottom: 8px;">Drillhole: ${props.name || 'Unnamed'}</h3>
-                    <p style="margin: 4px 0;"><strong>Depth:</strong> ${props.depth ? props.depth + 'm' : 'N/A'}</p>
-                    <p style="margin: 4px 0;"><strong>Azimuth:</strong> ${props.azimuth ? props.azimuth + '°' : 'N/A'}</p>
-                    <p style="margin: 4px 0;"><strong>Dip:</strong> ${props.dip ? props.dip + '°' : 'N/A'}</p>
-                </div>
-            `)
-            .addTo(map);
-    });
-
-    // Change the cursor when hovering
-    map.on('mouseenter', 'projects-fill', () => { map.getCanvas().style.cursor = 'pointer'; });
-    map.on('mouseleave', 'projects-fill', () => { map.getCanvas().style.cursor = ''; });
-
-    map.on('mouseenter', 'tenements-fill', () => { map.getCanvas().style.cursor = 'pointer'; });
-    map.on('mouseleave', 'tenements-fill', () => { map.getCanvas().style.cursor = ''; });
-
-    map.on('mouseenter', 'prospects-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
-    map.on('mouseleave', 'prospects-layer', () => { map.getCanvas().style.cursor = ''; });
-
-    map.on('mouseenter', 'drillholes-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
-    map.on('mouseleave', 'drillholes-layer', () => { map.getCanvas().style.cursor = ''; });
 });
 </script>
 {% endblock %}
