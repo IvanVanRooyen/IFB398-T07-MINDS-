@@ -57,4 +57,5 @@ urlpatterns = [
     path("api/geojson/tenements/", views.geojson_tenements, name="geojson_tenements"),
     path("api/geojson/prospects/", views.geojson_prospects, name="geojson_prospects"),
     path("api/geojson/drillholes/", views.geojson_drillholes, name="geojson_drillholes"),
+    path("api/spatial-search/", views.spatial_search, name="spatial_search"),
 ]

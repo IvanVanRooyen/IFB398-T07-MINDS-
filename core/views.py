@@ -957,6 +957,107 @@ def geojson_drillholes(request):
     import json
     return JsonResponse(json.loads(geojson_data), safe=False)
 
+
+@login_required
+@require_POST
+def spatial_search(request):
+    """
+    POST body (application/json):
+        { "geometry": <GeoJSON geometry object> }
+        Optionally with a radius for point searches:
+        { "geometry": {"type": "Point", "coordinates": [lng, lat]}, "radius": 5000 }
+        radius is in metres; internally converted to an approximate buffer in degrees.
+
+    Returns an HTML partial (templates/core/partials/spatial_search_results.html)
+    for injection into the map's results panel.
+    """
+    import json
+    from django.contrib.gis.geos import GEOSGeometry
+
+    try:
+        body = json.loads(request.body)
+        geometry_json = body.get("geometry")
+        if not geometry_json:
+            return HttpResponseBadRequest("No geometry provided.")
+        geom = GEOSGeometry(json.dumps(geometry_json), srid=4326)
+        radius_m = body.get("radius")
+    except Exception as e:
+        return HttpResponseBadRequest(f"Invalid geometry: {e}")
+
+    org_filter = _org_qs_filter(request)
+
+    # For a point + radius: buffer the point into an approximate circle
+    # (1 degree ≈ 111,111 m at the equator; acceptable approximation for Australia)
+    if geom.geom_type == 'Point' and radius_m:
+        radius_deg = float(radius_m) / 111111.0
+        search_geom = geom.buffer(radius_deg)
+    else:
+        search_geom = geom
+
+    ProspectModel = _get_model("core", "Prospect")
+    TenementModel = _get_model("core", "Tenement")
+    DrillholeModel = _get_model("core", "Drillhole")
+
+    processes  = Process.objects.filter(org_filter, geom__intersects=search_geom).order_by('name').values('id', 'name', 'mode')
+    tenements  = TenementModel.objects.filter(org_filter, geom__intersects=search_geom).order_by('name').values('id', 'name') if TenementModel else []
+    prospects  = ProspectModel.objects.filter(org_filter, geom__intersects=search_geom).order_by('name').values('id', 'name') if ProspectModel else []
+    drillholes = DrillholeModel.objects.filter(org_filter, collar_location__intersects=search_geom).order_by('name').values('id', 'name', 'depth') if DrillholeModel else []
+
+    # Find documents linked to matched spatial entities via DocLink (Group 1)
+    documents = []
+    DocLinkModel = _get_model("core", "DocLink")
+    if DocLinkModel and (prospects or drillholes or processes):
+        from django.contrib.contenttypes.models import ContentType
+        linked_doc_ids = set()
+
+        if ProspectModel and prospects:
+            ct = ContentType.objects.get_for_model(ProspectModel)
+            ids = [str(r['id']) for r in prospects]
+            linked_doc_ids.update(
+                DocLinkModel.objects.filter(content_type=ct, object_id__in=ids)
+                .values_list('document_id', flat=True)
+            )
+
+        if DrillholeModel and drillholes:
+            ct = ContentType.objects.get_for_model(DrillholeModel)
+            ids = [str(r['id']) for r in drillholes]
+            linked_doc_ids.update(
+                DocLinkModel.objects.filter(content_type=ct, object_id__in=ids)
+                .values_list('document_id', flat=True)
+            )
+
+        if processes:
+            ct = ContentType.objects.get_for_model(Process)
+            ids = [str(r['id']) for r in processes]
+            linked_doc_ids.update(
+                DocLinkModel.objects.filter(content_type=ct, object_id__in=ids)
+                .values_list('document_id', flat=True)
+            )
+
+        if linked_doc_ids:
+            documents = list(
+                Document.objects.filter(org_filter, id__in=linked_doc_ids)
+                .values('id', 'title', 'doc_type', 'created_at')[:20]
+            )
+
+    processes_list  = list(processes[:20])
+    tenements_list  = list(tenements[:20])
+    prospects_list  = list(prospects[:20])
+    drillholes_list = list(drillholes[:20])
+
+    return render(request, "core/partials/spatial_search_results.html", {
+        "processes":  processes_list,
+        "tenements":  tenements_list,
+        "prospects":  prospects_list,
+        "drillholes": drillholes_list,
+        "documents":  documents,
+        "total": sum([
+            len(processes_list), len(tenements_list),
+            len(prospects_list), len(drillholes_list),
+        ]),
+    })
+
+
 # ---------- AI Report Generation & Document Analysis Pages ----------
 
 @login_required
