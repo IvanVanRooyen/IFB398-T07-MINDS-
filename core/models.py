@@ -412,6 +412,14 @@ class SavedReport(models.Model):
     )
     title = models.CharField(max_length=256)
     content_md = models.TextField()
+
+    source_documents = models.ManyToManyField(
+        "Document",
+        blank=True,
+        related_name="generated_reports",
+        help_text="Documents used as sources when generating this report."
+    )
+    
     clearance_level = models.CharField(
         max_length=32,
         choices=UserProfile.ClearanceLevel.choices,

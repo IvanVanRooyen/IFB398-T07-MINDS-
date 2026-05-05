@@ -1129,14 +1129,14 @@ def generate_report(request):
     ).order_by("-version_number").first()
 
     if existing:
-        SavedReport.create_version(
+        report = SavedReport.create_version(
             parent=existing,
             content_md=md,
             user=request.user,
             reason=SavedReport.ChangeReason.REGENERATED,
         )
     else:
-        SavedReport.objects.create(
+        report = SavedReport.objects.create(
             process=process,
             organisation=process.organisation,
             title=title,
@@ -1146,6 +1146,9 @@ def generate_report(request):
             version_number=1,
             change_reason=SavedReport.ChangeReason.GENERATED,
         )
+    report.source_documents.set(
+        Document.objects.filter(process=process)
+    )
 
     return redirect(reverse("report_editor", kwargs={"process_id": process_id}))
 
@@ -1172,11 +1175,13 @@ def report_editor(request, process_id):
     custom_title  = request.GET.get("title", "").strip()
     default_title = custom_title or f"{process.name or 'Project'} Report"
 
+    latest = SavedReport.objects.filter(process=process).order_by("-created_at").first()
+
     return render(request, "core/report_editor.html", {
         "process": process,
         "markdown_content": md,
         "default_title": default_title,
-        "saved_report": None,
+        "saved_report": latest,
         "save_url": reverse("save_report"),
         "export_url": reverse("export_report"),
     })
@@ -1266,6 +1271,9 @@ def save_report(request):
             version_number=1,
             change_reason=SavedReport.ChangeReason.GENERATED,
         )
+    report.source_documents.set(
+        Document.objects.filter(process=process)
+    )
     return JsonResponse({
         "success": True,
         "report_id": str(report.id),
