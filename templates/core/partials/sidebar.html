@@ -1,59 +1,64 @@
 {% load static %}
-<aside class="w-64 bg-white shadow-md hidden md:flex flex-col shrink-0">
-  <div class="px-4 py-3 border-b flex items-center gap-3">
+<aside class="w-64 bg-white dark:bg-gray-900 shadow-md hidden md:flex flex-col shrink-0 border-r border-gray-200 dark:border-gray-700">
+  <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3">
     <img src="{% static 'img/logo.png' %}" alt="OreFox" class="h-14 w-14 object-contain translate-y-2.5">
-    <span class="text-xl font-semibold text-cyan-600">OreFox KMS</span>
+    <span class="text-xl font-semibold text-cyan-600 dark:text-cyan-400">OreFox KMS</span>
   </div>
   <nav class="flex-1 p-4 space-y-2">
     <a href="{% url 'dashboard' %}"
-       class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium {% if request.resolver_match.url_name == 'dashboard' %}bg-cyan-100{% endif %}">
+       class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 dark:hover:bg-cyan-900/30 text-gray-800 dark:text-gray-200 font-medium {% if request.resolver_match.url_name == 'dashboard' %}bg-cyan-100 dark:bg-cyan-900/40{% endif %}">
       🏠 <span>Dashboard</span>
     </a>
     <a href="{% url 'projects' %}"
-       class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}bg-cyan-100{% endif %}">
+       class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 dark:hover:bg-cyan-900/30 text-gray-800 dark:text-gray-200 font-medium {% if request.resolver_match.url_name == 'projects' or request.resolver_match.url_name == 'project_detail' %}bg-cyan-100 dark:bg-cyan-900/40{% endif %}">
       📁 <span>Projects</span>
     </a>
     <a href="{% url 'documents' %}"
-       class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium {% if request.resolver_match.url_name == 'documents' or request.resolver_match.url_name == 'document_detail' %}bg-cyan-100{% endif %}">
+       class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 dark:hover:bg-cyan-900/30 text-gray-800 dark:text-gray-200 font-medium {% if request.resolver_match.url_name == 'documents' or request.resolver_match.url_name == 'document_detail' %}bg-cyan-100 dark:bg-cyan-900/40{% endif %}">
       📄 <span>Documents</span>
     </a>
     <a href="{% url 'prospects' %}"
-       class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium {% if request.resolver_match.url_name == 'prospects' or request.resolver_match.url_name == 'prospect_detail' %}bg-cyan-100{% endif %}">
+       class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 dark:hover:bg-cyan-900/30 text-gray-800 dark:text-gray-200 font-medium {% if request.resolver_match.url_name == 'prospects' or request.resolver_match.url_name == 'prospect_detail' %}bg-cyan-100 dark:bg-cyan-900/40{% endif %}">
       💎 <span>Prospects</span>
     </a>
     <a href="{% url 'drillholes' %}"
-       class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium {% if 'drillhole' in request.resolver_match.url_name %}bg-cyan-100{% endif %}">
+       class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 dark:hover:bg-cyan-900/30 text-gray-800 dark:text-gray-200 font-medium {% if 'drillhole' in request.resolver_match.url_name %}bg-cyan-100 dark:bg-cyan-900/40{% endif %}">
       🧱 <span>Drillholes</span>
     </a>
     <a href="{% url 'ai_insights' %}"
-       class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium {% if request.resolver_match.url_name == 'ai_insights' or 'report' in request.resolver_match.url_name %}bg-cyan-100{% endif %}">
+       class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 dark:hover:bg-cyan-900/30 text-gray-800 dark:text-gray-200 font-medium {% if request.resolver_match.url_name == 'ai_insights' or 'report' in request.resolver_match.url_name %}bg-cyan-100 dark:bg-cyan-900/40{% endif %}">
       📊 <span>Reporting</span>
     </a>
     <a href="{% url 'document_analysis_page' %}"
-       class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium {% if 'analysis' in request.resolver_match.url_name %}bg-cyan-100{% endif %}">
+       class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 dark:hover:bg-cyan-900/30 text-gray-800 dark:text-gray-200 font-medium {% if 'analysis' in request.resolver_match.url_name %}bg-cyan-100 dark:bg-cyan-900/40{% endif %}">
       🔍 <span>Document Analysis</span>
     </a>
     <a href="{% url 'map_view' %}"
-       class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium {% if request.resolver_match.url_name == 'map_view' %}bg-cyan-100{% endif %}">
+       class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 dark:hover:bg-cyan-900/30 text-gray-800 dark:text-gray-200 font-medium {% if request.resolver_match.url_name == 'map_view' %}bg-cyan-100 dark:bg-cyan-900/40{% endif %}">
       🗺️ <span>Map</span>
     </a>
     {% if request.user.profile.role in 'ADMIN,DATA_MANAGER,OPERATIONS_MANAGER' or request.user.is_superuser or request.user.profile.can_approve_jorc or request.user.profile.can_approve_valmin %}
     <a href="{% url 'approval_workflows_list' %}"
-       class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium {% if request.resolver_match.url_name == 'approval_workflows_list' %}bg-cyan-100{% endif %}">
+       class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 dark:hover:bg-cyan-900/30 text-gray-800 dark:text-gray-200 font-medium {% if request.resolver_match.url_name == 'approval_workflows_list' %}bg-cyan-100 dark:bg-cyan-900/40{% endif %}">
       ✅ <span>Approvals</span>
     </a>
     {% endif %}
     {% if request.user.is_superuser or request.user.profile.role in 'ADMIN,DATA_MANAGER,OPS_MANAGER' %}
     <a href="{% url 'audit_log' %}"
-       class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 text-gray-800 font-medium {% if request.resolver_match.url_name == 'audit_log' %}bg-cyan-100{% endif %}">
+       class="flex items-center gap-2 p-3 rounded-lg hover:bg-cyan-50 dark:hover:bg-cyan-900/30 text-gray-800 dark:text-gray-200 font-medium {% if request.resolver_match.url_name == 'audit_log' %}bg-cyan-100 dark:bg-cyan-900/40{% endif %}">
       📋 <span>Audit Log</span>
     </a>
     {% endif %}
   </nav>
-  <div class="p-4 border-t text-sm text-gray-600 flex flex-col gap-3">
-    <div>Logged in as <span class="font-medium">{{ request.user.username }}</span></div>
+  <div class="p-4 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400 flex flex-col gap-3">
+    <div>Logged in as <span class="font-medium text-gray-800 dark:text-gray-200">{{ request.user.username }}</span></div>
+    <button onclick="toggleDark()"
+            class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+      <span class="dark:hidden">🌙 Dark mode</span>
+      <span class="hidden dark:inline">☀️ Light mode</span>
+    </button>
     <a href="/admin/"
-       class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-cyan-600 rounded-lg hover:bg-cyan-700 transition">
+       class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-700 dark:hover:bg-cyan-600 rounded-lg transition">
       ⚙️ Admin Panel
     </a>
   </div>

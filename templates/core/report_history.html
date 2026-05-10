@@ -3,26 +3,26 @@
 <div class="p-6">
   <h1 class="text-xl font-bold mb-4">Report History</h1>
   {% for title, versions in grouped.items %}
-  <div class="mb-6 bg-white rounded-xl shadow">
-    <div class="p-4 border-b font-semibold">{{ title }}</div>
-    <ul class="divide-y">
+  <div class="mb-6 bg-white dark:bg-gray-900 rounded-xl shadow">
+    <div class="p-4 border-b dark:border-gray-700 font-semibold">{{ title }}</div>
+    <ul class="divide-y dark:divide-gray-700">
       {% for v in versions %}
-      <li class="p-4 flex items-center justify-between hover:bg-gray-50">
+      <li class="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800">
         <div>
           <span class="font-medium">v{{ v.version_number }}</span>
-          <span class="text-sm text-gray-500 ml-2">{{ v.created_at|date:"M d, Y H:i" }}</span>
-          <span class="text-sm text-gray-400 ml-2">{{ v.get_change_reason_display }}</span>
+          <span class="text-sm text-gray-500 dark:text-gray-400 ml-2">{{ v.created_at|date:"M d, Y H:i" }}</span>
+          <span class="text-sm text-gray-400 dark:text-gray-500 ml-2">{{ v.get_change_reason_display }}</span>
           {% if v.change_summary %}
-          <span class="text-sm text-gray-400 ml-2">— {{ v.change_summary }}</span>
+          <span class="text-sm text-gray-400 dark:text-gray-500 ml-2">— {{ v.change_summary }}</span>
           {% endif %}
         </div>
-        <a href="{% url 'report_version_detail' v.id %}" class="text-cyan-600 text-sm hover:underline">View</a>
+        <a href="{% url 'report_version_detail' v.id %}" class="text-cyan-600 dark:text-cyan-400 text-sm hover:underline">View</a>
       </li>
       {% endfor %}
     </ul>
   </div>
   {% empty %}
-  <p class="text-gray-500">No reports yet.</p>
+  <p class="text-gray-500 dark:text-gray-400">No reports yet.</p>
   {% endfor %}
 </div>
 {% endblock %}

@@ -3,42 +3,42 @@
 {% load static %}
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-  <div class="bg-white rounded-xl p-5 shadow">
-    <p class="text-sm text-gray-500">Projects</p>
+  <div class="bg-white dark:bg-gray-900 rounded-xl p-5 shadow">
+    <p class="text-sm text-gray-500 dark:text-gray-400">Projects</p>
     <p class="text-3xl font-bold text-cyan-400">{{ metrics.project_count }}</p>
   </div>
-  <div class="bg-white rounded-xl p-5 shadow">
-    <p class="text-sm text-gray-500">Documents</p>
+  <div class="bg-white dark:bg-gray-900 rounded-xl p-5 shadow">
+    <p class="text-sm text-gray-500 dark:text-gray-400">Documents</p>
     <p class="text-3xl font-bold text-cyan-400">{{ metrics.document_count }}</p>
   </div>
-  <div class="bg-white rounded-xl p-5 shadow">
-    <p class="text-sm text-gray-500">Prospects</p>
+  <div class="bg-white dark:bg-gray-900 rounded-xl p-5 shadow">
+    <p class="text-sm text-gray-500 dark:text-gray-400">Prospects</p>
     <p class="text-3xl font-bold text-cyan-400">{{ metrics.prospect_count }}</p>
   </div>
-  <div class="bg-white rounded-xl p-5 shadow">
-    <p class="text-sm text-gray-500">Drillholes</p>
+  <div class="bg-white dark:bg-gray-900 rounded-xl p-5 shadow">
+    <p class="text-sm text-gray-500 dark:text-gray-400">Drillholes</p>
     <p class="text-3xl font-bold text-cyan-400">{{ metrics.drillhole_count }}</p>
   </div>
-  <div class="bg-white rounded-xl p-5 shadow">
-    <p class="text-sm text-gray-500">Tenements</p>
+  <div class="bg-white dark:bg-gray-900 rounded-xl p-5 shadow">
+    <p class="text-sm text-gray-500 dark:text-gray-400">Tenements</p>
     <p class="text-3xl font-bold text-cyan-400">{{ metrics.tenement_count }}</p>
   </div>
 </div>
 
 <!-- 📋 Recent Documents -->
-<div class="bg-white rounded-xl shadow">
-  <div class="p-4 border-b flex items-center justify-between">
-    <h3 class="font-semibold">Recent Documents</h3>
-    <a href="{% url 'upload' %}" class="text-sm text-cyan-600 hover:underline">Upload new</a>
+<div class="bg-white dark:bg-gray-900 rounded-xl shadow">
+  <div class="p-4 border-b dark:border-gray-700 flex items-center justify-between">
+    <h3 class="font-semibold dark:text-gray-100">Recent Documents</h3>
+    <a href="{% url 'upload' %}" class="text-sm text-cyan-600 dark:text-cyan-400 hover:underline">Upload new</a>
   </div>
-  <ul class="divide-y">
+  <ul class="divide-y dark:divide-gray-700">
     {% for d in recent_docs %}
-      <li class="p-4 flex items-center justify-between hover:bg-gray-50">
-        <span class="truncate">{{ d.title }}</span>
-        <span class="text-xs text-gray-400">{{ d.created_at|date:"M d, Y" }}</span>
+      <li class="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800">
+        <span class="truncate dark:text-gray-200">{{ d.title }}</span>
+        <span class="text-xs text-gray-400 dark:text-gray-500">{{ d.created_at|date:"M d, Y" }}</span>
       </li>
     {% empty %}
-      <li class="p-4 text-gray-500">No documents yet.</li>
+      <li class="p-4 text-gray-500 dark:text-gray-400">No documents yet.</li>
     {% endfor %}
   </ul>
 </div>

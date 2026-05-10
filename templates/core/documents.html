@@ -13,42 +13,42 @@
     <!-- Search Bar -->
     <div class="mb-6">
       <!-- ── Search panel ─────────────────────────────────────────────────── -->
-      <form method="get" action="{% url 'documents' %}" class="bg-white rounded-xl shadow p-5 mb-6">
-  
+      <form method="get" action="{% url 'documents' %}" class="bg-white dark:bg-gray-900 rounded-xl shadow p-5 mb-6">
+
         <!-- Row 1: keyword (full width) -->
         <div class="mb-4">
-          <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Keyword</label>
+          <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Keyword</label>
           {{ form.q }}
         </div>
-  
+
         <!-- Row 2: project | date from | date to -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
           <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Project</label>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Project</label>
             {{ form.process }}
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Date from</label>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Date from</label>
             {{ form.date_from }}
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Date to</label>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Date to</label>
             {{ form.date_to }}
           </div>
         </div>
-  
+
         <!-- Row 3: doc type | confidentiality | tag -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
           <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Document type</label>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Document type</label>
             {{ form.doc_type }}
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Confidentiality</label>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Confidentiality</label>
             {{ form.confidentiality }}
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Tag</label>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Tag</label>
             {{ form.tag }}
           </div>
         </div>
@@ -56,19 +56,19 @@
         <!-- Row 4: tenement | commodity | author | reporting stage -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-5">
           <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Tenement</label>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Tenement</label>
             {{ form.tenement }}
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Commodity</label>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Commodity</label>
             {{ form.commodity }}
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Author</label>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Author</label>
             {{ form.author_name }}
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Reporting Stage</label>
+            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Reporting Stage</label>
             {{ form.reporting_stage }}
           </div>
         </div>
@@ -77,17 +77,17 @@
         {% if form.non_field_errors %}
           <p class="mb-4 text-sm text-red-600">{{ form.non_field_errors.0 }}</p>
         {% endif %}
-  
+
         <!-- Actions -->
         <div class="flex items-center gap-3">
           <button type="submit" class="px-6 py-2 bg-cyan-600 text-white font-semibold rounded-lg hover:bg-cyan-700">
             🔍 Search
           </button>
           {% if filters_active %}
-            <a href="{% url 'documents' %}" class="px-4 py-2 border border-gray-300 text-gray-500 rounded-lg hover:bg-gray-50 text-sm">
+            <a href="{% url 'documents' %}" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-sm">
               ✕ Clear
             </a>
-            <span class="text-sm text-gray-400">{{ total }} result{{ total|pluralize }}</span>
+            <span class="text-sm text-gray-400 dark:text-gray-500">{{ total }} result{{ total|pluralize }}</span>
           {% endif %}
         </div>
       </form>
@@ -97,18 +97,18 @@
     {% if page.object_list %}
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for doc in page.object_list %}
-          <div class="bg-white rounded-xl shadow hover:shadow-lg transition p-6">
+          <div class="bg-white dark:bg-gray-900 rounded-xl shadow hover:shadow-lg transition p-6">
             <div class="flex items-start justify-between mb-3">
               <div class="flex-1 min-w-0">
                 <h3 class="font-semibold text-lg truncate">{{ doc.title }}</h3>
-                <p class="text-sm text-gray-500">{{ doc.doc_type|default:"Document" }}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ doc.doc_type|default:"Document" }}</p>
               </div>
-              <span class="ml-2 px-2 py-1 text-xs rounded-full bg-cyan-100 text-cyan-700">
+              <span class="ml-2 px-2 py-1 text-xs rounded-full bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-400">
                 {{ doc.confidentiality|default:"internal" }}
               </span>
             </div>
 
-            <div class="text-sm text-gray-600 mb-4">
+            <div class="text-sm text-gray-600 dark:text-gray-400 mb-4">
               <p>📅 {{ doc.timestamp|date:"M d, Y"|default:"No date" }}</p>
               {% if doc.process %}
                 <p>📁 {{ doc.process.name }}</p>
@@ -121,7 +121,7 @@
                   View File
                 </a>
               {% endif %}
-              <a href="{% url 'document_detail' doc.id %}" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm">
+              <a href="{% url 'document_detail' doc.id %}" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-sm">
                 Details
               </a>
             </div>
@@ -133,17 +133,17 @@
       {% if page.has_other_pages %}
         <div class="mt-8 flex justify-center gap-2">
           {% if page.has_previous %}
-            <a href="?page={{ page.previous_page_number }}{% if q %}&q={{ q }}{% endif %}" class="px-4 py-2 border rounded-lg hover:bg-gray-50">
+            <a href="?page={{ page.previous_page_number }}{% if q %}&q={{ q }}{% endif %}" class="px-4 py-2 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
               Previous
             </a>
           {% endif %}
 
-          <span class="px-4 py-2 bg-cyan-100 text-cyan-700 rounded-lg">
+          <span class="px-4 py-2 bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-400 rounded-lg">
             Page {{ page.number }} of {{ page.paginator.num_pages }}
           </span>
 
           {% if page.has_next %}
-            <a href="?page={{ page.next_page_number }}{% if q %}&q={{ q }}{% endif %}" class="px-4 py-2 border rounded-lg hover:bg-gray-50">
+            <a href="?page={{ page.next_page_number }}{% if q %}&q={{ q }}{% endif %}" class="px-4 py-2 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
               Next
             </a>
           {% endif %}
@@ -152,12 +152,12 @@
 
     {% else %}
       <div class="text-center py-16">
-        <p class="text-gray-500 text-lg mb-4">No documents found</p>
+        <p class="text-gray-500 dark:text-gray-400 text-lg mb-4">No documents found</p>
         {% if q %}
-          <p class="text-gray-400 mb-4">Try a different search term</p>
-          <a href="{% url 'documents' %}" class="text-cyan-600 hover:underline">Clear search</a>
+          <p class="text-gray-400 dark:text-gray-500 mb-4">Try a different search term</p>
+          <a href="{% url 'documents' %}" class="text-cyan-600 dark:text-cyan-400 hover:underline">Clear search</a>
         {% else %}
-          <a href="{% url 'upload' %}" class="text-cyan-600 hover:underline">Upload your first document</a>
+          <a href="{% url 'upload' %}" class="text-cyan-600 dark:text-cyan-400 hover:underline">Upload your first document</a>
         {% endif %}
       </div>
     {% endif %}

@@ -8,26 +8,26 @@
 
 {% block content %}
 
-<div class="mb-4 text-sm text-gray-600">
-  <a href="{% url 'projects' %}" class="hover:text-cyan-600">Projects</a>
+<div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+  <a href="{% url 'projects' %}" class="hover:text-cyan-600 dark:hover:text-cyan-400">Projects</a>
   <span class="mx-2">/</span>
-  <a href="{% url 'project_detail' process.pk %}" class="hover:text-cyan-600">{{ process.name }}</a>
+  <a href="{% url 'project_detail' process.pk %}" class="hover:text-cyan-600 dark:hover:text-cyan-400">{{ process.name }}</a>
   <span class="mx-2">/</span>
-  <span class="text-gray-900">Edit Boundary</span>
+  <span class="text-gray-900 dark:text-gray-100">Edit Boundary</span>
 </div>
 
 <div class="max-w-2xl">
   <h1 class="text-3xl font-bold mb-1">Edit Spatial Boundary</h1>
-  <p class="text-gray-600 mb-6">{{ process.name }}</p>
+  <p class="text-gray-600 dark:text-gray-400 mb-6">{{ process.name }}</p>
 
-  <div class="bg-white rounded-xl shadow p-6">
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow p-6">
     <form method="post" novalidate>
       {% csrf_token %}
 
       {% if messages %}
         {% for msg in messages %}
-          <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p class="text-red-600 text-sm">{{ msg }}</p>
+          <div class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
+            <p class="text-red-600 dark:text-red-400 text-sm">{{ msg }}</p>
           </div>
         {% endfor %}
       {% endif %}
@@ -52,21 +52,21 @@
         </button>
       </div>
 
-      <p id="draw-hint" class="hidden text-xs text-cyan-700 mb-2">
+      <p id="draw-hint" class="hidden text-xs text-cyan-700 dark:text-cyan-400 mb-2">
         Click on the map to add points. Click <strong>Finish Polygon</strong> when done (min. 3 points).
-        Press <kbd class="bg-white border border-cyan-300 px-1 rounded text-xs">Esc</kbd> to cancel.
+        Press <kbd class="bg-white dark:bg-gray-700 border border-cyan-300 dark:border-cyan-600 px-1 rounded text-xs">Esc</kbd> to cancel.
       </p>
 
-      <div id="process-map" class="rounded-lg border border-gray-300 mb-4" style="height: 420px;"></div>
+      <div id="process-map" class="rounded-lg border border-gray-300 dark:border-gray-600 mb-4" style="height: 420px;"></div>
 
       <input type="hidden" name="geom_geojson" id="id_geom_geojson" value="">
 
       <div class="flex items-center gap-4 mt-4">
         <button type="submit"
-                class="px-6 py-2 bg-cyan-600 text-white text-sm font-semibold rounded-lg hover:bg-cyan-700">
+                class="px-6 py-2 bg-cyan-600 dark:bg-cyan-700 text-white text-sm font-semibold rounded-lg hover:bg-cyan-700 dark:hover:bg-cyan-600">
           Save Boundary
         </button>
-        <a href="{% url 'project_detail' process.pk %}" class="text-sm text-gray-500 hover:text-gray-700">Cancel</a>
+        <a href="{% url 'project_detail' process.pk %}" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">Cancel</a>
       </div>
     </form>
   </div>

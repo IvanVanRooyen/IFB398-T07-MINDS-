@@ -8,53 +8,53 @@
 
 {% block content %}
 
-<div class="mb-4 text-sm text-gray-600">
-  <a href="{% url 'surveys' %}" class="hover:text-cyan-600">Surveys</a>
+<div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+  <a href="{% url 'surveys' %}" class="hover:text-cyan-600 dark:hover:text-cyan-400">Surveys</a>
   <span class="mx-2">/</span>
-  <span class="text-gray-900">New Survey</span>
+  <span class="text-gray-900 dark:text-gray-100">New Survey</span>
 </div>
 
 <div class="max-w-2xl">
   <h1 class="text-3xl font-bold mb-6">Create Survey</h1>
 
-  <div class="bg-white rounded-xl shadow p-6">
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow p-6">
     <form method="post" novalidate>
       {% csrf_token %}
 
       {% if form.non_field_errors %}
-        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-          {% for error in form.non_field_errors %}<p class="text-red-600 text-sm">{{ error }}</p>{% endfor %}
+        <div class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
+          {% for error in form.non_field_errors %}<p class="text-red-600 dark:text-red-400 text-sm">{{ error }}</p>{% endfor %}
         </div>
       {% endif %}
 
       <!-- Name -->
       <div class="mb-5">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Survey Name <span class="text-red-500">*</span></label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Survey Name <span class="text-red-500">*</span></label>
         {{ form.name }}
-        {% for e in form.name.errors %}<p class="text-red-600 text-sm mt-1">{{ e }}</p>{% endfor %}
+        {% for e in form.name.errors %}<p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ e }}</p>{% endfor %}
       </div>
 
       <!-- Project -->
       <div class="mb-5">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Project <span class="text-red-500">*</span></label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project <span class="text-red-500">*</span></label>
         {{ form.process }}
-        {% for e in form.process.errors %}<p class="text-red-600 text-sm mt-1">{{ e }}</p>{% endfor %}
+        {% for e in form.process.errors %}<p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ e }}</p>{% endfor %}
       </div>
 
       <!-- Prospect -->
       <div class="mb-5">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Prospect</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Prospect</label>
         {{ form.prospect }}
       </div>
 
       <!-- Type + Contractor (2-col) -->
       <div class="mb-5 grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Survey Type</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Survey Type</label>
           {{ form.survey_type }}
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Contractor</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contractor</label>
           {{ form.contractor }}
         </div>
       </div>
@@ -62,26 +62,26 @@
       <!-- Dates (2-col) -->
       <div class="mb-5 grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date From</label>
           {{ form.date_from }}
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date To</label>
           {{ form.date_to }}
         </div>
       </div>
 
       <!-- Description -->
       <div class="mb-5">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
         {{ form.description }}
       </div>
 
       <!-- Coverage area map -->
       <div class="mb-6">
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Coverage Area
-          <span class="font-normal text-gray-500">— optional polygon showing the survey extent</span>
+          <span class="font-normal text-gray-500 dark:text-gray-400">— optional polygon showing the survey extent</span>
         </label>
 
         <div class="flex gap-2 mb-2">
@@ -103,26 +103,26 @@
           </button>
         </div>
 
-        <p id="draw-hint" class="hidden text-xs text-cyan-700 mb-2">
+        <p id="draw-hint" class="hidden text-xs text-cyan-700 dark:text-cyan-400 mb-2">
           Click on the map to add points. Click <strong>Finish Area</strong> when done (min. 3 points).
         </p>
 
-        <div id="survey-map" class="rounded-lg border border-gray-300" style="height: 320px;"></div>
-        <p id="geom-status" class="text-sm text-gray-500 mt-2">No coverage area drawn</p>
+        <div id="survey-map" class="rounded-lg border border-gray-300 dark:border-gray-600" style="height: 320px;"></div>
+        <p id="geom-status" class="text-sm text-gray-500 dark:text-gray-400 mt-2">No coverage area drawn</p>
 
         {{ form.geom_geojson }}
-        {% for e in form.geom_geojson.errors %}<p class="text-red-600 text-sm mt-1">{{ e }}</p>{% endfor %}
+        {% for e in form.geom_geojson.errors %}<p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ e }}</p>{% endfor %}
       </div>
 
       <div class="flex items-center gap-4">
         <button type="submit"
-                class="px-6 py-2 bg-cyan-600 text-white text-sm font-semibold rounded-lg hover:bg-cyan-700">
+                class="px-6 py-2 bg-cyan-600 dark:bg-cyan-700 text-white text-sm font-semibold rounded-lg hover:bg-cyan-700 dark:hover:bg-cyan-600">
           Save Survey
         </button>
         {% if initial_prospect %}
-          <a href="{% url 'prospect_detail' initial_prospect.pk %}" class="text-sm text-gray-500 hover:text-gray-700">Cancel</a>
+          <a href="{% url 'prospect_detail' initial_prospect.pk %}" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">Cancel</a>
         {% else %}
-          <a href="{% url 'surveys' %}" class="text-sm text-gray-500 hover:text-gray-700">Cancel</a>
+          <a href="{% url 'surveys' %}" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">Cancel</a>
         {% endif %}
       </div>
     </form>

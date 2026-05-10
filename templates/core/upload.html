@@ -6,17 +6,17 @@
     <!-- Header / Status -->
     <div class="mb-4 flex items-center justify-between">
       <h1 class="text-2xl font-semibold">Upload Document</h1>
-      <a href="{% url 'documents' %}" class="text-cyan-600 hover:underline">View library →</a>
+      <a href="{% url 'documents' %}" class="text-cyan-600 dark:text-cyan-400 hover:underline">View library →</a>
     </div>
 
     {% if form.non_field_errors %}
-      <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+      <div class="mb-4 rounded-lg border border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-red-700 dark:text-red-400">
         {{ form.non_field_errors }}
       </div>
     {% endif %}
 
     <!-- Upload Card -->
-    <div class="bg-white rounded-xl shadow overflow-hidden">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow overflow-hidden">
       <form method="post" enctype="multipart/form-data" class="p-6" id="uploadForm">
         {% csrf_token %}
         {% if form.errors %}
@@ -43,8 +43,8 @@
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Date</label>
-            {{ form.timestamp }} 
-            <small class="text-xs text-gray-500">Use date picker or enter YYYY-MM-DD.</small>
+            {{ form.timestamp }}
+            <small class="text-xs text-gray-500 dark:text-gray-400">Use date picker or enter YYYY-MM-DD.</small>
             {{ form.timestamp.errors }}
           </div>
           <div>
@@ -77,52 +77,52 @@
         <div class="mt-5">
           <label class="block text-sm font-medium mb-1">File</label>
           <div id="dropZone"
-               class="border-2 border-dashed rounded-xl p-6 text-center transition bg-gray-50 hover:bg-gray-100">
-            <p class="text-gray-700 mb-2">Drag & drop a file here, or click to browse</p>
-            <p class="text-xs text-gray-500">Accepted: any file • Max ~100MB (configurable)</p>
+               class="border-2 border-dashed rounded-xl p-6 text-center transition bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700">
+            <p class="text-gray-700 dark:text-gray-300 mb-2">Drag & drop a file here, or click to browse</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Accepted: any file • Max ~100MB (configurable)</p>
             <!-- Keep Django's file input so the backend receives it -->
             <div class="mt-4 inline-block">
               {{ form.file }}
             </div>
-            <div id="fileMeta" class="mt-3 text-sm text-gray-600 hidden"></div>
+            <div id="fileMeta" class="mt-3 text-sm text-gray-600 dark:text-gray-400 hidden"></div>
           </div>
         </div>
 
         <!-- Submit -->
         <div class="mt-6 flex items-center gap-3">
-          <button class="bg-cyan-600 hover:bg-cyan-700 text-white font-semibold px-5 py-2.5 rounded-lg">
+          <button class="bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-700 dark:hover:bg-cyan-600 text-white font-semibold px-5 py-2.5 rounded-lg">
             Upload
           </button>
-          <div id="uploadSpinner" class="hidden text-sm text-gray-500">Uploading… please wait</div>
+          <div id="uploadSpinner" class="hidden text-sm text-gray-500 dark:text-gray-400">Uploading… please wait</div>
         </div>
       </form>
     </div>
 
     <!-- Recent uploads -->
-    <div class="mt-8 bg-white rounded-xl shadow">
-      <div class="p-4 border-b flex items-center justify-between">
+    <div class="mt-8 bg-white dark:bg-gray-900 rounded-xl shadow">
+      <div class="p-4 border-b dark:border-gray-700 flex items-center justify-between">
         <h3 class="font-semibold">Recent Uploads</h3>
-        <a href="{% url 'documents' %}" class="text-sm text-cyan-600 hover:underline">Open library</a>
+        <a href="{% url 'documents' %}" class="text-sm text-cyan-600 dark:text-cyan-400 hover:underline">Open library</a>
       </div>
-      <ul class="divide-y">
+      <ul class="divide-y dark:divide-gray-700">
         {% for d in docs %}
           <li class="p-4 flex items-center justify-between gap-4" id="doc-{{ d.id }}">
             <div class="min-w-0 flex-1">
               <div class="truncate font-medium">{{ d.title }}</div>
-              <div class="text-xs text-gray-500">{{ d.created_at|date:"Y-m-d H:i" }}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">{{ d.created_at|date:"Y-m-d H:i" }}</div>
             </div>
             <div class="flex items-center gap-2">
               {% if d.file %}
-                <a class="text-cyan-600 text-sm hover:underline px-2 py-1" href="{% url 'download_document' d.id %}" target="_blank">View</a>
+                <a class="text-cyan-600 dark:text-cyan-400 text-sm hover:underline px-2 py-1" href="{% url 'download_document' d.id %}" target="_blank">View</a>
               {% endif %}
               <form method="post" action="{% url 'delete_document' d.id %}" class="inline" onsubmit="return confirmDelete(event, '{{ d.title }}', '{{ d.id }}')">
                 {% csrf_token %}
-                <button type="submit" class="text-red-600 text-sm hover:underline px-2 py-1">Delete</button>
+                <button type="submit" class="text-red-600 dark:text-red-400 text-sm hover:underline px-2 py-1">Delete</button>
               </form>
             </div>
           </li>
         {% empty %}
-          <li class="p-4 text-gray-500">No documents yet.</li>
+          <li class="p-4 text-gray-500 dark:text-gray-400">No documents yet.</li>
         {% endfor %}
       </ul>
     </div>

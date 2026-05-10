@@ -4,40 +4,40 @@
 
     <div class="mb-6">
       <h1 class="text-3xl font-bold">🔍 Document Analysis</h1>
-      <p class="text-gray-600 mt-2">Extract key insights, commodity information, and findings from documents</p>
+      <p class="text-gray-600 dark:text-gray-400 mt-2">Extract key insights, commodity information, and findings from documents</p>
     </div>
 
     <!-- Feature Card -->
-    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-6 mb-8">
       <div class="flex items-center gap-3 mb-4">
         <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-2xl">
           🔍
         </div>
         <div>
           <h2 class="text-xl font-semibold">Document Analysis</h2>
-          <p class="text-sm text-gray-600">Extract key insights</p>
+          <p class="text-sm text-gray-600 dark:text-gray-400">Extract key insights</p>
         </div>
       </div>
-      <p class="text-gray-700">
+      <p class="text-gray-700 dark:text-gray-300">
         Analyze documents to extract commodity information, dates, and key findings using the Granite AI model.
         Select a document below and click <strong>Analyze</strong> to begin.
       </p>
     </div>
 
     <!-- Documents for Analysis -->
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-      <div class="p-4 border-b flex items-center justify-between">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden">
+      <div class="p-4 border-b dark:border-gray-700 flex items-center justify-between">
         <h2 class="text-lg font-semibold">Documents</h2>
-        <span class="text-sm text-gray-500">{{ recent_docs|length }} document{{ recent_docs|length|pluralize }}</span>
+        <span class="text-sm text-gray-500 dark:text-gray-400">{{ recent_docs|length }} document{{ recent_docs|length|pluralize }}</span>
       </div>
 
       {% if recent_docs %}
-        <div class="divide-y">
+        <div class="divide-y dark:divide-gray-700">
           {% for doc in recent_docs %}
-            <div class="p-4 hover:bg-gray-50 flex items-center justify-between">
+            <div class="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center justify-between">
               <div class="flex-1 min-w-0 mr-4">
-                <h3 class="font-medium text-gray-900 truncate">{{ doc.title }}</h3>
-                <p class="text-sm text-gray-600">
+                <h3 class="font-medium text-gray-900 dark:text-gray-100 truncate">{{ doc.title }}</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400">
                   {{ doc.doc_type|default:"Document" }}
                   {% if doc.process %} &mdash; {{ doc.process.name }}{% endif %}
                   &mdash; {{ doc.created_at|date:"d M Y" }}
@@ -46,7 +46,7 @@
               <div class="flex gap-2 flex-shrink-0">
                 {% if doc.file %}
                   <a href="{{ doc.file.url }}" target="_blank"
-                     class="px-3 py-1 text-cyan-600 hover:underline text-sm">
+                     class="px-3 py-1 text-cyan-600 dark:text-cyan-400 hover:underline text-sm">
                     View
                   </a>
                 {% endif %}
@@ -64,9 +64,9 @@
           {% endfor %}
         </div>
       {% else %}
-        <div class="p-8 text-center text-gray-500">
+        <div class="p-8 text-center text-gray-500 dark:text-gray-400">
           <p>No documents available for analysis.</p>
-          <a href="{% url 'upload' %}" class="mt-3 inline-block text-sm text-cyan-600 hover:underline">
+          <a href="{% url 'upload' %}" class="mt-3 inline-block text-sm text-cyan-600 dark:text-cyan-400 hover:underline">
             Upload a document
           </a>
         </div>

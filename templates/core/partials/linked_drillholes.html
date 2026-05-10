@@ -1,4 +1,4 @@
-<div id="linked-drillholes" class="bg-white rounded-xl shadow max-w-4xl p-6 mt-6">
+<div id="linked-drillholes" class="bg-white dark:bg-gray-900 rounded-xl shadow max-w-4xl p-6 mt-6">
   <div class="flex items-center justify-between mb-4">
     <h2 class="text-lg font-semibold">Drillholes</h2>
     <button
@@ -13,7 +13,7 @@
 
   {% if drillholes %}
     <table class="w-full text-sm">
-      <thead class="text-left text-gray-500 border-b">
+      <thead class="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
         <tr>
           <th class="pb-2">Name</th>
           <th class="pb-2">Type</th>
@@ -21,16 +21,16 @@
           <th class="pb-2"></th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-100">
+      <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
         {% for dh in drillholes %}
         <tr>
           <td class="py-2">
-            <a href="{% url 'drillhole_detail' dh.pk %}" class="text-cyan-700 hover:underline font-medium">
+            <a href="{% url 'drillhole_detail' dh.pk %}" class="text-cyan-700 dark:text-cyan-400 hover:underline font-medium">
               {{ dh.name }}
             </a>
           </td>
-          <td class="py-2 text-gray-500">{{ dh.get_drill_type_display|default:"—" }}</td>
-          <td class="py-2 text-gray-500">{{ dh.depth|default:"—" }}</td>
+          <td class="py-2 text-gray-500 dark:text-gray-400">{{ dh.get_drill_type_display|default:"—" }}</td>
+          <td class="py-2 text-gray-500 dark:text-gray-400">{{ dh.depth|default:"—" }}</td>
           <td class="py-2 text-right">
             <form hx-post="{% url 'unlink_drillhole' dh.pk %}"
                   hx-target="#linked-drillholes"
@@ -45,6 +45,6 @@
       </tbody>
     </table>
   {% else %}
-    <p class="text-gray-400 text-sm">No drillholes linked yet. Use the button above to associate drillholes with this prospect.</p>
+    <p class="text-gray-400 dark:text-gray-500 text-sm">No drillholes linked yet. Use the button above to associate drillholes with this prospect.</p>
   {% endif %}
 </div>

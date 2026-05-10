@@ -6,13 +6,13 @@
     <div class="mb-6 flex items-center justify-between">
       <div>
         <h1 class="text-3xl font-bold">Report History</h1>
-        <p class="text-gray-600 mt-1">All generated reports grouped by project</p>
+        <p class="text-gray-600 dark:text-gray-400 mt-1">All generated reports grouped by project</p>
       </div>
-      <a href="{% url 'ai_insights' %}" class="text-sm text-cyan-600 hover:underline">← Back to Reporting</a>
+      <a href="{% url 'ai_insights' %}" class="text-sm text-cyan-600 dark:text-cyan-400 hover:underline">← Back to Reporting</a>
     </div>
 
     <!-- Search bar -->
-    <form method="get" action="{% url 'all_reports_history' %}" class="bg-white rounded-xl shadow p-4 mb-6">
+    <form method="get" action="{% url 'all_reports_history' %}" class="bg-white dark:bg-gray-900 rounded-xl shadow p-4 mb-6">
       <div class="flex gap-3 items-center">
         <div class="flex-1">
           <input
@@ -20,7 +20,7 @@
             name="q"
             value="{{ q }}"
             placeholder="Search report titles and content..."
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm"
+            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
           >
         </div>
         <button type="submit"
@@ -29,13 +29,13 @@
         </button>
         {% if q %}
           <a href="{% url 'all_reports_history' %}"
-             class="px-4 py-2 border border-gray-300 text-gray-500 rounded-lg hover:bg-gray-50 text-sm whitespace-nowrap">
+             class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-sm whitespace-nowrap">
             ✕ Clear
           </a>
         {% endif %}
       </div>
       {% if q and total is not None %}
-        <p class="mt-2 text-sm text-gray-500">
+        <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
           {{ total }} result{{ total|pluralize }} for "<strong>{{ q }}</strong>"
         </p>
       {% endif %}
@@ -49,11 +49,11 @@
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-3">
             <div class="w-2 h-6 bg-cyan-600 rounded-full"></div>
-            <h2 class="text-lg font-bold text-gray-800">{{ project_name }}</h2>
+            <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200">{{ project_name }}</h2>
           </div>
           {% if data.process_id %}
           <a href="{% url 'report_history' data.process_id %}"
-             class="text-xs text-cyan-600 hover:underline">
+             class="text-xs text-cyan-600 dark:text-cyan-400 hover:underline">
             View full history →
           </a>
           {% endif %}
@@ -61,48 +61,48 @@
 
         <div class="space-y-4">
           {% for title, versions in data.titles.items %}
-          <div class="bg-white rounded-xl shadow overflow-hidden">
+          <div class="bg-white dark:bg-gray-900 rounded-xl shadow overflow-hidden">
 
             <!-- Report title bar -->
-            <div class="px-4 py-3 border-b bg-gray-50 flex items-center justify-between">
-              <span class="font-semibold text-gray-700">{{ title }}</span>
-              <span class="text-xs text-gray-400">{{ versions|length }} version{{ versions|length|pluralize }}</span>
+            <div class="px-4 py-3 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex items-center justify-between">
+              <span class="font-semibold text-gray-700 dark:text-gray-300">{{ title }}</span>
+              <span class="text-xs text-gray-400 dark:text-gray-500">{{ versions|length }} version{{ versions|length|pluralize }}</span>
             </div>
 
             <!-- Versions list -->
-            <ul class="divide-y">
+            <ul class="divide-y dark:divide-gray-700">
               {% for v in versions %}
-              <li class="px-4 py-3 flex items-center justify-between hover:bg-gray-50">
+              <li class="px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800">
                 <div class="flex items-center gap-3">
-                  <span class="text-sm font-semibold text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded">
+                  <span class="text-sm font-semibold text-cyan-700 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-900/20 px-2 py-0.5 rounded">
                     v{{ v.version_number }}
                   </span>
                   <div>
-                    <span class="text-sm text-gray-800">{{ v.created_at|date:"M d, Y H:i" }}</span>
-                    <span class="text-xs text-gray-400 ml-2">{{ v.get_change_reason_display }}</span>
+                    <span class="text-sm text-gray-800 dark:text-gray-200">{{ v.created_at|date:"M d, Y H:i" }}</span>
+                    <span class="text-xs text-gray-400 dark:text-gray-500 ml-2">{{ v.get_change_reason_display }}</span>
                     {% if v.created_by %}
-                    <span class="text-xs text-gray-400 ml-2">by {{ v.created_by.username }}</span>
+                    <span class="text-xs text-gray-400 dark:text-gray-500 ml-2">by {{ v.created_by.username }}</span>
                     {% endif %}
 
                     <!-- Status badge -->
                     <span class="ml-2 text-xs px-2 py-0.5 rounded-full
-                      {% if v.status == 'PUBLISHED' %}bg-green-100 text-green-700
-                      {% elif v.status == 'APPROVED' %}bg-blue-100 text-blue-700
-                      {% elif v.status == 'UNDER_REVIEW' %}bg-yellow-100 text-yellow-700
-                      {% else %}bg-gray-100 text-gray-500{% endif %}">
+                      {% if v.status == 'PUBLISHED' %}bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400
+                      {% elif v.status == 'APPROVED' %}bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400
+                      {% elif v.status == 'UNDER_REVIEW' %}bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400
+                      {% else %}bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400{% endif %}">
                       {{ v.get_status_display }}
                     </span>
 
                     {% if v.change_summary %}
-                    <p class="text-xs text-gray-400 italic mt-0.5">{{ v.change_summary }}</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 italic mt-0.5">{{ v.change_summary }}</p>
                     {% endif %}
                   </div>
                 </div>
                 <div class="flex gap-2">
                   <a href="{% url 'report_version_detail' v.id %}"
-                     class="text-sm text-cyan-600 hover:underline">View</a>
+                     class="text-sm text-cyan-600 dark:text-cyan-400 hover:underline">View</a>
                   <a href="{% url 'saved_report_editor' v.id %}"
-                     class="text-sm text-gray-500 hover:underline">Edit</a>
+                     class="text-sm text-gray-500 dark:text-gray-400 hover:underline">Edit</a>
                 </div>
               </li>
               {% endfor %}
@@ -116,15 +116,15 @@
       {% endfor %}
 
     {% else %}
-      <div class="bg-white rounded-xl shadow p-12 text-center text-gray-500">
+      <div class="bg-white dark:bg-gray-900 rounded-xl shadow p-12 text-center text-gray-500 dark:text-gray-400">
         {% if q %}
           <p class="text-lg mb-2">No reports matched "<strong>{{ q }}</strong>"</p>
-          <a href="{% url 'all_reports_history' %}" class="text-cyan-600 hover:underline text-sm">
+          <a href="{% url 'all_reports_history' %}" class="text-cyan-600 dark:text-cyan-400 hover:underline text-sm">
             Clear search and show all reports →
           </a>
         {% else %}
           <p class="text-lg mb-2">No reports generated yet</p>
-          <a href="{% url 'ai_insights' %}" class="text-cyan-600 hover:underline text-sm">
+          <a href="{% url 'ai_insights' %}" class="text-cyan-600 dark:text-cyan-400 hover:underline text-sm">
             Go generate your first report →
           </a>
         {% endif %}

@@ -32,11 +32,11 @@ class DocumentForm(ModelForm):
         ]
         widgets = {
             "commodity": forms.TextInput(attrs={
-                "class": "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
+                "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
                 "placeholder": "e.g. Gold, Copper",
             }),
             "author_name": forms.TextInput(attrs={
-                "class": "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
+                "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
                 "placeholder": "Author name",
             }),
         }
@@ -73,7 +73,7 @@ CONFIDENTIALITY_CHOICES = [
 
 TAG_FILTER_CHOICES = [("", "Any tag")] + TAG_CHOICES
 
-_INPUT = "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm"
+_INPUT = "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm"
 
 class DocumentSearchForm(forms.Form):
     q = forms.CharField(
@@ -160,7 +160,7 @@ class TenementForm(ModelForm):
         fields = ["name", "process"]
         widgets = {
             "name": forms.TextInput(attrs={
-                "class": "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
+                "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
                 "placeholder": "e.g. EPM 27431",
             }),
         }
@@ -210,17 +210,17 @@ class ProspectForm(ModelForm):
         fields = ["name", "process", "hypothesis", "objective"]
         widgets = {
             "name": forms.TextInput(attrs={
-                "class": "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
+                "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
                 "placeholder": "e.g. Ridgeline East",
             }),
             "hypothesis": forms.Textarea(attrs={
                 "rows": 5,
-                "class": "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
+                "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
                 "placeholder": "Describe the geological hypothesis. What do you believe is here and why?",
             }),
             "objective": forms.Textarea(attrs={
                 "rows": 4,
-                "class": "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
+                "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
                 "placeholder": "State the exploration objective. What will you do to test the hypothesis?",
             }),
         }

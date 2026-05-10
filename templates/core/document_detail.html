@@ -3,10 +3,10 @@
 {% load static %}
 
     <!-- Breadcrumb -->
-    <div class="mb-4 text-sm text-gray-600">
+    <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
       <a href="{% url 'documents' %}" class="hover:text-cyan-600">Documents</a>
       <span class="mx-2">/</span>
-      <span class="text-gray-900">{{ doc.title }}</span>
+      <span class="text-gray-900 dark:text-gray-100">{{ doc.title }}</span>
     </div>
 
     {% if not doc.is_latest %}
@@ -23,7 +23,7 @@
     {% endif %}
 
     <!-- Document Card -->
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden max-w-4xl">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden max-w-4xl">
 
       <!-- Header -->
       <div class="bg-gradient-to-r from-cyan-600 to-blue-600 text-white p-6">
@@ -39,69 +39,69 @@
       </div>
 
       <!-- Metadata -->
-      <div class="p-6 border-b">
+      <div class="p-6 border-b dark:border-gray-700">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <p class="text-sm text-gray-500">Document Type</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Document Type</p>
             <p class="font-medium">{{ doc.doc_type|default:"Not specified" }}</p>
           </div>
           <div>
-            <p class="text-sm text-gray-500">Date</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Date</p>
             <p class="font-medium">{{ doc.timestamp|date:"M d, Y"|default:"Not specified" }}</p>
           </div>
           <div>
-            <p class="text-sm text-gray-500">Confidentiality</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Confidentiality</p>
             <p class="font-medium">
-              <span class="px-3 py-1 rounded-full bg-cyan-100 text-cyan-700 text-sm">
+              <span class="px-3 py-1 rounded-full bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 text-sm">
                 {{ doc.confidentiality|default:"internal" }}
               </span>
             </p>
           </div>
           <div>
-            <p class="text-sm text-gray-500">Project</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Project</p>
             <p class="font-medium">{{ doc.process.name|default:"Not linked" }}</p>
           </div>
           {% if doc.organisation %}
           <div>
-            <p class="text-sm text-gray-500">Organisation</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Organisation</p>
             <p class="font-medium">{{ doc.organisation.name }}</p>
           </div>
           {% endif %}
           <div>
-            <p class="text-sm text-gray-500">Uploaded</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Uploaded</p>
             <p class="font-medium">{{ doc.created_at|date:"M d, Y H:i" }}</p>
           </div>
           {% if doc.created_by %}
           <div>
-            <p class="text-sm text-gray-500">Uploaded By</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Uploaded By</p>
             <p class="font-medium">{{ doc.created_by.username }}</p>
           </div>
           {% endif %}
           <div>
-            <p class="text-sm text-gray-500">Checksum (SHA-256)</p>
-            <p class="font-mono text-xs text-gray-600 break-all">{{ doc.checksum_sha256|default:"N/A" }}</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Checksum (SHA-256)</p>
+            <p class="font-mono text-xs text-gray-600 dark:text-gray-400 break-all">{{ doc.checksum_sha256|default:"N/A" }}</p>
           </div>
           {% if doc.tenement %}
           <div>
-            <p class="text-sm text-gray-500">Tenement</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Tenement</p>
             <p class="font-medium">{{ doc.tenement.name }}</p>
           </div>
           {% endif %}
           {% if doc.commodity %}
           <div>
-            <p class="text-sm text-gray-500">Commodity</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Commodity</p>
             <p class="font-medium">{{ doc.commodity }}</p>
           </div>
           {% endif %}
           {% if doc.reporting_stage %}
           <div>
-            <p class="text-sm text-gray-500">Reporting Stage</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Reporting Stage</p>
             <p class="font-medium">{{ doc.get_reporting_stage_display }}</p>
           </div>
           {% endif %}
           {% if doc.author_name %}
           <div>
-            <p class="text-sm text-gray-500">Author</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Author</p>
             <p class="font-medium">{{ doc.author_name }}</p>
           </div>
           {% endif %}
@@ -110,18 +110,18 @@
 
       <!-- Tags -->
       {% if tag_labels %}
-      <div class="p-6 border-b">
-        <p class="text-sm text-gray-500 mb-2">Tags</p>
+      <div class="p-6 border-b dark:border-gray-700">
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Tags</p>
         <div class="flex flex-wrap gap-2">
           {% for label in tag_labels %}
-            <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">{{ label }}</span>
+            <span class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm">{{ label }}</span>
           {% endfor %}
         </div>
       </div>
       {% endif %}
 
       <!-- Actions -->
-      <div class="p-6 bg-gray-50">
+      <div class="p-6 bg-gray-50 dark:bg-gray-800">
         <div class="flex gap-3">
           {% if doc.file %}
             <a href="{% url 'download_document' doc.pk %}" target="_blank"
@@ -129,20 +129,20 @@
               Open File
             </a>
             <a href="{% url 'download_document' doc.pk %}" download
-               class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-white font-semibold">
+               class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-white dark:hover:bg-gray-700 font-semibold">
               Download
             </a>
           {% else %}
-            <p class="text-gray-500">No file attached</p>
+            <p class="text-gray-500 dark:text-gray-400">No file attached</p>
           {% endif %}
         </div>
 
         <div class="mt-4 flex gap-3">
-          <a href="{% url 'documents' %}" class="text-cyan-600 hover:underline">
+          <a href="{% url 'documents' %}" class="text-cyan-600 dark:text-cyan-400 hover:underline">
             &larr; Back to Documents
           </a>
           {% if doc.process %}
-            <a href="{% url 'report_editor' doc.process.id %}" class="text-cyan-600 hover:underline">
+            <a href="{% url 'report_editor' doc.process.id %}" class="text-cyan-600 dark:text-cyan-400 hover:underline">
               AI Report for {{ doc.process.name }}
             </a>
           {% endif %}
@@ -153,24 +153,24 @@
 
     <!-- Version History -->
     {% if version_family|length > 1 %}
-    <div class="mt-6 bg-white rounded-xl shadow max-w-4xl">
-      <div class="p-4 border-b">
-        <h3 class="font-semibold text-gray-800">Version History</h3>
+    <div class="mt-6 bg-white dark:bg-gray-900 rounded-xl shadow max-w-4xl">
+      <div class="p-4 border-b dark:border-gray-700">
+        <h3 class="font-semibold text-gray-800 dark:text-gray-200">Version History</h3>
       </div>
-      <div class="divide-y">
+      <div class="divide-y dark:divide-gray-700">
         {% for v in version_family %}
-        <div class="p-4 flex items-center justify-between {% if v.pk == doc.pk %}bg-cyan-50{% endif %}">
+        <div class="p-4 flex items-center justify-between {% if v.pk == doc.pk %}bg-cyan-50 dark:bg-cyan-900/20{% endif %}">
           <div class="flex items-center gap-3">
-            <span class="w-8 h-8 rounded-full bg-cyan-100 text-cyan-700 text-sm font-bold flex items-center justify-center">
+            <span class="w-8 h-8 rounded-full bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 text-sm font-bold flex items-center justify-center">
               {{ v.version_number }}
             </span>
             <div>
               <p class="font-medium text-sm">
                 v{{ v.version_number }}
-                {% if v.is_latest %}<span class="ml-1 px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded-full">Latest</span>{% endif %}
-                {% if v.pk == doc.pk %}<span class="ml-1 text-xs text-gray-500">(viewing)</span>{% endif %}
+                {% if v.is_latest %}<span class="ml-1 px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-full">Latest</span>{% endif %}
+                {% if v.pk == doc.pk %}<span class="ml-1 text-xs text-gray-500 dark:text-gray-400">(viewing)</span>{% endif %}
               </p>
-              <p class="text-xs text-gray-500">
+              <p class="text-xs text-gray-500 dark:text-gray-400">
                 {{ v.created_at|date:"M d, Y H:i" }}
                 {% if v.created_by %} by {{ v.created_by.username }}{% endif %}
               </p>
@@ -179,7 +179,7 @@
           <div class="flex gap-2">
             {% if v.pk != doc.pk %}
             <a href="{% url 'document_detail' v.pk %}"
-               class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700">
+               class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300">
               View
             </a>
             {% endif %}
@@ -198,10 +198,10 @@
 
     <!-- Upload New Version (role-restricted) -->
     {% if can_upload_version and doc.is_latest %}
-    <div class="mt-6 bg-white rounded-xl shadow max-w-4xl">
-      <div class="p-4 border-b">
-        <h3 class="font-semibold text-gray-800">Upload New Version</h3>
-        <p class="text-sm text-gray-500 mt-1">
+    <div class="mt-6 bg-white dark:bg-gray-900 rounded-xl shadow max-w-4xl">
+      <div class="p-4 border-b dark:border-gray-700">
+        <h3 class="font-semibold text-gray-800 dark:text-gray-200">Upload New Version</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Replace this document with an updated file. The current version will be preserved in the version history.
         </p>
       </div>
@@ -209,9 +209,9 @@
             action="{% url 'replace_document' doc.pk %}" class="p-4">
         {% csrf_token %}
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-1">New File</label>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New File</label>
           <input type="file" name="file" required
-                 class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
+                 class="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4
                         file:rounded-lg file:border-0 file:text-sm file:font-semibold
                         file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100">
         </div>

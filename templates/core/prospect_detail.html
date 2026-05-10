@@ -9,96 +9,96 @@
 {% block content %}
 
 <!-- Breadcrumb -->
-<div class="mb-4 text-sm text-gray-600">
+<div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
   <a href="{% url 'prospects' %}" class="hover:text-cyan-600">Prospects</a>
   <span class="mx-2">/</span>
-  <span class="text-gray-900">{{ prospect.name }}</span>
+  <span class="text-gray-900 dark:text-gray-100">{{ prospect.name }}</span>
 </div>
 
 <!-- Header Card -->
-<div class="bg-white rounded-xl shadow-lg overflow-hidden max-w-4xl mb-6">
+<div class="bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden max-w-4xl mb-6">
   <div class="bg-gradient-to-r from-cyan-600 to-blue-600 text-white p-6">
     <h1 class="text-3xl font-bold mb-1">💎 {{ prospect.name }}</h1>
     <p class="text-cyan-100 text-sm">{{ prospect.process.name }} &mdash; {{ prospect.organisation.name }}</p>
   </div>
 
   <!-- Metadata grid -->
-  <div class="p-6 border-b grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div class="p-6 border-b dark:border-gray-700 grid grid-cols-1 md:grid-cols-2 gap-4">
     <div>
-      <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Organisation</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Organisation</p>
       <p class="font-medium">{{ prospect.organisation.name }}</p>
     </div>
     <div>
-      <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Project</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Project</p>
       <p class="font-medium">
-        <a href="{% url 'project_detail' prospect.process.pk %}" class="text-cyan-600 hover:underline">
+        <a href="{% url 'project_detail' prospect.process.pk %}" class="text-cyan-600 dark:text-cyan-400 hover:underline">
           {{ prospect.process.name }}
         </a>
       </p>
     </div>
     <div>
-      <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Created</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Created</p>
       <p class="font-medium">{{ prospect.created_at|date:"M d, Y" }}</p>
     </div>
     <div>
-      <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Last Updated</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Last Updated</p>
       <p class="font-medium">{{ prospect.updated_at|date:"M d, Y H:i" }}</p>
     </div>
     {% if prospect.geom %}
     <div>
-      <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Location (WGS84)</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Location (WGS84)</p>
       <p class="font-mono text-sm">{{ prospect.geom.y|floatformat:5 }}°, {{ prospect.geom.x|floatformat:5 }}°</p>
     </div>
     {% else %}
     <div>
-      <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Location</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Location</p>
       <p class="text-yellow-600 text-sm">No geometry mapped yet</p>
     </div>
     {% endif %}
   </div>
 
   <!-- Hypothesis -->
-  <div class="p-6 border-b">
-    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Geological Hypothesis</h2>
-    <p class="text-gray-800 leading-relaxed">{{ prospect.hypothesis }}</p>
+  <div class="p-6 border-b dark:border-gray-700">
+    <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Geological Hypothesis</h2>
+    <p class="text-gray-800 dark:text-gray-200 leading-relaxed">{{ prospect.hypothesis }}</p>
   </div>
 
   <!-- Objective -->
-  <div class="p-6 border-b">
-    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Exploration Objective</h2>
-    <p class="text-gray-800 leading-relaxed">{{ prospect.objective }}</p>
+  <div class="p-6 border-b dark:border-gray-700">
+    <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Exploration Objective</h2>
+    <p class="text-gray-800 dark:text-gray-200 leading-relaxed">{{ prospect.objective }}</p>
   </div>
 
   <!-- Actions -->
-  <div class="p-6 bg-gray-50 flex gap-3">
-    <a href="{% url 'prospects' %}" class="text-cyan-600 hover:underline text-sm">
+  <div class="p-6 bg-gray-50 dark:bg-gray-800 flex gap-3">
+    <a href="{% url 'prospects' %}" class="text-cyan-600 dark:text-cyan-400 hover:underline text-sm">
       ← Back to Prospects
     </a>
-    <a href="{% url 'edit_prospect' prospect.pk %}" class="text-cyan-600 hover:text-cyan-800 text-sm">
+    <a href="{% url 'edit_prospect' prospect.pk %}" class="text-cyan-600 dark:text-cyan-400 hover:text-cyan-800 text-sm">
       ✏️ Edit Prospect
     </a>
   </div>
 </div>
 
 <!-- Spatial Map -->
-<div class="bg-white rounded-xl shadow max-w-4xl p-6 mb-6">
+<div class="bg-white dark:bg-gray-900 rounded-xl shadow max-w-4xl p-6 mb-6">
   <div class="flex items-center justify-between mb-4">
     <h2 class="text-lg font-semibold">Spatial View</h2>
-    <div class="flex items-center gap-4 text-xs text-gray-500 flex-wrap">
+    <div class="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
       <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-red-600"></span> Prospect</span>
       {% if prospect.area_geom %}<span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded bg-emerald-500 opacity-70"></span> Area</span>{% endif %}
       <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded bg-purple-600 opacity-70"></span> Tenements</span>
       <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-blue-600"></span> Drillholes</span>
     </div>
   </div>
-  <div id="prospect-detail-map" class="rounded-lg border border-gray-200" style="height: 420px;"></div>
+  <div id="prospect-detail-map" class="rounded-lg border border-gray-200 dark:border-gray-700" style="height: 420px;"></div>
   {% if not prospect.geom %}
     <p class="text-sm text-yellow-600 mt-2">No prospect location mapped — map centred on project area.</p>
   {% endif %}
 </div>
 
 <!-- Linked Documents Section -->
-<div id="linked-documents" class="bg-white rounded-xl shadow max-w-4xl p-6">
+<div id="linked-documents" class="bg-white dark:bg-gray-900 rounded-xl shadow max-w-4xl p-6">
   <div class="flex items-center justify-between mb-4">
     <h2 class="text-lg font-semibold">Linked Documents</h2>
     <button
@@ -112,15 +112,15 @@
   <div id="link-modal-container"></div>
 
   {% if doc_links %}
-    <ul class="divide-y divide-gray-100">
+    <ul class="divide-y divide-gray-100 dark:divide-gray-700">
       {% for link in doc_links %}
       <li class="py-3 flex items-center justify-between">
         <div>
           <a href="{% url 'document_detail' link.document.pk %}" class="font-medium text-cyan-700 hover:underline">
             {{ link.document.title }}
           </a>
-          <span class="ml-2 text-xs text-gray-400">{{ link.document.doc_type }}</span>
-          <p class="text-xs text-gray-400 mt-0.5">Linked {{ link.created_at|date:"M d, Y" }}{% if link.created_by %} by {{ link.created_by.username }}{% endif %}</p>
+          <span class="ml-2 text-xs text-gray-400 dark:text-gray-500">{{ link.document.doc_type }}</span>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Linked {{ link.created_at|date:"M d, Y" }}{% if link.created_by %} by {{ link.created_by.username }}{% endif %}</p>
         </div>
         <form hx-post="{% url 'delete_doc_link' link.pk %}"
               hx-target="#linked-documents"
@@ -134,7 +134,7 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p class="text-gray-400 text-sm">No documents linked yet. Use the button above to attach evidence documents.</p>
+    <p class="text-gray-400 dark:text-gray-500 text-sm">No documents linked yet. Use the button above to attach evidence documents.</p>
   {% endif %}
 </div>
 
@@ -142,7 +142,7 @@
 {% include "core/partials/linked_drillholes.html" %}
 
 <!-- Reports Section -->
-<div class="bg-white rounded-xl shadow max-w-4xl p-6 mt-6">
+<div class="bg-white dark:bg-gray-900 rounded-xl shadow max-w-4xl p-6 mt-6">
   <div class="flex items-center justify-between mb-4">
     <h2 class="text-lg font-semibold">Reports</h2>
     <form method="post" action="{% url 'generate_prospect_report' prospect.pk %}" class="inline">
@@ -155,22 +155,22 @@
   </div>
 
   {% if prospect_reports %}
-    <ul class="divide-y divide-gray-100">
+    <ul class="divide-y divide-gray-100 dark:divide-gray-700">
       {% for report in prospect_reports %}
       <li class="py-3 flex items-center justify-between">
         <div>
           <a href="{% url 'saved_report_editor' report.pk %}" class="font-medium text-cyan-700 hover:underline">
             {{ report.title }}
           </a>
-          <p class="text-xs text-gray-400 mt-0.5">
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
             v{{ report.version_number }} · {{ report.created_at|date:"M d, Y" }}
             {% if report.created_by %} · by {{ report.created_by.username }}{% endif %}
           </p>
         </div>
         <span class="px-2 py-0.5 rounded-full text-xs font-semibold
-          {% if report.status == 'DRAFT' %}bg-gray-100 text-gray-600
-          {% elif report.status == 'UNDER_REVIEW' %}bg-yellow-100 text-yellow-700
-          {% elif report.status == 'APPROVED' %}bg-green-100 text-green-700
+          {% if report.status == 'DRAFT' %}bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400
+          {% elif report.status == 'UNDER_REVIEW' %}bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400
+          {% elif report.status == 'APPROVED' %}bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400
           {% elif report.status == 'PUBLISHED' %}bg-blue-100 text-blue-700
           {% endif %}">
           {{ report.get_status_display }}
@@ -179,55 +179,55 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p class="text-gray-400 text-sm">No reports yet. Generate one using the button above.</p>
+    <p class="text-gray-400 dark:text-gray-500 text-sm">No reports yet. Generate one using the button above.</p>
   {% endif %}
 </div>
 
 <!-- Tenements Section -->
-<div class="bg-white rounded-xl shadow max-w-4xl p-6 mt-6">
+<div class="bg-white dark:bg-gray-900 rounded-xl shadow max-w-4xl p-6 mt-6">
   <div class="flex items-center justify-between mb-4">
     <div>
       <h2 class="text-lg font-semibold">Tenements</h2>
-      <p class="text-xs text-gray-400 mt-0.5">Licensed areas for project: {{ prospect.process.name }}</p>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Licensed areas for project: {{ prospect.process.name }}</p>
     </div>
   </div>
 
   {% if tenements %}
     <table class="w-full text-sm">
-      <thead class="text-left text-gray-500 border-b">
+      <thead class="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
         <tr>
           <th class="pb-2">Name</th>
           <th class="pb-2">Geometry</th>
           <th class="pb-2">Added</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-100">
+      <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
         {% for tenement in tenements %}
         <tr>
           <td class="py-2 font-medium">{{ tenement.name }}</td>
-          <td class="py-2 text-gray-500">
+          <td class="py-2 text-gray-500 dark:text-gray-400">
             {% if tenement.geom %}
-              <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs">Mapped</span>
+              <span class="px-2 py-0.5 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-full text-xs">Mapped</span>
             {% else %}
-              <span class="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-xs">No boundary</span>
+              <span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-full text-xs">No boundary</span>
             {% endif %}
           </td>
-          <td class="py-2 text-gray-500">{{ tenement.created_at|date:"M d, Y" }}</td>
+          <td class="py-2 text-gray-500 dark:text-gray-400">{{ tenement.created_at|date:"M d, Y" }}</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   {% else %}
-    <p class="text-gray-400 text-sm">No tenements linked to this project.</p>
+    <p class="text-gray-400 dark:text-gray-500 text-sm">No tenements linked to this project.</p>
   {% endif %}
 </div>
 
 <!-- Samples Section -->
-<div class="bg-white rounded-xl shadow max-w-4xl p-6 mt-6">
+<div class="bg-white dark:bg-gray-900 rounded-xl shadow max-w-4xl p-6 mt-6">
   <div class="flex items-center justify-between mb-4">
     <div>
       <h2 class="text-lg font-semibold">Samples</h2>
-      <p class="text-xs text-gray-400 mt-0.5">Field samples collected at this prospect</p>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Field samples collected at this prospect</p>
     </div>
     <a href="{% url 'create_sample' %}?prospect={{ prospect.pk }}"
        class="px-4 py-2 bg-cyan-600 text-white text-sm rounded-lg hover:bg-cyan-700">
@@ -237,7 +237,7 @@
 
   {% if samples %}
     <table class="w-full text-sm">
-      <thead class="text-left text-gray-500 border-b">
+      <thead class="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
         <tr>
           <th class="pb-2">Sample</th>
           <th class="pb-2">Type</th>
@@ -246,31 +246,31 @@
           <th class="pb-2">Lab</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-100">
+      <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
         {% for sample in samples %}
         <tr>
           <td class="py-2 font-medium">
             <a href="{% url 'sample_detail' sample.pk %}" class="text-cyan-700 hover:underline">{{ sample.name }}</a>
           </td>
-          <td class="py-2 text-gray-500">{{ sample.get_sample_type_display|default:"—" }}</td>
-          <td class="py-2 text-gray-500">{{ sample.sample_number|default:"—" }}</td>
-          <td class="py-2 text-gray-500">{{ sample.collected_at|date:"M d, Y"|default:"—" }}</td>
-          <td class="py-2 text-gray-500">{{ sample.laboratory|default:"—" }}</td>
+          <td class="py-2 text-gray-500 dark:text-gray-400">{{ sample.get_sample_type_display|default:"—" }}</td>
+          <td class="py-2 text-gray-500 dark:text-gray-400">{{ sample.sample_number|default:"—" }}</td>
+          <td class="py-2 text-gray-500 dark:text-gray-400">{{ sample.collected_at|date:"M d, Y"|default:"—" }}</td>
+          <td class="py-2 text-gray-500 dark:text-gray-400">{{ sample.laboratory|default:"—" }}</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   {% else %}
-    <p class="text-gray-400 text-sm">No samples recorded. Use the button above to add one.</p>
+    <p class="text-gray-400 dark:text-gray-500 text-sm">No samples recorded. Use the button above to add one.</p>
   {% endif %}
 </div>
 
 <!-- Surveys Section -->
-<div class="bg-white rounded-xl shadow max-w-4xl p-6 mt-6">
+<div class="bg-white dark:bg-gray-900 rounded-xl shadow max-w-4xl p-6 mt-6">
   <div class="flex items-center justify-between mb-4">
     <div>
       <h2 class="text-lg font-semibold">Surveys</h2>
-      <p class="text-xs text-gray-400 mt-0.5">Geophysical and geological surveys for this prospect</p>
+      <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Geophysical and geological surveys for this prospect</p>
     </div>
     <a href="{% url 'create_survey' %}?prospect={{ prospect.pk }}"
        class="px-4 py-2 bg-cyan-600 text-white text-sm rounded-lg hover:bg-cyan-700">
@@ -280,7 +280,7 @@
 
   {% if surveys %}
     <table class="w-full text-sm">
-      <thead class="text-left text-gray-500 border-b">
+      <thead class="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
         <tr>
           <th class="pb-2">Survey</th>
           <th class="pb-2">Type</th>
@@ -289,15 +289,15 @@
           <th class="pb-2">Coverage</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-100">
+      <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
         {% for survey in surveys %}
         <tr>
           <td class="py-2 font-medium">
             <a href="{% url 'survey_detail' survey.pk %}" class="text-cyan-700 hover:underline">{{ survey.name }}</a>
           </td>
-          <td class="py-2 text-gray-500">{{ survey.get_survey_type_display|default:"—" }}</td>
-          <td class="py-2 text-gray-500">{{ survey.contractor|default:"—" }}</td>
-          <td class="py-2 text-gray-500">
+          <td class="py-2 text-gray-500 dark:text-gray-400">{{ survey.get_survey_type_display|default:"—" }}</td>
+          <td class="py-2 text-gray-500 dark:text-gray-400">{{ survey.contractor|default:"—" }}</td>
+          <td class="py-2 text-gray-500 dark:text-gray-400">
             {% if survey.date_from %}{{ survey.date_from|date:"M d, Y" }}{% endif %}
             {% if survey.date_from and survey.date_to %} – {% endif %}
             {% if survey.date_to %}{{ survey.date_to|date:"M d, Y" }}{% endif %}
@@ -305,9 +305,9 @@
           </td>
           <td class="py-2">
             {% if survey.geom %}
-              <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs">Mapped</span>
+              <span class="px-2 py-0.5 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-full text-xs">Mapped</span>
             {% else %}
-              <span class="text-gray-400 text-xs">No boundary</span>
+              <span class="text-gray-400 dark:text-gray-500 text-xs">No boundary</span>
             {% endif %}
           </td>
         </tr>
@@ -315,7 +315,7 @@
       </tbody>
     </table>
   {% else %}
-    <p class="text-gray-400 text-sm">No surveys recorded. Use the button above to add one.</p>
+    <p class="text-gray-400 dark:text-gray-500 text-sm">No surveys recorded. Use the button above to add one.</p>
   {% endif %}
 </div>
 
