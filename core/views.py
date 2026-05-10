@@ -2577,13 +2577,19 @@ def audit_log_view(request):
 
 
 @login_required
-@role_required(
-    UserProfile.RoleChoices.ADMIN,
-    UserProfile.RoleChoices.DATA_MANAGER,
-    UserProfile.RoleChoices.OPERATIONS_MANAGER,
-)
 def approval_workflows_list(request):
     """List all ApprovalWorkflow records for ADMIN/approval-capable users."""
+    if not request.user.is_superuser:
+        profile = getattr(request.user, 'profile', None)
+        allowed_roles = {
+            UserProfile.RoleChoices.ADMIN,
+            UserProfile.RoleChoices.DATA_MANAGER,
+            UserProfile.RoleChoices.OPERATIONS_MANAGER,
+        }
+        has_role = profile and profile.role in allowed_roles
+        has_approval = profile and (profile.can_approve_jorc or profile.can_approve_valmin)
+        if not (has_role or has_approval):
+            raise PermissionDenied
     org_filter = _org_qs_filter(request)
 
     # Get workflow IDs associated with SavedReports in this org

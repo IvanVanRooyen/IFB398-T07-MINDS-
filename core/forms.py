@@ -43,6 +43,15 @@ class DocumentForm(ModelForm):
 
     def __init__(self, *args, organisation=None, **kwargs):
         super().__init__(*args, **kwargs)
+        _ic = (
+            "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 "
+            "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 "
+            "placeholder-gray-400 dark:placeholder-gray-500 "
+            "rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm"
+        )
+        for name, field in self.fields.items():
+            if name not in ("tags", "file"):
+                field.widget.attrs["class"] = _ic
         if self.instance and self.instance.pk:
             self.initial["tags"] = self.instance.tags or []
         if organisation:
