@@ -5,16 +5,16 @@
 
     <!-- Version sidebar -->
     <div class="w-52 shrink-0">
-      <div class="bg-white rounded-xl shadow p-4">
-        <h2 class="font-semibold text-sm text-gray-600 mb-3">Versions</h2>
+      <div class="bg-white dark:bg-gray-900 rounded-xl shadow p-4">
+        <h2 class="font-semibold text-sm text-gray-600 dark:text-gray-400 mb-3">Versions</h2>
         <ul class="space-y-1">
           {% for v in all_versions %}
           <li>
             <a href="{% url 'report_version_detail' v.id %}"
-               class="block px-3 py-2 rounded-lg text-sm {% if v.id == report.id %}bg-cyan-100 text-cyan-700 font-semibold{% else %}hover:bg-gray-100 text-gray-600{% endif %}">
+               class="block px-3 py-2 rounded-lg text-sm {% if v.id == report.id %}bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-400 font-semibold{% else %}hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400{% endif %}">
               <span>v{{ v.version_number }}</span>
-              <span class="block text-xs text-gray-400 mt-0.5">{{ v.created_at|date:"M d, Y" }}</span>
-              <span class="block text-xs text-gray-400">{{ v.get_change_reason_display }}</span>
+              <span class="block text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ v.created_at|date:"M d, Y" }}</span>
+              <span class="block text-xs text-gray-400 dark:text-gray-500">{{ v.get_change_reason_display }}</span>
             </a>
           </li>
           {% endfor %}
@@ -29,7 +29,7 @@
         </a>
         {% if report.process %}
         <a href="{% url 'report_history' report.process.id %}"
-           class="block text-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm">
+           class="block text-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-sm">
           ← All Reports
         </a>
         {% endif %}
@@ -37,27 +37,27 @@
     </div>
 
     <!-- Report content -->
-    <div class="flex-1 bg-white rounded-xl shadow p-6">
+    <div class="flex-1 bg-white dark:bg-gray-900 rounded-xl shadow p-6">
       <!-- Header -->
-      <div class="flex items-start justify-between mb-4 pb-4 border-b">
+      <div class="flex items-start justify-between mb-4 pb-4 border-b dark:border-gray-700">
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {{ report.title }}
-            <span class="ml-2 text-lg font-normal text-gray-400">v{{ report.version_number }}</span>
+            <span class="ml-2 text-lg font-normal text-gray-400 dark:text-gray-500">v{{ report.version_number }}</span>
           </h1>
-          <p class="text-sm text-gray-500 mt-1">
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
             {{ report.created_at|date:"M d, Y H:i" }}
             {% if report.created_by %} &mdash; {{ report.created_by.username }}{% endif %}
-            &mdash; <span class="text-xs bg-gray-100 px-1.5 py-0.5 rounded">{{ report.get_change_reason_display }}</span>
+            &mdash; <span class="text-xs bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">{{ report.get_change_reason_display }}</span>
           </p>
           {% if report.change_summary %}
-          <p class="text-sm text-gray-400 italic mt-1">{{ report.change_summary }}</p>
+          <p class="text-sm text-gray-400 dark:text-gray-500 italic mt-1">{{ report.change_summary }}</p>
           {% endif %}
         </div>
       </div>
 
       <!-- Markdown content rendered as preformatted text -->
-      <div class="prose max-w-none text-gray-800">
+      <div class="prose max-w-none dark:prose-invert text-gray-800 dark:text-gray-200">
         <pre class="whitespace-pre-wrap font-sans text-sm leading-relaxed">{{ report.content_md }}</pre>
       </div>
     </div>

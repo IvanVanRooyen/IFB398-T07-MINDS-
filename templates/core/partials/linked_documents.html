@@ -1,5 +1,5 @@
 <!-- Partial for HTMX out-of-band swap of the linked documents section -->
-<div id="linked-documents" class="bg-white rounded-xl shadow max-w-4xl p-6">
+<div id="linked-documents" class="bg-white dark:bg-gray-900 rounded-xl shadow max-w-4xl p-6">
   <div class="flex items-center justify-between mb-4">
     <h2 class="text-lg font-semibold">Linked Documents</h2>
     <button
@@ -14,15 +14,15 @@
   <div id="link-modal-container"></div>
 
   {% if doc_links %}
-    <ul class="divide-y divide-gray-100">
+    <ul class="divide-y divide-gray-100 dark:divide-gray-700">
       {% for link in doc_links %}
       <li class="py-3 flex items-center justify-between">
         <div>
-          <a href="{% url 'document_detail' link.document.pk %}" class="font-medium text-cyan-700 hover:underline">
+          <a href="{% url 'document_detail' link.document.pk %}" class="font-medium text-cyan-700 dark:text-cyan-400 hover:underline">
             {{ link.document.title }}
           </a>
-          <span class="ml-2 text-xs text-gray-400">{{ link.document.doc_type }}</span>
-          <p class="text-xs text-gray-400 mt-0.5">
+          <span class="ml-2 text-xs text-gray-400 dark:text-gray-500">{{ link.document.doc_type }}</span>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
             Linked {{ link.created_at|date:"M d, Y" }}{% if link.created_by %} by {{ link.created_by.username }}{% endif %}
           </p>
         </div>
@@ -38,6 +38,6 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p class="text-gray-400 text-sm">No documents linked yet. Use the button above to attach evidence documents.</p>
+    <p class="text-gray-400 dark:text-gray-500 text-sm">No documents linked yet. Use the button above to attach evidence documents.</p>
   {% endif %}
 </div>

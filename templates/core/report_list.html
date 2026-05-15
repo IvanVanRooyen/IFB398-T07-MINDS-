@@ -5,8 +5,8 @@
 
       <!-- Header -->
       <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Generate Report</h1>
-        <p class="mt-2 text-sm text-gray-600">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Generate Report</h1>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
           Create AI-assisted reports using files and records stored in the system.
         </p>
       </div>
@@ -18,23 +18,23 @@
         <div class="xl:col-span-2 space-y-6">
 
           <!-- Report Details -->
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-4">Report Details</h2>
+          <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Report Details</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Report Title</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Report Title</label>
                 <input
                   type="text"
                   id="report-title-input"
                   placeholder="Enter report title"
-                  class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
                 >
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Report Type</label>
-                <select class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Report Type</label>
+                <select class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400">
                   <option>Exploration Summary</option>
                   <option>Project Update</option>
                   <option>Document Summary</option>
@@ -45,8 +45,8 @@
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Project / Process</label>
-                <select id="project-select" class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project / Process</label>
+                <select id="project-select" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400">
                   <option value="">Select linked project or process</option>
                   {% for project in recent_projects %}
                   <option value="{{ project.id }}">{{ project.name }}</option>
@@ -55,8 +55,8 @@
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Tone / Style</label>
-                <select class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tone / Style</label>
+                <select class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400">
                   <option>Professional</option>
                   <option>Technical</option>
                   <option>Executive Summary</option>
@@ -65,20 +65,20 @@
             </div>
 
             <div class="mt-4">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Instructions</label>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Instructions</label>
               <textarea
                 rows="4"
                 placeholder="Add any additional instructions for the report..."
-                class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
               ></textarea>
             </div>
           </div>
 
           <!-- File Selection -->
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+          <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex items-center justify-between mb-4">
-              <h2 class="text-xl font-semibold text-gray-900">Select Files from Database</h2>
-              <button class="text-sm font-medium text-cyan-600 hover:text-cyan-700">
+              <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Select Files from Database</h2>
+              <button class="text-sm font-medium text-cyan-600 dark:text-cyan-400 hover:text-cyan-700">
                 Browse All Files
               </button>
             </div>
@@ -89,10 +89,10 @@
                 type="text"
                 id="doc-search"
                 placeholder="Search files..."
-                class="md:col-span-2 rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                class="md:col-span-2 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
               >
 
-              <select id="doc-type-filter" class="rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+              <select id="doc-type-filter" class="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400">
                 <option value="all">All Document Types</option>
                 <option value="pdf">PDF</option>
                 <option value="report">Report</option>
@@ -100,7 +100,7 @@
                 <option value="compliance">Compliance</option>
               </select>
 
-              <select class="rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+              <select class="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400">
                 <option>All Dates</option>
                 <option>Last 30 days</option>
                 <option>Last 90 days</option>
@@ -111,14 +111,14 @@
             <!-- File List -->
             <div id="file-list" class="space-y-3 max-h-96 overflow-y-auto">
               {% for doc in all_documents %}
-              <label class="flex items-start gap-3 p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer"
+              <label class="flex items-start gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
                      data-title="{{ doc.title|lower }}"
                      data-doctype="{{ doc.doc_type|lower }}"
                      data-created="{{ doc.created_at|date:'Y-m-d' }}">
-                <input type="checkbox" class="mt-1 rounded border-gray-300 text-cyan-600 doc-checkbox" value="{{ doc.id }}">
+                <input type="checkbox" class="mt-1 rounded border-gray-300 dark:border-gray-600 text-cyan-600 doc-checkbox" value="{{ doc.id }}">
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-semibold text-gray-900 truncate">{{ doc.title }}</p>
-                  <p class="text-xs text-gray-500">
+                  <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{{ doc.title }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">
                     {{ doc.doc_type|default:"Document" }}
                     {% if doc.process %} &mdash; {{ doc.process.name }}{% endif %}
                     &mdash; {{ doc.created_at|date:"d M Y" }}
@@ -126,34 +126,34 @@
                 </div>
               </label>
               {% empty %}
-              <p class="text-sm text-gray-500 py-4 text-center">No documents available.</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">No documents available.</p>
               {% endfor %}
             </div>
           </div>
 
           <!-- Report Options -->
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-4">Report Options</h2>
+          <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Report Options</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label class="flex items-center gap-3">
-                <input type="checkbox" class="rounded border-gray-300 text-cyan-600">
-                <span class="text-sm text-gray-700">Include document metadata</span>
+                <input type="checkbox" class="rounded border-gray-300 dark:border-gray-600 text-cyan-600">
+                <span class="text-sm text-gray-700 dark:text-gray-300">Include document metadata</span>
               </label>
 
               <label class="flex items-center gap-3">
-                <input type="checkbox" class="rounded border-gray-300 text-cyan-600" checked>
-                <span class="text-sm text-gray-700">Include key findings</span>
+                <input type="checkbox" class="rounded border-gray-300 dark:border-gray-600 text-cyan-600" checked>
+                <span class="text-sm text-gray-700 dark:text-gray-300">Include key findings</span>
               </label>
 
               <label class="flex items-center gap-3">
-                <input type="checkbox" class="rounded border-gray-300 text-cyan-600" checked>
-                <span class="text-sm text-gray-700">Include recommendations</span>
+                <input type="checkbox" class="rounded border-gray-300 dark:border-gray-600 text-cyan-600" checked>
+                <span class="text-sm text-gray-700 dark:text-gray-300">Include recommendations</span>
               </label>
 
               <label class="flex items-center gap-3">
-                <input type="checkbox" class="rounded border-gray-300 text-cyan-600">
-                <span class="text-sm text-gray-700">Include source references</span>
+                <input type="checkbox" class="rounded border-gray-300 dark:border-gray-600 text-cyan-600">
+                <span class="text-sm text-gray-700 dark:text-gray-300">Include source references</span>
               </label>
             </div>
 
@@ -175,9 +175,9 @@
         <div class="space-y-6">
 
           <!-- Selected Files Summary -->
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Selected Files</h2>
-            <div class="space-y-3 text-sm text-gray-700">
+          <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Selected Files</h2>
+            <div class="space-y-3 text-sm text-gray-700 dark:text-gray-300">
               <div class="flex justify-between">
                 <span>Files selected</span>
                 <span class="font-semibold">1</span>
@@ -194,9 +194,9 @@
           </div>
 
           <!-- Report Content -->
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-3">Report Content</h2>
-            <ul class="space-y-2 text-sm text-gray-600">
+          <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Report Content</h2>
+            <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
               <li>Overview of selected records</li>
               <li>Summary of key findings</li>
               <li>Important themes and issues</li>
@@ -205,10 +205,10 @@
           </div>
 
           <!-- Recent Reports -->
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+          <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex items-center justify-between mb-3">
-              <h2 class="text-lg font-semibold text-gray-900">Recent Reports</h2>
-              <a href="{% url 'all_reports_history' %}" class="text-xs text-cyan-600 hover:underline">View all →</a>
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Recent Reports</h2>
+              <a href="{% url 'all_reports_history' %}" class="text-xs text-cyan-600 dark:text-cyan-400 hover:underline">View all →</a>
             </div>
 
             <!-- Report search -->
@@ -219,7 +219,7 @@
                   name="q"
                   value="{{ q }}"
                   placeholder="Search reports..."
-                  class="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500"
+                  class="flex-1 px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
                 >
                 <button type="submit"
                         class="px-3 py-1.5 bg-cyan-600 text-white rounded-lg text-sm hover:bg-cyan-700">
@@ -228,8 +228,8 @@
               </div>
               {% if q %}
               <div class="mt-1 flex items-center gap-2">
-                <span class="text-xs text-gray-500">Results for "{{ q }}"</span>
-                <a href="{% url 'report_list' %}" class="text-xs text-cyan-600 hover:underline">Clear</a>
+                <span class="text-xs text-gray-500 dark:text-gray-400">Results for "{{ q }}"</span>
+                <a href="{% url 'report_list' %}" class="text-xs text-cyan-600 dark:text-cyan-400 hover:underline">Clear</a>
               </div>
               {% endif %}
             </form>
@@ -237,12 +237,12 @@
             <div class="space-y-2">
               {% for report in recent_reports %}
               <a href="{% url 'saved_report_editor' report.id %}"
-                 class="block p-3 rounded-lg hover:bg-gray-50 border border-gray-200">
-                <p class="text-sm font-medium text-gray-800 truncate">{{ report.title }}</p>
-                <p class="text-xs text-gray-500">{{ report.created_at|date:"d M Y" }}{% if report.process %} &mdash; {{ report.process.name }}{% endif %}</p>
+                 class="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{{ report.title }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ report.created_at|date:"d M Y" }}{% if report.process %} &mdash; {{ report.process.name }}{% endif %}</p>
               </a>
               {% empty %}
-              <p class="text-sm text-gray-500">
+              <p class="text-sm text-gray-500 dark:text-gray-400">
                 {% if q %}No reports matched "{{ q }}".{% else %}No saved reports yet.{% endif %}
               </p>
               {% endfor %}
@@ -255,7 +255,7 @@
     </div>
 
 <script>
-  // ── Document list filtering 
+  // ── Document list filtering
   const fileList     = document.getElementById("file-list");
   const searchInput  = document.getElementById("doc-search");
   const typeSelect   = document.getElementById("doc-type-filter");

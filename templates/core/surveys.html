@@ -5,7 +5,7 @@
 <div class="mb-6 flex items-center justify-between">
   <div>
     <h1 class="text-3xl font-bold">Surveys</h1>
-    <p class="text-gray-500 text-sm mt-1">Geophysical and geological surveys</p>
+    <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Geophysical and geological surveys</p>
   </div>
   <a href="{% url 'create_survey' %}"
      class="px-4 py-2 bg-cyan-600 text-white text-sm font-semibold rounded-lg hover:bg-cyan-700">
@@ -13,10 +13,10 @@
   </a>
 </div>
 
-<div class="bg-white rounded-xl shadow overflow-hidden">
+<div class="bg-white dark:bg-gray-900 rounded-xl shadow overflow-hidden">
   {% if page.object_list %}
     <table class="w-full text-sm">
-      <thead class="bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wide border-b">
+      <thead class="bg-gray-50 dark:bg-gray-800 text-left text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b dark:border-gray-700">
         <tr>
           <th class="px-4 py-3">Survey</th>
           <th class="px-4 py-3">Type</th>
@@ -27,21 +27,21 @@
           <th class="px-4 py-3">Coverage</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-100">
+      <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
         {% for survey in page.object_list %}
-        <tr class="hover:bg-gray-50 transition">
+        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition">
           <td class="px-4 py-3 font-medium">
-            <a href="{% url 'survey_detail' survey.pk %}" class="text-cyan-700 hover:underline">{{ survey.name }}</a>
+            <a href="{% url 'survey_detail' survey.pk %}" class="text-cyan-700 dark:text-cyan-400 hover:underline">{{ survey.name }}</a>
           </td>
-          <td class="px-4 py-3 text-gray-600">{{ survey.get_survey_type_display|default:"—" }}</td>
-          <td class="px-4 py-3 text-gray-600">{{ survey.process.name|default:"—" }}</td>
-          <td class="px-4 py-3 text-gray-600">
+          <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ survey.get_survey_type_display|default:"—" }}</td>
+          <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ survey.process.name|default:"—" }}</td>
+          <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
             {% if survey.prospect %}
-              <a href="{% url 'prospect_detail' survey.prospect.pk %}" class="text-cyan-600 hover:underline">{{ survey.prospect.name }}</a>
+              <a href="{% url 'prospect_detail' survey.prospect.pk %}" class="text-cyan-600 dark:text-cyan-400 hover:underline">{{ survey.prospect.name }}</a>
             {% else %}—{% endif %}
           </td>
-          <td class="px-4 py-3 text-gray-500">{{ survey.contractor|default:"—" }}</td>
-          <td class="px-4 py-3 text-gray-500 text-xs">
+          <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ survey.contractor|default:"—" }}</td>
+          <td class="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">
             {% if survey.date_from %}{{ survey.date_from|date:"M Y" }}{% endif %}
             {% if survey.date_from and survey.date_to %} – {% endif %}
             {% if survey.date_to %}{{ survey.date_to|date:"M Y" }}{% endif %}
@@ -49,9 +49,9 @@
           </td>
           <td class="px-4 py-3">
             {% if survey.geom %}
-              <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs">Mapped</span>
+              <span class="px-2 py-0.5 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-full text-xs">Mapped</span>
             {% else %}
-              <span class="text-gray-400 text-xs">—</span>
+              <span class="text-gray-400 dark:text-gray-500 text-xs">—</span>
             {% endif %}
           </td>
         </tr>
@@ -60,21 +60,21 @@
     </table>
 
     {% if page.has_other_pages %}
-    <div class="flex items-center justify-between px-4 py-3 border-t text-sm text-gray-500">
+    <div class="flex items-center justify-between px-4 py-3 border-t dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">
       <span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
       <div class="flex gap-2">
         {% if page.has_previous %}
-          <a href="?page={{ page.previous_page_number }}" class="px-3 py-1 border rounded hover:bg-gray-50">Previous</a>
+          <a href="?page={{ page.previous_page_number }}" class="px-3 py-1 border dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800">Previous</a>
         {% endif %}
         {% if page.has_next %}
-          <a href="?page={{ page.next_page_number }}" class="px-3 py-1 border rounded hover:bg-gray-50">Next</a>
+          <a href="?page={{ page.next_page_number }}" class="px-3 py-1 border dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800">Next</a>
         {% endif %}
       </div>
     </div>
     {% endif %}
 
   {% else %}
-    <div class="px-6 py-12 text-center text-gray-400">
+    <div class="px-6 py-12 text-center text-gray-400 dark:text-gray-500">
       <p class="text-lg font-medium mb-2">No surveys yet</p>
       <p class="text-sm mb-4">Record geophysical and geological surveys to build your data coverage.</p>
       <a href="{% url 'create_survey' %}" class="px-4 py-2 bg-cyan-600 text-white text-sm rounded-lg hover:bg-cyan-700">

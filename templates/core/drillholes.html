@@ -5,7 +5,7 @@
 <div class="mb-6 flex items-start justify-between">
   <div>
     <h1 class="text-3xl font-bold">🧱 Drillholes</h1>
-    <p class="text-gray-600 mt-2">Drilling locations and data</p>
+    <p class="text-gray-600 dark:text-gray-400 mt-2">Drilling locations and data</p>
   </div>
   <a href="{% url 'drillhole_import' %}" class="px-4 py-2 bg-cyan-600 text-white text-sm font-semibold rounded-lg hover:bg-cyan-700">
     + Import Data
@@ -14,48 +14,48 @@
 
 {% if model_exists %}
   {% if page and page.object_list %}
-    <div class="bg-white rounded-xl shadow overflow-hidden">
-      <table class="min-w-full divide-y divide-gray-200" id="drillhole-table">
-        <thead class="bg-gray-50">
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow overflow-hidden">
+      <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" id="drillhole-table">
+        <thead class="bg-gray-50 dark:bg-gray-800">
           <tr>
             <th class="px-4 py-3 w-10">
               <input type="checkbox" id="select-all-dh"
-                     class="rounded border-gray-300 text-cyan-600 cursor-pointer"
+                     class="rounded border-gray-300 dark:border-gray-600 text-cyan-600 cursor-pointer"
                      title="Select all">
             </th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organisation</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prospect</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Depth (m)</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Organisation</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Project</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Prospect</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Depth (m)</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
+        <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
           {% for drillhole in page.object_list %}
-            <tr class="hover:bg-gray-50 drillhole-row" data-id="{{ drillhole.pk }}">
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 drillhole-row" data-id="{{ drillhole.pk }}">
               <td class="px-4 py-4">
                 <input type="checkbox" name="drillhole_ids" value="{{ drillhole.pk }}"
-                       class="dh-row-checkbox rounded border-gray-300 text-cyan-600 cursor-pointer">
+                       class="dh-row-checkbox rounded border-gray-300 dark:border-gray-600 text-cyan-600 cursor-pointer">
               </td>
-              <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{{ drillhole.name }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ drillhole.drill_type|default:"—" }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ drillhole.organisation.name }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ drillhole.process.name }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+              <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-gray-100">{{ drillhole.name }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{{ drillhole.drill_type|default:"—" }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{{ drillhole.organisation.name }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{{ drillhole.process.name }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                 {% if drillhole.prospect %}
                   <a href="{% url 'prospect_detail' drillhole.prospect.pk %}"
-                     class="text-cyan-600 hover:underline">{{ drillhole.prospect.name }}</a>
+                     class="text-cyan-600 dark:text-cyan-400 hover:underline">{{ drillhole.prospect.name }}</a>
                 {% else %}
-                  <span class="text-gray-400">—</span>
+                  <span class="text-gray-400 dark:text-gray-500">—</span>
                 {% endif %}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ drillhole.depth|default:"—" }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ drillhole.created_at|date:"M d, Y" }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{{ drillhole.depth|default:"—" }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{{ drillhole.created_at|date:"M d, Y" }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm">
-                <a href="{% url 'drillhole_detail' drillhole.pk %}" class="text-cyan-600 hover:underline">View</a>
+                <a href="{% url 'drillhole_detail' drillhole.pk %}" class="text-cyan-600 dark:text-cyan-400 hover:underline">View</a>
               </td>
             </tr>
           {% endfor %}
@@ -67,41 +67,41 @@
     {% if page.has_other_pages %}
       <div class="mt-8 flex justify-center gap-2">
         {% if page.has_previous %}
-          <a href="?page={{ page.previous_page_number }}" class="px-4 py-2 border rounded-lg hover:bg-gray-50">Previous</a>
+          <a href="?page={{ page.previous_page_number }}" class="px-4 py-2 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">Previous</a>
         {% endif %}
-        <span class="px-4 py-2 bg-cyan-100 text-cyan-700 rounded-lg">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+        <span class="px-4 py-2 bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-400 rounded-lg">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
         {% if page.has_next %}
-          <a href="?page={{ page.next_page_number }}" class="px-4 py-2 border rounded-lg hover:bg-gray-50">Next</a>
+          <a href="?page={{ page.next_page_number }}" class="px-4 py-2 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">Next</a>
         {% endif %}
       </div>
     {% endif %}
 
   {% else %}
-    <div class="bg-white rounded-xl shadow p-12 text-center">
-      <p class="text-gray-500 text-lg mb-4">No drillholes found</p>
-      <p class="text-gray-400 mb-6">Import drillhole data to get started</p>
+    <div class="bg-white dark:bg-gray-900 rounded-xl shadow p-12 text-center">
+      <p class="text-gray-500 dark:text-gray-400 text-lg mb-4">No drillholes found</p>
+      <p class="text-gray-400 dark:text-gray-500 mb-6">Import drillhole data to get started</p>
       <a href="{% url 'drillhole_import' %}" class="inline-block px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700">Import Data</a>
     </div>
   {% endif %}
 {% else %}
-  <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-8 text-center">
-    <p class="text-yellow-800 font-semibold mb-2">⚠️ Drillhole Model Not Implemented</p>
-    <p class="text-yellow-700 text-sm">The Drillhole model is not yet available in the system.</p>
+  <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 rounded-xl p-8 text-center">
+    <p class="text-yellow-800 dark:text-yellow-400 font-semibold mb-2">⚠️ Drillhole Model Not Implemented</p>
+    <p class="text-yellow-700 dark:text-yellow-400 text-sm">The Drillhole model is not yet available in the system.</p>
   </div>
 {% endif %}
 
 <!-- Floating bulk-action bar (hidden until rows selected) -->
 <div id="bulk-action-bar"
-     class="hidden fixed bottom-0 left-64 right-0 bg-white border-t border-gray-200 shadow-lg z-40">
+     class="hidden fixed bottom-0 left-64 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-lg z-40">
   <form method="post" action="{% url 'bulk_assign_drillholes' %}" id="bulk-assign-form"
         class="max-w-5xl mx-auto flex items-center gap-4 px-6 py-4">
     {% csrf_token %}
     <div id="bulk-hidden-ids"></div>
-    <span id="bulk-count" class="text-sm font-medium text-gray-700 whitespace-nowrap"></span>
+    <span id="bulk-count" class="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap"></span>
     <div class="flex-1"></div>
-    <label class="text-sm text-gray-600 whitespace-nowrap">Link to prospect:</label>
+    <label class="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">Link to prospect:</label>
     <select name="prospect_id" required
-            class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 min-w-52">
+            class="px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 min-w-52">
       <option value="">Select prospect...</option>
       {% for prospect in prospects %}
       <option value="{{ prospect.pk }}">{{ prospect.name }} — {{ prospect.process.name }}</option>
@@ -112,7 +112,7 @@
       Link Selected
     </button>
     <button type="button" id="btn-cancel-bulk"
-            class="px-4 py-2 border border-gray-300 text-sm rounded-lg hover:bg-gray-50 whitespace-nowrap">
+            class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 whitespace-nowrap">
       Cancel
     </button>
   </form>

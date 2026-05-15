@@ -2,14 +2,14 @@
 {% block content %}
 {% load static %}
 
-<div class="mb-4 text-sm text-gray-600">
+<div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
   <a href="{% url 'tenements' %}" class="hover:text-cyan-600">Tenements</a>
   <span class="mx-2">/</span>
-  <span class="text-gray-900">{{ tenement.name }}</span>
+  <span class="text-gray-900 dark:text-gray-100">{{ tenement.name }}</span>
 </div>
 
 <!-- Header -->
-<div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+<div class="bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden mb-6">
   <div class="bg-gradient-to-r from-purple-600 to-purple-800 text-white p-6">
     <div class="flex items-start justify-between">
       <div>
@@ -25,7 +25,7 @@
 
   <div class="p-6 grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
     <div>
-      <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Project</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Project</p>
       <p class="font-medium">
         <a href="{% url 'project_detail' tenement.process.pk %}" class="text-cyan-700 hover:underline">
           {{ tenement.process.name }}
@@ -33,13 +33,13 @@
       </p>
     </div>
     <div>
-      <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Spatial Boundary</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Spatial Boundary</p>
       <p class="font-medium {% if not tenement.geom %}text-yellow-600{% endif %}">
-        {% if tenement.geom %}Mapped{% else %}Not mapped — <a href="{% url 'edit_tenement' tenement.pk %}" class="text-cyan-600 hover:underline">add boundary</a>{% endif %}
+        {% if tenement.geom %}Mapped{% else %}Not mapped — <a href="{% url 'edit_tenement' tenement.pk %}" class="text-cyan-600 dark:text-cyan-400 hover:underline">add boundary</a>{% endif %}
       </p>
     </div>
     <div>
-      <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Created</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Created</p>
       <p class="font-medium">{{ tenement.created_at|date:"M d, Y" }}</p>
     </div>
   </div>
@@ -47,8 +47,8 @@
 
 {% if tenement.geom %}
 <!-- Boundary map -->
-<div class="bg-white rounded-xl shadow mb-6 overflow-hidden">
-  <div class="px-6 py-4 border-b">
+<div class="bg-white dark:bg-gray-900 rounded-xl shadow mb-6 overflow-hidden">
+  <div class="px-6 py-4 border-b dark:border-gray-700">
     <h2 class="text-lg font-semibold">Boundary Map</h2>
   </div>
   <div id="tenement-map" style="height: 350px;"></div>
@@ -109,8 +109,8 @@ map.on('load', () => {
 {% endif %}
 
 <!-- Documents -->
-<div class="bg-white rounded-xl shadow overflow-hidden">
-  <div class="px-6 py-4 border-b flex items-center justify-between">
+<div class="bg-white dark:bg-gray-900 rounded-xl shadow overflow-hidden">
+  <div class="px-6 py-4 border-b dark:border-gray-700 flex items-center justify-between">
     <h2 class="text-lg font-semibold">📄 Associated Documents</h2>
     <a href="{% url 'upload' %}" class="px-4 py-2 bg-cyan-600 text-white text-sm rounded-lg hover:bg-cyan-700">
       Upload Document
@@ -118,7 +118,7 @@ map.on('load', () => {
   </div>
   {% if documents %}
     <table class="w-full text-sm">
-      <thead class="bg-gray-50 text-left text-gray-500 border-b">
+      <thead class="bg-gray-50 dark:bg-gray-800 text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
         <tr>
           <th class="px-6 py-3">Title</th>
           <th class="px-6 py-3">Type</th>
@@ -126,18 +126,18 @@ map.on('load', () => {
           <th class="px-6 py-3">Confidentiality</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-100">
+      <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
         {% for doc in documents %}
-        <tr class="hover:bg-gray-50">
+        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
           <td class="px-6 py-3">
             <a href="{% url 'document_detail' doc.pk %}" class="text-cyan-700 hover:underline font-medium">
               {{ doc.title }}
             </a>
           </td>
-          <td class="px-6 py-3 text-gray-500">{{ doc.doc_type|default:"—" }}</td>
-          <td class="px-6 py-3 text-gray-400">{{ doc.timestamp|date:"M d, Y"|default:doc.created_at|date:"M d, Y" }}</td>
+          <td class="px-6 py-3 text-gray-500 dark:text-gray-400">{{ doc.doc_type|default:"—" }}</td>
+          <td class="px-6 py-3 text-gray-400 dark:text-gray-500">{{ doc.timestamp|date:"M d, Y"|default:doc.created_at|date:"M d, Y" }}</td>
           <td class="px-6 py-3">
-            <span class="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">
+            <span class="px-2 py-0.5 text-xs rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
               {{ doc.confidentiality|default:"internal" }}
             </span>
           </td>
@@ -146,7 +146,7 @@ map.on('load', () => {
       </tbody>
     </table>
   {% else %}
-    <div class="px-6 py-8 text-center text-gray-400 text-sm">
+    <div class="px-6 py-8 text-center text-gray-400 dark:text-gray-500 text-sm">
       No documents linked to this tenement yet.
     </div>
   {% endif %}

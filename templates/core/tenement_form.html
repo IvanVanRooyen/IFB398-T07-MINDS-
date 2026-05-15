@@ -8,15 +8,15 @@
 
 {% block content %}
 
-<div class="mb-4 text-sm text-gray-600">
-  <a href="{% url 'tenements' %}" class="hover:text-cyan-600">Tenements</a>
+<div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+  <a href="{% url 'tenements' %}" class="hover:text-cyan-600 dark:hover:text-cyan-400">Tenements</a>
   <span class="mx-2">/</span>
   {% if editing %}
-    <a href="{% url 'tenement_detail' tenement.pk %}" class="hover:text-cyan-600">{{ tenement.name }}</a>
+    <a href="{% url 'tenement_detail' tenement.pk %}" class="hover:text-cyan-600 dark:hover:text-cyan-400">{{ tenement.name }}</a>
     <span class="mx-2">/</span>
-    <span class="text-gray-900">Edit</span>
+    <span class="text-gray-900 dark:text-gray-100">Edit</span>
   {% else %}
-    <span class="text-gray-900">New Tenement</span>
+    <span class="text-gray-900 dark:text-gray-100">New Tenement</span>
   {% endif %}
 </div>
 
@@ -25,36 +25,36 @@
     {% if editing %}Edit Tenement: {{ tenement.name }}{% else %}Create Tenement{% endif %}
   </h1>
 
-  <div class="bg-white rounded-xl shadow p-6">
+  <div class="bg-white dark:bg-gray-900 rounded-xl shadow p-6">
     <form method="post" novalidate>
       {% csrf_token %}
 
       {% if form.non_field_errors %}
-        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+        <div class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
           {% for error in form.non_field_errors %}
-            <p class="text-red-600 text-sm">{{ error }}</p>
+            <p class="text-red-600 dark:text-red-400 text-sm">{{ error }}</p>
           {% endfor %}
         </div>
       {% endif %}
 
       <!-- Name -->
       <div class="mb-5">
-        <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+        <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Tenement Name <span class="text-red-500">*</span>
         </label>
         {{ form.name }}
         {% for error in form.name.errors %}
-          <p class="text-red-600 text-sm mt-1">{{ error }}</p>
+          <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ error }}</p>
         {% endfor %}
       </div>
 
       <!-- Project -->
       <div class="mb-5">
-        <label for="{{ form.process.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+        <label for="{{ form.process.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Project <span class="text-red-500">*</span>
         </label>
         <select name="process" id="{{ form.process.id_for_label }}"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm">
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400">
           <option value="">Select a project...</option>
           {% for value, label in form.process.field.choices %}
             {% if value %}
@@ -66,15 +66,15 @@
           {% endfor %}
         </select>
         {% for error in form.process.errors %}
-          <p class="text-red-600 text-sm mt-1">{{ error }}</p>
+          <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ error }}</p>
         {% endfor %}
       </div>
 
       <!-- Boundary Map -->
       <div class="mb-6">
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Spatial Boundary
-          <span class="font-normal text-gray-500">— draw the tenement polygon on the map</span>
+          <span class="font-normal text-gray-500 dark:text-gray-400">— draw the tenement polygon on the map</span>
         </label>
 
         <div class="flex gap-2 mb-2">
@@ -96,33 +96,33 @@
           </button>
         </div>
 
-        <p id="draw-hint" class="hidden text-xs text-cyan-700 mb-2">
+        <p id="draw-hint" class="hidden text-xs text-cyan-700 dark:text-cyan-400 mb-2">
           Click on the map to add points. Click <strong>Finish Polygon</strong> when done (min. 3 points).
-          Press <kbd class="bg-white border border-cyan-300 px-1 rounded text-xs">Esc</kbd> to cancel.
+          Press <kbd class="bg-white dark:bg-gray-700 border border-cyan-300 dark:border-cyan-600 px-1 rounded text-xs">Esc</kbd> to cancel.
         </p>
 
-        <div id="tenement-map" class="rounded-lg border border-gray-300" style="height: 350px;"></div>
+        <div id="tenement-map" class="rounded-lg border border-gray-300 dark:border-gray-600" style="height: 350px;"></div>
 
-        <p id="geom-status" class="text-sm text-gray-500 mt-2">
+        <p id="geom-status" class="text-sm text-gray-500 dark:text-gray-400 mt-2">
           {% if editing and tenement.geom %}Boundary mapped — redraw to update{% else %}No boundary drawn{% endif %}
         </p>
 
         {{ form.geom_geojson }}
         {% for error in form.geom_geojson.errors %}
-          <p class="text-red-600 text-sm mt-1">{{ error }}</p>
+          <p class="text-red-600 dark:text-red-400 text-sm mt-1">{{ error }}</p>
         {% endfor %}
       </div>
 
       <!-- Actions -->
       <div class="flex items-center gap-4">
         <button type="submit"
-                class="px-6 py-2 bg-cyan-600 text-white text-sm font-semibold rounded-lg hover:bg-cyan-700">
+                class="px-6 py-2 bg-cyan-600 dark:bg-cyan-700 text-white text-sm font-semibold rounded-lg hover:bg-cyan-700 dark:hover:bg-cyan-600">
           Save Tenement
         </button>
         {% if editing %}
-          <a href="{% url 'tenement_detail' tenement.pk %}" class="text-sm text-gray-500 hover:text-gray-700">Cancel</a>
+          <a href="{% url 'tenement_detail' tenement.pk %}" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">Cancel</a>
         {% else %}
-          <a href="{% url 'tenements' %}" class="text-sm text-gray-500 hover:text-gray-700">Cancel</a>
+          <a href="{% url 'tenements' %}" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">Cancel</a>
         {% endif %}
       </div>
     </form>

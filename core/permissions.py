@@ -24,6 +24,9 @@ def role_required(*allowed_roles):
             if not request.user.is_authenticated:
                 raise PermissionDenied("Authentication required")
 
+            if request.user.is_superuser:
+                return view_func(request, *args, **kwargs)
+
             if not hasattr(request.user, 'profile'):
                 raise PermissionDenied("User profile not found")
 
