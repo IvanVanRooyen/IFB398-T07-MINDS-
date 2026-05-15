@@ -35,6 +35,24 @@ WORKFLOW_STATUSES = ["PENDING", "APPROVED", "REJECTED"]
 AUDIT_ACTIONS = ["CREATE", "UPDATE", "DELETE", "VIEW"]
 TAG_POOL = list(range(1, 20))
 
+MINERALISATION_STYLES = [
+    "shear-hosted gold",
+    "orogenic gold",
+    "porphyry copper-gold",
+    "IOCG",
+    "epithermal gold-silver",
+    "skarn",
+    "VMS",
+    "sediment-hosted copper",
+]
+
+EXPLORATION_TARGETS = [
+    "extend the known resource along strike",
+    "test the depth extent of the mineralised corridor",
+    "identify additional lodes beneath the transported cover",
+    "delineate the footprint of the anomaly for drill targeting",
+    "confirm continuity of the high-grade shoot identified in Phase 1",
+]
 AU_LAT_RANGE = (-35.0, -18.0)
 AU_LON_RANGE = (115.0, 150.0)
 

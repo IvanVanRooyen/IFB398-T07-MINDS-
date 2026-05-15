@@ -1,3 +1,5 @@
+import random
+
 from django.contrib.auth import get_user_model
 from faker import Faker
 
@@ -6,41 +8,38 @@ User = get_user_model()
 
 
 def jorc_content(org, process, commodity):
-    title = f"JORC Resource Estimate - {process.name}"
+    title = f"Public Report: {commodity.capitalize()} Resource Estimate - {org.name} ({process.name})"
+    drill_type = (
+        "Diamond Core" if "Exploration" in process.name else "Reverse Circulation"
+    )
+
     sections = [
         (
-            "1. Heading 1",
+            "1. Executive Summary",
             [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                f"This report outlines the mineral resource estimate for the {process.name} project.",
+                f"The estimation was conducted in accordance with the JORC Code (2012 Edition) regarding {commodity}.",
             ],
         ),
         (
-            "2. Heading 2",
+            "2. Geology and Mineralisation",
             [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                f"The deposit is characterized by {fake.word()}-hosted mineralisation within a {fake.word()} sequence.",
+                f"Structural controls include {random.choice(['shear zones', 'faulting', 'stratigraphic pinch-outs'])}.",
             ],
         ),
         (
-            "3. Heading 3",
+            "3. Sampling and Sub-sampling Techniques",
             [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                f"Sampling was primarily achieved via {drill_type} drilling.",
+                "Samples were split using a riffle splitter to ensure representative sub-sampling for assaying.",
             ],
         ),
         (
-            "4. Heading 4",
+            "4. Estimation and Reporting of Mineral Resources",
             [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-            ],
-        ),
-        (
-            "5. Heading 5",
-            [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                f"Ordinary Kriging was utilized for the {commodity} grade interpolation.",
+                "Cut-off grades were determined based on current economic assumptions and metallurgical recovery rates.",
             ],
         ),
     ]
@@ -48,41 +47,40 @@ def jorc_content(org, process, commodity):
 
 
 def valmin_content(org, process, commodity):
-    title = f"Independent Technical Valuation - {process.name} ({commodity})"
+    valuation_method = random.choice(
+        ["Income Approach (DCF)", "Market Approach", "Cost Approach"]
+    )
+    title = (
+        f"Independent Technical Assessment and Valuation - {process.name} ({commodity})"
+    )
+
     sections = [
         (
-            "1. Heading 1",
+            "1. Introduction and Scope",
             [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                f"The Practitioner has been commissioned by {org.name} to provide an independent valuation of the {process.name} asset.",
+                "This report complies with the VALMIN Code (2015) for Public Reporting of Technical Assessments.",
             ],
         ),
         (
-            "2. Heading 2",
+            "2. Project Tenure and Status",
             [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                f"The tenements are currently {fake.word()} and held 100% by the subsidiary.",
+                f"Regulatory standing is confirmed as '{random.choice(['In Good Standing', 'Pending Renewal'])}'.",
             ],
         ),
         (
-            "3. Heading 3",
+            "3. Technical Assessment",
             [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                f"Evaluation of the {commodity} extraction methodology indicates high technical feasibility.",
+                f"The proposed {process.name} workflow aligns with industry best practices.",
             ],
         ),
         (
-            "4. Heading 4",
+            "4. Valuation Methodology",
             [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-            ],
-        ),
-        (
-            "5. Heading 5",
-            [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                f"The primary valuation methodology employed is the {valuation_method}.",
+                "Sensitivity analysis was performed on key value drivers including commodity price and OPEX.",
             ],
         ),
     ]
@@ -90,41 +88,31 @@ def valmin_content(org, process, commodity):
 
 
 def technical_content(org, process, commodity):
-    title = f"Pre-Feasibility Study - {process.name} {commodity} Project"
+    """
+    Generates content for a general Technical/Feasibility Report.
+    """
+    title = f"Technical Feasibility Study: {process.name} Operations"
+
     sections = [
         (
-            "1. Heading 1",
+            "1. Project Infrastructure",
             [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                f"Current site infrastructure at {org.name} supports a processing capacity of {random.randint(1, 10)} Mtpa.",
+                "Power requirements are met through a combination of grid and onsite LNG generation.",
             ],
         ),
         (
-            "2. Heading 2",
+            "2. Metallurgical Testwork",
             [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                f"Recoveries for {commodity} are modeled at {random.uniform(85, 98):.1f}%.",
+                f"Testwork was performed at {fake.company()} laboratories using representative composite samples.",
             ],
         ),
         (
-            "3. Heading 3",
+            "3. Mine Design and Scheduling",
             [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-            ],
-        ),
-        (
-            "4. Heading 4",
-            [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-            ],
-        ),
-        (
-            "5. Heading 5",
-            [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                f"The mine plan utilizes a {random.choice(['top-down', 'block caving', 'open pit'])} sequence.",
+                "Waste rock characterization indicates low potential for acid mine drainage.",
             ],
         ),
     ]
@@ -132,41 +120,32 @@ def technical_content(org, process, commodity):
 
 
 def environmental_content(org, process, commodity):
-    title = f"Annual Environmental Monitoring Report - {process.name}"
+    """
+    Generates content for an Environmental Impact or Monitoring Report.
+    """
+    impact_level = random.choice(["Low", "Moderate", "Significant"])
+    title = f"Annual Environmental Performance Report - {org.name}"
+
     sections = [
         (
-            "1. Heading 1",
+            "1. Environmental Management Systems (EMS)",
             [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                f"Operations at {process.name} adhere to ISO 14001 standards.",
+                "All environmental incidents during the period were recorded and remediated immediately.",
             ],
         ),
         (
-            "2. Heading 2",
+            "2. Biodiversity and Land Rehabilitation",
             [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                f"Rehabilitation of the {fake.word()} stockpile area is {random.randint(40, 90)}% complete.",
+                "Monitoring of local flora suggests no adverse impact from {commodity} processing.",
             ],
         ),
         (
-            "3. Heading 3",
+            "3. Water and Tailings Management",
             [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-            ],
-        ),
-        (
-            "4. Heading 4",
-            [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-            ],
-        ),
-        (
-            "5. Heading 5",
-            [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                f"The Tailings Storage Facility (TSF) was inspected and rated as '{impact_level}' risk.",
+                "Groundwater monitoring bores indicate levels remain within statutory limits.",
             ],
         ),
     ]
@@ -174,41 +153,31 @@ def environmental_content(org, process, commodity):
 
 
 def compliance_content(org, process, commodity):
-    title = f"Regulatory Compliance Report - {process.name}, {org.name}"
+    """
+    Generates content for Regulatory and Compliance reports (e.g., Mining Act compliance).
+    """
+    title = f"Regulatory Compliance Audit - {process.name}"
+
     sections = [
         (
-            "1. Heading 1",
+            "1. Statutory Obligations",
             [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                f"{org.name} has met all reporting obligations under the Mining Act for the {commodity} tenements.",
+                "Rent and rates payments are up to date as of the reporting period.",
             ],
         ),
         (
-            "2. Heading 2",
+            "2. Occupational Health and Safety (OHS)",
             [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                f"The Lost Time Injury Frequency Rate (LTIFR) for the {process.name} site is {random.uniform(0.5, 4.0):.2f}.",
+                "Safety audits identified three minor non-conformances which have since been closed out.",
             ],
         ),
         (
-            "3. Heading 3",
+            "3. Permit and License Register",
             [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-            ],
-        ),
-        (
-            "4. Heading 4",
-            [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-            ],
-        ),
-        (
-            "5. Heading 5",
-            [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                "Environmental Protection License (EPL) #4029 remains active.",
+                f"Water extraction volumes for {commodity} leaching were within the {random.randint(100, 500)}ML allocation.",
             ],
         ),
     ]
@@ -216,41 +185,35 @@ def compliance_content(org, process, commodity):
 
 
 def internal_content(org, process, commodity):
-    title = f"Internal Technical Memorandum - {process.name}"
+    """
+    Generates content for Internal Communication.
+    """
+    priority = random.choice(["URGENT", "Routine", "Confidential"])
+    sender = fake.name()
+
+    title = f"MEMO: [{priority}] Update on {process.name} - {commodity} Project"
+
     sections = [
         (
-            "1. Heading 1",
+            "Internal Briefing",
             [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                f"To: Management Team, {org.name}",
+                f"From: {sender}",
+                f"Date: {fake.date()}",
             ],
         ),
         (
-            "2. Heading 2",
+            "Subject: Operational Milestone",
             [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                f"We have successfully completed the phase one pilot for the {process.name} unit.",
+                f"Initial assays for {commodity} are looking {random.choice(['promising', 'above budget', 'aligned with expectations'])}.",
             ],
         ),
         (
-            "3. Heading 3",
+            "Action Items",
             [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-            ],
-        ),
-        (
-            "4. Heading 4",
-            [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-            ],
-        ),
-        (
-            "5. Heading 5",
-            [
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed",
-                "do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                "Please review the attached data before our Friday stand-up.",
+                "Procurement needs to be notified regarding long-lead items for the plant expansion.",
             ],
         ),
     ]

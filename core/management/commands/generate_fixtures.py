@@ -67,10 +67,23 @@ class Command(BaseCommand):
         handlers.upload_minio(s3=s3, filepath=filepath, bucket=bucket, key=key)
         return key
 
-    def _flush_bucket(self, s3, bucket, prefix="documents/"):
+    def _flush_bucket(self, s3, bucket, prefix="docs/"):
         try:
             deleted = handlers.try_flush_bucket(s3=s3, bucket=bucket, prefix=prefix)
-            self.stdout.write(f"    deleted {deleted} objects: s3://{bucket}/{prefix}")
+            if deleted == 0:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"      failed to delete any objects from s3://{bucket}/{prefix}",
+                    )
+                )
+                self.stdout.write(
+                    self.style.WARNING("      note: this might be expected."),
+                )
+
+            else:
+                self.stdout.write(
+                    f"    deleted {deleted} objects: s3://{bucket}/{prefix}"
+                )
 
         except ClientError as err:
             self.stderr.write(
@@ -93,7 +106,7 @@ class Command(BaseCommand):
         try:
             s3 = self._get_s3_client()
             bucket = self._get_bucket()
-            self._flush_bucket(s3, bucket, prefix="documents/")
+            self._flush_bucket(s3, bucket, prefix="docs/")
         except Exception as err:
             self.stderr.write(
                 self.style.WARNING(
@@ -113,7 +126,7 @@ class Command(BaseCommand):
                     f"    delete {pdf_count} PDFs from local path: {fixture_docs}"
                 )
 
-        self.stdout.write(self.style.WARNING("flushed app data\n"))
+        self.stdout.write(self.style.SUCCESS("\ndata flush complete\n"))
 
     def _create_groups(self):
         from django.db.models import Q
@@ -155,21 +168,11 @@ class Command(BaseCommand):
 
     def _create_users(self, orgs, groups):
         users = []
-        su, _ = User.objects.get_or_create(
-            username="admin",
-            defaults=dict(
-                email="admin@example.com",
-                first_name="Admin",
-                last_name="User",
-                is_superuser=True,
-                is_staff=True,
-            ),
-        )
-        if _:
-            su.set_password("admin123")
-            su.save()
-        users.append(su)
-        self._log("created: admin / admin123")
+
+        users.append(handlers.create_superuser())
+
+        self.stdout.write("created superuser account: admin / admin123")
+        self.stdout.write(" - creating other orgs and users...")
 
         for org in orgs:
             for i in range(NUM_USERS_PER_ORG):
@@ -178,6 +181,8 @@ class Command(BaseCommand):
                         fake, random, groups=groups, org=org, index=i
                     )
                 )
+
+            users.append(handlers.create_competent_person(org, "testpass123", fake))
 
         self._log(f"created: {len(users)} users + profiles")
         return users
@@ -207,8 +212,7 @@ class Command(BaseCommand):
         prospects = []
         for proc in processes:
             for _ in range(NUM_PROSPECTS_PER_PROCESS):
-                pr = handlers.create_prospect(uuid, fake, random, proc)
-                prospects.append(pr)
+                prospects.append(handlers.create_prospect(uuid, fake, random, proc))
         self._log(f"created: {len(prospects)} prospects")
         return prospects
 
@@ -250,8 +254,8 @@ class Command(BaseCommand):
                 uploaded += 1
 
         self._log(f"created: {len(docs)} documents")
-        self._log(f"    uploaded {uploaded} PDFs to s3://{bucket}/documents/")
-        self._log(f"    fixture copies written to {fixture_docs_dir}")
+        self._log(f"    + uploaded {uploaded} PDFs to s3://{bucket}/docs/")
+        self._log(f"      fixture copies written to {fixture_docs_dir}")
 
         return docs
 
@@ -315,14 +319,14 @@ class Command(BaseCommand):
         self._log(options)
 
         seed = 12345
-        self._log(f"rng seed: {seed}")
+        self._log(f"init random + Faker using seed: '{seed}'")
 
         random.seed(seed)
         Faker.seed(seed)
         fake.unique.clear()
 
         self.fixtures_dir = Path(settings.BASE_DIR) / "fixtures"
-        self.fixtures_media_dir = self.fixtures_dir / "media" / "documents"
+        self.fixtures_media_dir = self.fixtures_dir / "media" / "docs"
         self.fixtures_media_dir.mkdir(parents=True, exist_ok=True)
 
         if options["flush"]:
@@ -338,6 +342,8 @@ class Command(BaseCommand):
         tenements = self._create_tenements(processes)
 
         if options["gen_pdf"]:
+            self.stdout.write(" - running PDF doc generation...")
+
             docs = self._create_documents(processes, users)
 
             self._create_approval_workflows(docs, users)

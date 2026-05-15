@@ -20,6 +20,8 @@ from .constants import (
     CONFIDENTIALITY_LEVELS,
     DEPARTMENTS,
     DOC_TYPES,
+    EXPLORATION_TARGETS,
+    MINERALISATION_STYLES,
     ROLES,
     TAG_POOL,
 )
@@ -43,7 +45,7 @@ def get_s3_client():
 
 
 def get_bucket():
-    return getattr(settings, "MINIO_BUCKET", os.getenv("MINIO_BUCKET", "documents"))
+    return getattr(settings, "MINIO_BUCKET", os.getenv("MINIO_BUCKET", "docs"))
 
 
 def upload_minio(s3, filepath, bucket, key):
@@ -62,11 +64,37 @@ def try_flush_bucket(s3, bucket, prefix):
         objects = page.get("Contents", [])
         if not objects:
             continue
+
         delete_req = {"Objects": [{"Key": obj["Key"]} for obj in objects]}
         s3.delete_objects(Bucket=bucket, Delete=delete_req)
         deleted += len(objects)
 
     return deleted
+
+
+def create_superuser():
+    u, _ = User.objects.get_or_create(
+        username="admin",
+        defaults=dict(
+            email="admin@example.com",
+            first_name="Admin",
+            last_name="User",
+            is_superuser=True,
+            is_staff=True,
+        ),
+    )
+
+    if _:
+        u.set_password("admin123")
+        u.save()
+
+    # ensure superuser has application-level 'Administrator' role
+    UserProfile.objects.update_or_create(
+        user=u,
+        defaults=dict(role=UserProfile.RoleChoices.ADMIN),
+    )
+
+    return u
 
 
 def create_single_user(
@@ -112,14 +140,62 @@ def create_single_user(
     return user
 
 
+def create_competent_person(org, password, fake):
+    cp_username = f"competent.person.{org.name.lower().replace(' ', '_')[:20]}"
+    cp_user, created = User.objects.get_or_create(
+        username=cp_username[:150],
+        defaults=dict(
+            email=f"{cp_username}@example.com",
+            first_name="Competent",
+            last_name="Person",
+            is_staff=True,
+        ),
+    )
+    if created:
+        cp_user.set_password("testpass123")
+        cp_user.save()
+    UserProfile.objects.update_or_create(
+        user=cp_user,
+        defaults=dict(
+            organisation=org,
+            role=UserProfile.RoleChoices.COMPETENT_PERSON,
+            clearance_level=UserProfile.ClearanceLevel.JORC_APPROVED,
+            can_approve_jorc=True,
+            can_approve_valmin=False,
+            employee_id=f"CP-{fake.unique.random_int(min=1000, max=9999)}",
+        ),
+    )
+
+    return cp_user
+
+
 def create_prospect(uuid, fake, random, proc):
-    return Prospect.objects.create(
+    style = random.choice(MINERALISATION_STYLES)
+    commodity = proc.commodity or "gold"
+    hypothesis = (
+        f"Structural mapping and geochemical sampling indicate a {style} "
+        f"mineralisation system associated with the regional fault corridor. "
+        f"Elevated {commodity} values in rock chips and soils define a "
+        f"{round(random.uniform(0.5, 4.0), 1)} km trend with anomalous "
+        f"pathfinder elements suggestive of a significant discovery."
+    )
+    objective = (
+        f"The primary objective is to {random.choice(EXPLORATION_TARGETS)} "
+        f"and establish an inferred resource base sufficient to support a "
+        f"maiden drilling programme. Secondary objective: assess metallurgical "
+        f"recovery potential for {commodity}."
+    )
+    pr = Prospect.objects.create(
         id=uuid.uuid4(),
         name=f"{fake.last_name()} {random.choice(['Lode', 'Reef', 'Deposit', 'Zone'])}",
         organisation=proc.organisation,
         process=proc,
+        hypothesis=hypothesis,
+        objective=objective,
         geom=utils.random_point(),
     )
+
+    return pr
 
 
 def create_tenement(uuid, random, proc):
@@ -198,8 +274,8 @@ def create_doc_for_process(
     doc_id = uuid.uuid4()
     doc_type = random.choice(DOC_TYPES)
 
-    filename = f"{doc_type.lower()}_{doc_id.hex[:8]}.pdf"
-    object_key = f"documents/{filename}"
+    filename = f"{doc_type.lower()}_{doc_id.hex[:6]}.pdf"
+    object_key = f"docs/{filename}"
     fixture_path = fixture_docs_dir / filename
 
     checksum = utils.generate_pdf(

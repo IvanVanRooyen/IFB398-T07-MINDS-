@@ -1,0 +1,3745 @@
+[
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "Viewers",
+      "permissions": [
+        ["view_approvalworkflow", "core", "approvalworkflow"],
+        ["view_assayresult", "core", "assayresult"],
+        ["view_auditlog", "core", "auditlog"],
+        ["view_doclink", "core", "doclink"],
+        ["view_document", "core", "document"],
+        ["view_documentchunk", "core", "documentchunk"],
+        ["view_documentview", "core", "documentview"],
+        ["view_drillhole", "core", "drillhole"],
+        ["view_drillholesurvey", "core", "drillholesurvey"],
+        ["view_lithologyinterval", "core", "lithologyinterval"],
+        ["view_organisation", "core", "organisation"],
+        ["view_process", "core", "process"],
+        ["view_prospect", "core", "prospect"],
+        ["view_sample", "core", "sample"],
+        ["view_savedreport", "core", "savedreport"],
+        ["view_survey", "core", "survey"],
+        ["view_tenement", "core", "tenement"],
+        ["view_userprofile", "core", "userprofile"]
+      ]
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "Editors",
+      "permissions": [
+        ["add_approvalworkflow", "core", "approvalworkflow"],
+        ["change_approvalworkflow", "core", "approvalworkflow"],
+        ["view_approvalworkflow", "core", "approvalworkflow"],
+        ["add_assayresult", "core", "assayresult"],
+        ["change_assayresult", "core", "assayresult"],
+        ["view_assayresult", "core", "assayresult"],
+        ["add_auditlog", "core", "auditlog"],
+        ["change_auditlog", "core", "auditlog"],
+        ["view_auditlog", "core", "auditlog"],
+        ["add_doclink", "core", "doclink"],
+        ["change_doclink", "core", "doclink"],
+        ["view_doclink", "core", "doclink"],
+        ["add_document", "core", "document"],
+        ["change_document", "core", "document"],
+        ["view_document", "core", "document"],
+        ["add_documentchunk", "core", "documentchunk"],
+        ["change_documentchunk", "core", "documentchunk"],
+        ["view_documentchunk", "core", "documentchunk"],
+        ["add_documentview", "core", "documentview"],
+        ["change_documentview", "core", "documentview"],
+        ["view_documentview", "core", "documentview"],
+        ["add_drillhole", "core", "drillhole"],
+        ["change_drillhole", "core", "drillhole"],
+        ["view_drillhole", "core", "drillhole"],
+        ["add_drillholesurvey", "core", "drillholesurvey"],
+        ["change_drillholesurvey", "core", "drillholesurvey"],
+        ["view_drillholesurvey", "core", "drillholesurvey"],
+        ["add_lithologyinterval", "core", "lithologyinterval"],
+        ["change_lithologyinterval", "core", "lithologyinterval"],
+        ["view_lithologyinterval", "core", "lithologyinterval"],
+        ["add_organisation", "core", "organisation"],
+        ["change_organisation", "core", "organisation"],
+        ["view_organisation", "core", "organisation"],
+        ["add_process", "core", "process"],
+        ["change_process", "core", "process"],
+        ["view_process", "core", "process"],
+        ["add_prospect", "core", "prospect"],
+        ["change_prospect", "core", "prospect"],
+        ["view_prospect", "core", "prospect"],
+        ["add_sample", "core", "sample"],
+        ["change_sample", "core", "sample"],
+        ["view_sample", "core", "sample"],
+        ["add_savedreport", "core", "savedreport"],
+        ["change_savedreport", "core", "savedreport"],
+        ["view_savedreport", "core", "savedreport"],
+        ["add_survey", "core", "survey"],
+        ["change_survey", "core", "survey"],
+        ["view_survey", "core", "survey"],
+        ["add_tenement", "core", "tenement"],
+        ["change_tenement", "core", "tenement"],
+        ["view_tenement", "core", "tenement"],
+        ["add_userprofile", "core", "userprofile"],
+        ["change_userprofile", "core", "userprofile"],
+        ["view_userprofile", "core", "userprofile"]
+      ]
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "Managers",
+      "permissions": [
+        ["add_approvalworkflow", "core", "approvalworkflow"],
+        ["change_approvalworkflow", "core", "approvalworkflow"],
+        ["delete_approvalworkflow", "core", "approvalworkflow"],
+        ["view_approvalworkflow", "core", "approvalworkflow"],
+        ["add_assayresult", "core", "assayresult"],
+        ["change_assayresult", "core", "assayresult"],
+        ["delete_assayresult", "core", "assayresult"],
+        ["view_assayresult", "core", "assayresult"],
+        ["add_auditlog", "core", "auditlog"],
+        ["change_auditlog", "core", "auditlog"],
+        ["delete_auditlog", "core", "auditlog"],
+        ["view_auditlog", "core", "auditlog"],
+        ["add_doclink", "core", "doclink"],
+        ["change_doclink", "core", "doclink"],
+        ["delete_doclink", "core", "doclink"],
+        ["view_doclink", "core", "doclink"],
+        ["add_document", "core", "document"],
+        ["change_document", "core", "document"],
+        ["delete_document", "core", "document"],
+        ["view_document", "core", "document"],
+        ["add_documentchunk", "core", "documentchunk"],
+        ["change_documentchunk", "core", "documentchunk"],
+        ["delete_documentchunk", "core", "documentchunk"],
+        ["view_documentchunk", "core", "documentchunk"],
+        ["add_documentview", "core", "documentview"],
+        ["change_documentview", "core", "documentview"],
+        ["delete_documentview", "core", "documentview"],
+        ["view_documentview", "core", "documentview"],
+        ["add_drillhole", "core", "drillhole"],
+        ["change_drillhole", "core", "drillhole"],
+        ["delete_drillhole", "core", "drillhole"],
+        ["view_drillhole", "core", "drillhole"],
+        ["add_drillholesurvey", "core", "drillholesurvey"],
+        ["change_drillholesurvey", "core", "drillholesurvey"],
+        ["delete_drillholesurvey", "core", "drillholesurvey"],
+        ["view_drillholesurvey", "core", "drillholesurvey"],
+        ["add_lithologyinterval", "core", "lithologyinterval"],
+        ["change_lithologyinterval", "core", "lithologyinterval"],
+        ["delete_lithologyinterval", "core", "lithologyinterval"],
+        ["view_lithologyinterval", "core", "lithologyinterval"],
+        ["add_organisation", "core", "organisation"],
+        ["change_organisation", "core", "organisation"],
+        ["delete_organisation", "core", "organisation"],
+        ["view_organisation", "core", "organisation"],
+        ["add_process", "core", "process"],
+        ["change_process", "core", "process"],
+        ["delete_process", "core", "process"],
+        ["view_process", "core", "process"],
+        ["add_prospect", "core", "prospect"],
+        ["change_prospect", "core", "prospect"],
+        ["delete_prospect", "core", "prospect"],
+        ["view_prospect", "core", "prospect"],
+        ["add_sample", "core", "sample"],
+        ["change_sample", "core", "sample"],
+        ["delete_sample", "core", "sample"],
+        ["view_sample", "core", "sample"],
+        ["add_savedreport", "core", "savedreport"],
+        ["change_savedreport", "core", "savedreport"],
+        ["delete_savedreport", "core", "savedreport"],
+        ["view_savedreport", "core", "savedreport"],
+        ["add_survey", "core", "survey"],
+        ["change_survey", "core", "survey"],
+        ["delete_survey", "core", "survey"],
+        ["view_survey", "core", "survey"],
+        ["add_tenement", "core", "tenement"],
+        ["change_tenement", "core", "tenement"],
+        ["delete_tenement", "core", "tenement"],
+        ["view_tenement", "core", "tenement"],
+        ["add_userprofile", "core", "userprofile"],
+        ["change_userprofile", "core", "userprofile"],
+        ["delete_userprofile", "core", "userprofile"],
+        ["view_userprofile", "core", "userprofile"]
+      ]
+    }
+  },
+  {
+    "model": "auth.user",
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$o55htYVIqddnUIDwTySLVh$SgauC8UHJom+JiyPtSYwYFAnkkfEVg66R2TqRZOOsDo=",
+      "last_login": null,
+      "is_superuser": true,
+      "username": "admin",
+      "first_name": "Admin",
+      "last_name": "User",
+      "email": "admin@example.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-05-15T14:36:42.663Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$g0ReTuekhGkJSI6RxCd6dI$9Z3o6rFyGKv2ZxFm+U/cE13VREm6DcC1P/ny5Jc0N7c=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "david.hamilton.9309",
+      "first_name": "David",
+      "last_name": "Hamilton",
+      "email": "david.hamilton.9309@hotmail.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-05-15T14:36:42.766Z",
+      "groups": [["Managers"]],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$rhC74gzulhIRJ9nq9QvMfX$fI9a/y5e/JDPIw+jVgwke6FjBy5aXZtNLtpVfBioFx0=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "jennifer.lee.5696",
+      "first_name": "Jennifer",
+      "last_name": "Lee",
+      "email": "jennifer.lee.5696@yahoo.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-05-15T14:36:42.869Z",
+      "groups": [["Editors"]],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$ABPJElrst6ZCfMUtGqaP9j$c8ioOyGz3luD/AuhUn/qNz1TiBP7JjFP6TCw5lidqhs=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "denise.rodriguez.9571",
+      "first_name": "Denise",
+      "last_name": "Rodriguez",
+      "email": "denise.rodriguez.9571@gmail.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-05-15T14:36:42.972Z",
+      "groups": [["Editors"]],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$UFADy1YqoMerzkDIZAZZCt$hQ4fuSV+32hT9Kw+6yQ9+U+x3zOoVdbamFN1kw1WnwM=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "sabrina.anderson.2789",
+      "first_name": "Sabrina",
+      "last_name": "Anderson",
+      "email": "sabrina.anderson.2789@yahoo.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-05-15T14:36:43.076Z",
+      "groups": [["Viewers"]],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$YSyoUGGjpOBJmR5uFUsGEP$v5SPgbRtNmjZ0BSRAfjlZB75USpTALIuPgYaxA9D0Z4=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "competent.person.oconnor-wilkins",
+      "first_name": "Competent",
+      "last_name": "Person",
+      "email": "competent.person.oconnor-wilkins@example.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-05-15T14:36:43.177Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$9X97kFpcHOojw87q8Ymlpe$6mx4nRkbZXpVg79G2zSo4AaTx06NBR4IBuUmqQj3ZWQ=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "christian.vang.3040",
+      "first_name": "Christian",
+      "last_name": "Vang",
+      "email": "christian.vang.3040@gmail.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-05-15T14:36:43.279Z",
+      "groups": [["Managers"]],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$orOAnJrTygvXLbFup3x0iv$PC9pNEssWPbvA0sSYQRBMCv08VvOqJu+jlOmjUJoq10=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "angela.miller.2802",
+      "first_name": "Angela",
+      "last_name": "Miller",
+      "email": "angela.miller.2802@yahoo.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-05-15T14:36:43.381Z",
+      "groups": [["Editors"]],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$A4EclcoeHqDplwQUBMLqyi$8hg9aiPAGi98IUAqdN7PuJVgodi8+RMsUZMIADdcRUg=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "diane.blackwell.1670",
+      "first_name": "Diane",
+      "last_name": "Blackwell",
+      "email": "diane.blackwell.1670@yahoo.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-05-15T14:36:43.483Z",
+      "groups": [["Viewers"]],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$nVquDSp7DudaWwQM1r1rb7$VQZu2rklJaWz59Cwx3GYy21tFmxX3Sj/+SPGcnt+D9o=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "william.butler.2068",
+      "first_name": "William",
+      "last_name": "Butler",
+      "email": "william.butler.2068@gmail.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-05-15T14:36:43.586Z",
+      "groups": [["Editors"]],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$WBsZ5Re3OtoVUmkDsqc0gj$I2vCTr5Eh91jWJPw18DqQ54nE0VovhML/0fzK98Usj8=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "competent.person.wyatt-huynh",
+      "first_name": "Competent",
+      "last_name": "Person",
+      "email": "competent.person.wyatt-huynh@example.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-05-15T14:36:43.687Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$a6xZAP70eR8lXUPEORkkFx$eGsgmk496E/99EYNDCXmc+9X8ml3lKXYG5BLRf/YFBQ=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "michael.black.9505",
+      "first_name": "Michael",
+      "last_name": "Black",
+      "email": "michael.black.9505@gmail.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-05-15T14:36:43.788Z",
+      "groups": [["Managers"]],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$rYbpILyCERW1ytZRMK3eGA$3TTnZ9IGkEKWWCodR1LaVbK6BbqWWXUylVmhbMzi9XE=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "brent.griffin.3698",
+      "first_name": "Brent",
+      "last_name": "Griffin",
+      "email": "brent.griffin.3698@yahoo.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-05-15T14:36:43.889Z",
+      "groups": [["Editors"]],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$YVJa5NJCZsS7hX5O9yol7z$lx9scKykj+8FFUifASr1QUoN9kFCTcg6045AsdGTRE4=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "jason.evans.5265",
+      "first_name": "Jason",
+      "last_name": "Evans",
+      "email": "jason.evans.5265@yahoo.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-05-15T14:36:43.990Z",
+      "groups": [["Viewers"]],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$yn9IhnwWp92HyAA4IbFjU7$hKlqNKplAhaAsu5+Mm/bFlIDBXsjYRkPNRH3xidVQF8=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "marvin.harris.2555",
+      "first_name": "Marvin",
+      "last_name": "Harris",
+      "email": "marvin.harris.2555@gmail.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-05-15T14:36:44.091Z",
+      "groups": [["Viewers"]],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "fields": {
+      "password": "pbkdf2_sha256$1000000$Dx02y5cPOlyjAK25NBiBwq$BQXrePIrlx/4Q0l0Mo83ceJKM6VB000PFhPCch8DQKw=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "competent.person.knight-martin",
+      "first_name": "Competent",
+      "last_name": "Person",
+      "email": "competent.person.knight-martin@example.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-05-15T14:36:44.193Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.organisation",
+    "pk": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+    "fields": {
+      "name": "Oconnor-Wilkins",
+      "mode": "MINING",
+      "created_at": "2026-05-15T14:36:42.660Z",
+      "updated_at": "2026-05-15T14:36:42.660Z"
+    }
+  },
+  {
+    "model": "core.organisation",
+    "pk": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+    "fields": {
+      "name": "Wyatt-Huynh",
+      "mode": "EXPLORATION",
+      "created_at": "2026-05-15T14:36:42.661Z",
+      "updated_at": "2026-05-15T14:36:42.661Z"
+    }
+  },
+  {
+    "model": "core.organisation",
+    "pk": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+    "fields": {
+      "name": "Knight-Martin",
+      "mode": "MINING",
+      "created_at": "2026-05-15T14:36:42.662Z",
+      "updated_at": "2026-05-15T14:36:42.662Z"
+    }
+  },
+  {
+    "model": "core.process",
+    "pk": "209542e4-8823-4595-a835-1f46dbe3f1d0",
+    "fields": {
+      "name": "Hoopertown Project",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "mode": "PROJECT",
+      "geom": "SRID=4326;MULTIPOLYGON (((134.37798546284318 -21.41771296074366, 134.4779854628432 -21.41771296074366, 134.4779854628432 -21.31771296074366, 134.37798546284318 -21.31771296074366, 134.37798546284318 -21.41771296074366)))",
+      "commodity": "Zinc",
+      "created_at": "2026-05-15T14:36:44.306Z",
+      "updated_at": "2026-05-15T14:36:44.306Z"
+    }
+  },
+  {
+    "model": "core.process",
+    "pk": "20a96b39-c55d-46ed-8df5-5f7b0deed2a0",
+    "fields": {
+      "name": "South Annette Project",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "mode": "PROJECT",
+      "geom": "SRID=4326;MULTIPOLYGON (((126.3516291277079 -24.40623287140993, 126.45162912770789 -24.40623287140993, 126.45162912770789 -24.30623287140993, 126.3516291277079 -24.30623287140993, 126.3516291277079 -24.40623287140993)))",
+      "commodity": "Gold",
+      "created_at": "2026-05-15T14:36:44.320Z",
+      "updated_at": "2026-05-15T14:36:44.320Z"
+    }
+  },
+  {
+    "model": "core.process",
+    "pk": "25f67889-1cfb-4232-85cf-fcf5253347c1",
+    "fields": {
+      "name": "West Elainefurt Mine",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "mode": "PROJECT",
+      "geom": "SRID=4326;MULTIPOLYGON (((126.91884066234775 -29.104635404308507, 127.01884066234774 -29.104635404308507, 127.01884066234774 -29.004635404308505, 126.91884066234775 -29.004635404308505, 126.91884066234775 -29.104635404308507)))",
+      "commodity": "Iron Ore",
+      "created_at": "2026-05-15T14:36:44.312Z",
+      "updated_at": "2026-05-15T14:36:44.312Z"
+    }
+  },
+  {
+    "model": "core.process",
+    "pk": "4243fa19-ae93-4612-9bff-f446df5a86d0",
+    "fields": {
+      "name": "West Thomaston Mine",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "mode": "OPERATION",
+      "geom": "SRID=4326;MULTIPOLYGON (((142.55901052810117 -19.40031274667947, 142.6590105281012 -19.40031274667947, 142.6590105281012 -19.30031274667947, 142.55901052810117 -19.30031274667947, 142.55901052810117 -19.40031274667947)))",
+      "commodity": "Coal",
+      "created_at": "2026-05-15T14:36:44.317Z",
+      "updated_at": "2026-05-15T14:36:44.317Z"
+    }
+  },
+  {
+    "model": "core.process",
+    "pk": "430eff73-15ac-4ae9-9d38-ba80746c4513",
+    "fields": {
+      "name": "New Amanda Mine",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "mode": "OPERATION",
+      "geom": "SRID=4326;MULTIPOLYGON (((147.01100399459293 -27.677521032019932, 147.11100399459295 -27.677521032019932, 147.11100399459295 -27.57752103201993, 147.01100399459293 -27.57752103201993, 147.01100399459293 -27.677521032019932)))",
+      "commodity": "Nickel",
+      "created_at": "2026-05-15T14:36:44.308Z",
+      "updated_at": "2026-05-15T14:36:44.308Z"
+    }
+  },
+  {
+    "model": "core.process",
+    "pk": "71e4d64d-0c20-4844-a003-309d9c7b8420",
+    "fields": {
+      "name": "South Robert Mine",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "mode": "PROJECT",
+      "geom": "SRID=4326;MULTIPOLYGON (((145.2092857489524 -29.92744636300225, 145.30928574895242 -29.92744636300225, 145.30928574895242 -29.82744636300225, 145.2092857489524 -29.82744636300225, 145.2092857489524 -29.92744636300225)))",
+      "commodity": "Iron Ore",
+      "created_at": "2026-05-15T14:36:44.310Z",
+      "updated_at": "2026-05-15T14:36:44.310Z"
+    }
+  },
+  {
+    "model": "core.process",
+    "pk": "a4f13b66-cf8a-425f-8ebb-92117693991a",
+    "fields": {
+      "name": "Lawrenceport Prospect",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "mode": "OPERATION",
+      "geom": "SRID=4326;MULTIPOLYGON (((141.5940568436136 -23.51199505990075, 141.69405684361362 -23.51199505990075, 141.69405684361362 -23.41199505990075, 141.5940568436136 -23.41199505990075, 141.5940568436136 -23.51199505990075)))",
+      "commodity": "Iron Ore",
+      "created_at": "2026-05-15T14:36:44.318Z",
+      "updated_at": "2026-05-15T14:36:44.318Z"
+    }
+  },
+  {
+    "model": "core.process",
+    "pk": "d9245ed0-02ec-46ea-8284-aee1c2c1fc0d",
+    "fields": {
+      "name": "North Allisonside Mine",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "mode": "OPERATION",
+      "geom": "SRID=4326;MULTIPOLYGON (((119.1430800718192 -34.36573281474979, 119.2430800718192 -34.36573281474979, 119.2430800718192 -34.265732814749796, 119.1430800718192 -34.265732814749796, 119.1430800718192 -34.36573281474979)))",
+      "commodity": "Coal",
+      "created_at": "2026-05-15T14:36:44.298Z",
+      "updated_at": "2026-05-15T14:36:44.298Z"
+    }
+  },
+  {
+    "model": "core.process",
+    "pk": "e67e80de-06a4-49b5-a8ef-3663fde1c118",
+    "fields": {
+      "name": "Emilyside Project",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "mode": "OPERATION",
+      "geom": "SRID=4326;MULTIPOLYGON (((139.85870528354482 -34.21157320860677, 139.95870528354484 -34.21157320860677, 139.95870528354484 -34.11157320860678, 139.85870528354482 -34.11157320860678, 139.85870528354482 -34.21157320860677)))",
+      "commodity": "Gold",
+      "created_at": "2026-05-15T14:36:44.314Z",
+      "updated_at": "2026-05-15T14:36:44.314Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "030da0ff-eea4-4fc0-803c-4ea6f8894002",
+    "fields": {
+      "name": "DH-WESTELA-004",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "25f67889-1cfb-4232-85cf-fcf5253347c1",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (126.17719717567357 -29.202544639510396)",
+      "depth": 643.48,
+      "azimuth": 40.92,
+      "dip": -43.74,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.337Z",
+      "updated_at": "2026-05-15T14:36:44.337Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "0df4d79e-8dc4-4a83-a93a-0bca93a4cfa1",
+    "fields": {
+      "name": "DH-WESTELA-002",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "25f67889-1cfb-4232-85cf-fcf5253347c1",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (121.6402870462717 -34.3123285537408)",
+      "depth": 638.12,
+      "azimuth": 27.17,
+      "dip": -62.92,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.335Z",
+      "updated_at": "2026-05-15T14:36:44.335Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "0f1a852b-500f-48b5-a19d-71be60391ea3",
+    "fields": {
+      "name": "DH-SOUTHRO-002",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "71e4d64d-0c20-4844-a003-309d9c7b8420",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (124.27953206445676 -26.833107725857246)",
+      "depth": 602.92,
+      "azimuth": 161.7,
+      "dip": -66.21,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.332Z",
+      "updated_at": "2026-05-15T14:36:44.332Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "18520c00-1edd-48ef-807a-f3a6731a0607",
+    "fields": {
+      "name": "DH-SOUTHRO-004",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "71e4d64d-0c20-4844-a003-309d9c7b8420",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (128.89304956174254 -31.804836968555232)",
+      "depth": 501.84,
+      "azimuth": 336.2,
+      "dip": -87.25,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.334Z",
+      "updated_at": "2026-05-15T14:36:44.334Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "23ac786e-7c17-4773-b58c-14b8ca4580eb",
+    "fields": {
+      "name": "DH-WESTTHO-004",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "4243fa19-ae93-4612-9bff-f446df5a86d0",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (121.09399327012976 -33.361074526225494)",
+      "depth": 764.12,
+      "azimuth": 20.42,
+      "dip": -80.12,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.347Z",
+      "updated_at": "2026-05-15T14:36:44.347Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "291bb6a3-6ab8-4d45-9569-2d8af11cc7e7",
+    "fields": {
+      "name": "DH-NORTHAL-002",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "d9245ed0-02ec-46ea-8284-aee1c2c1fc0d",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (148.85486920732595 -32.195820911432925)",
+      "depth": 110.03,
+      "azimuth": 251.48,
+      "dip": -39.91,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.322Z",
+      "updated_at": "2026-05-15T14:36:44.322Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "2c920fab-1d35-40bf-9859-310c2f92b616",
+    "fields": {
+      "name": "DH-EMILYSID-002",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "e67e80de-06a4-49b5-a8ef-3663fde1c118",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (118.21209842927382 -20.443248139212514)",
+      "depth": 263.08,
+      "azimuth": 129.2,
+      "dip": -2.0,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.339Z",
+      "updated_at": "2026-05-15T14:36:44.339Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "337b80dc-d03c-4585-8013-2dcf2fadc8a8",
+    "fields": {
+      "name": "DH-EMILYSID-004",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "e67e80de-06a4-49b5-a8ef-3663fde1c118",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (142.35939801856864 -25.002616152444425)",
+      "depth": 448.71,
+      "azimuth": 280.01,
+      "dip": -76.36,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.342Z",
+      "updated_at": "2026-05-15T14:36:44.342Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "38d33a26-7e53-427e-8a6e-bff6fe564de4",
+    "fields": {
+      "name": "DH-SOUTHAN-001",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "20a96b39-c55d-46ed-8df5-5f7b0deed2a0",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (142.45050621397584 -31.686375131870697)",
+      "depth": 60.84,
+      "azimuth": 263.65,
+      "dip": -13.56,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.353Z",
+      "updated_at": "2026-05-15T14:36:44.353Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "47efccf6-8610-4245-a940-1def83986a43",
+    "fields": {
+      "name": "DH-HOOPERTO-003",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "209542e4-8823-4595-a835-1f46dbe3f1d0",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (133.13931935479155 -23.441107034689914)",
+      "depth": 183.49,
+      "azimuth": 118.97,
+      "dip": -54.47,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.326Z",
+      "updated_at": "2026-05-15T14:36:44.326Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "4db4d45b-91bc-444b-bbec-4d465b7037cd",
+    "fields": {
+      "name": "DH-WESTELA-003",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "25f67889-1cfb-4232-85cf-fcf5253347c1",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (115.48496399258505 -27.7870396791742)",
+      "depth": 224.18,
+      "azimuth": 29.47,
+      "dip": -16.42,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.336Z",
+      "updated_at": "2026-05-15T14:36:44.336Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "69fb70c3-a03b-43e3-b36d-f5bc2d938cb7",
+    "fields": {
+      "name": "DH-WESTELA-001",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "25f67889-1cfb-4232-85cf-fcf5253347c1",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (144.6202085062097 -22.66833129256821)",
+      "depth": 726.03,
+      "azimuth": 65.46,
+      "dip": -58.58,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.334Z",
+      "updated_at": "2026-05-15T14:36:44.334Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "6cf5bab5-1bec-438f-aea4-7ee7af7724f5",
+    "fields": {
+      "name": "DH-NEWAMAN-001",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "430eff73-15ac-4ae9-9d38-ba80746c4513",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (119.72590128767251 -31.567880177978115)",
+      "depth": 515.98,
+      "azimuth": 165.78,
+      "dip": -72.44,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.328Z",
+      "updated_at": "2026-05-15T14:36:44.328Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "7866f23c-9ff2-43b1-98be-d852b79f2697",
+    "fields": {
+      "name": "DH-SOUTHAN-003",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "20a96b39-c55d-46ed-8df5-5f7b0deed2a0",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (138.21082058641406 -23.28644132171224)",
+      "depth": 327.59,
+      "azimuth": 353.01,
+      "dip": -69.72,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.355Z",
+      "updated_at": "2026-05-15T14:36:44.355Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "86296474-7af1-4250-835a-209ee3830325",
+    "fields": {
+      "name": "DH-NEWAMAN-003",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "430eff73-15ac-4ae9-9d38-ba80746c4513",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (127.73861004392086 -27.743108356381356)",
+      "depth": 244.95,
+      "azimuth": 241.56,
+      "dip": -18.14,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.330Z",
+      "updated_at": "2026-05-15T14:36:44.330Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "866b72f7-6714-4649-816d-1a351b0aaf1f",
+    "fields": {
+      "name": "DH-HOOPERTO-004",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "209542e4-8823-4595-a835-1f46dbe3f1d0",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (117.3697092572665 -29.47561144797151)",
+      "depth": 568.91,
+      "azimuth": 89.62,
+      "dip": -52.81,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.327Z",
+      "updated_at": "2026-05-15T14:36:44.327Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "8b97fa41-7a0e-40d2-9b78-3a2bde008f4b",
+    "fields": {
+      "name": "DH-SOUTHRO-001",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "71e4d64d-0c20-4844-a003-309d9c7b8420",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (129.06269729699122 -23.33967596838139)",
+      "depth": 609.68,
+      "azimuth": 255.08,
+      "dip": -86.82,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.331Z",
+      "updated_at": "2026-05-15T14:36:44.331Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "8fdac557-f31e-4202-8937-3aa1b0c48277",
+    "fields": {
+      "name": "DH-SOUTHAN-002",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "20a96b39-c55d-46ed-8df5-5f7b0deed2a0",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (123.25003581103435 -30.490695255723445)",
+      "depth": 141.73,
+      "azimuth": 276.5,
+      "dip": -39.55,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.354Z",
+      "updated_at": "2026-05-15T14:36:44.354Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "93607be3-775d-49ac-b468-16475be5cacb",
+    "fields": {
+      "name": "DH-EMILYSID-003",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "e67e80de-06a4-49b5-a8ef-3663fde1c118",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (133.33962072083716 -28.027683580873827)",
+      "depth": 542.97,
+      "azimuth": 189.94,
+      "dip": -40.55,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.340Z",
+      "updated_at": "2026-05-15T14:36:44.340Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "9aadd85d-ba61-441f-98e0-11620c454b32",
+    "fields": {
+      "name": "DH-NORTHAL-001",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "d9245ed0-02ec-46ea-8284-aee1c2c1fc0d",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (141.90997282564362 -31.572891524487137)",
+      "depth": 764.4,
+      "azimuth": 219.63,
+      "dip": -52.13,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.321Z",
+      "updated_at": "2026-05-15T14:36:44.321Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "9af805d6-32ee-4876-991f-ffaf0535faf0",
+    "fields": {
+      "name": "DH-NEWAMAN-004",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "430eff73-15ac-4ae9-9d38-ba80746c4513",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (127.99260713765001 -33.84478216875384)",
+      "depth": 521.97,
+      "azimuth": 186.01,
+      "dip": -38.34,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.330Z",
+      "updated_at": "2026-05-15T14:36:44.330Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "9cbe04fe-d756-44d4-9736-84bd8036ef83",
+    "fields": {
+      "name": "DH-HOOPERTO-002",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "209542e4-8823-4595-a835-1f46dbe3f1d0",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (115.9546499926744 -20.06595279176937)",
+      "depth": 232.45,
+      "azimuth": 343.73,
+      "dip": -52.5,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.325Z",
+      "updated_at": "2026-05-15T14:36:44.325Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "a34abd46-d28c-4ab1-8ec2-ced1888f8e3f",
+    "fields": {
+      "name": "DH-LAWRENCE-004",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "a4f13b66-cf8a-425f-8ebb-92117693991a",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (120.57867816497888 -24.122380408376884)",
+      "depth": 748.14,
+      "azimuth": 324.03,
+      "dip": -40.17,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.352Z",
+      "updated_at": "2026-05-15T14:36:44.352Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "aafc2142-05c7-44c8-8268-89c65ba39459",
+    "fields": {
+      "name": "DH-WESTTHO-003",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "4243fa19-ae93-4612-9bff-f446df5a86d0",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (134.7879335044961 -32.867177438324674)",
+      "depth": 650.48,
+      "azimuth": 16.47,
+      "dip": -61.81,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.346Z",
+      "updated_at": "2026-05-15T14:36:44.346Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "acc5cb07-9241-4fa2-b19a-970114bc9087",
+    "fields": {
+      "name": "DH-HOOPERTO-001",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "209542e4-8823-4595-a835-1f46dbe3f1d0",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (142.6658649094474 -28.095651916235834)",
+      "depth": 428.88,
+      "azimuth": 287.45,
+      "dip": -81.37,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.325Z",
+      "updated_at": "2026-05-15T14:36:44.325Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "ae12fe0e-7747-44c2-8495-2bf7afad939b",
+    "fields": {
+      "name": "DH-WESTTHO-002",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "4243fa19-ae93-4612-9bff-f446df5a86d0",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (131.45839948443708 -34.71034466902139)",
+      "depth": 543.52,
+      "azimuth": 127.27,
+      "dip": -16.54,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.345Z",
+      "updated_at": "2026-05-15T14:36:44.345Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "b1c0e1f8-0736-43bd-8e12-364b2d3266fe",
+    "fields": {
+      "name": "DH-SOUTHAN-004",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "20a96b39-c55d-46ed-8df5-5f7b0deed2a0",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (118.79564228009147 -19.462756398503593)",
+      "depth": 698.75,
+      "azimuth": 202.39,
+      "dip": -31.44,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.356Z",
+      "updated_at": "2026-05-15T14:36:44.356Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "b6a8ec0b-0afe-475e-9c95-2a0afb2e8b89",
+    "fields": {
+      "name": "DH-NORTHAL-003",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "d9245ed0-02ec-46ea-8284-aee1c2c1fc0d",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (133.1864668380485 -25.868951003699543)",
+      "depth": 266.22,
+      "azimuth": 83.03,
+      "dip": -75.28,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.323Z",
+      "updated_at": "2026-05-15T14:36:44.323Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "c5367be3-4779-4c71-b170-2b9a8bb7a163",
+    "fields": {
+      "name": "DH-WESTTHO-001",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "4243fa19-ae93-4612-9bff-f446df5a86d0",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (145.38103277679673 -23.736547742299788)",
+      "depth": 68.43,
+      "azimuth": 58.94,
+      "dip": -52.69,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.344Z",
+      "updated_at": "2026-05-15T14:36:44.344Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "cf45bf66-e165-42a8-845e-c1b7765eb7c3",
+    "fields": {
+      "name": "DH-NEWAMAN-002",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "430eff73-15ac-4ae9-9d38-ba80746c4513",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (139.26836976407776 -25.849597829017142)",
+      "depth": 269.23,
+      "azimuth": 321.83,
+      "dip": -60.27,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.329Z",
+      "updated_at": "2026-05-15T14:36:44.329Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "d0ef6d9b-809b-40ac-ae79-a7cebdefab7e",
+    "fields": {
+      "name": "DH-LAWRENCE-003",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "a4f13b66-cf8a-425f-8ebb-92117693991a",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (147.334879125019 -18.15915022032944)",
+      "depth": 795.37,
+      "azimuth": 211.73,
+      "dip": -68.25,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.351Z",
+      "updated_at": "2026-05-15T14:36:44.351Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "d9c0700c-4b36-4b9d-afe4-19787179ac29",
+    "fields": {
+      "name": "DH-SOUTHRO-003",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "71e4d64d-0c20-4844-a003-309d9c7b8420",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (136.8960863587288 -23.505536485589438)",
+      "depth": 740.74,
+      "azimuth": 10.57,
+      "dip": -58.94,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.333Z",
+      "updated_at": "2026-05-15T14:36:44.333Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "da29ead8-a79b-4e61-88b7-fec3f9720a53",
+    "fields": {
+      "name": "DH-EMILYSID-001",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "e67e80de-06a4-49b5-a8ef-3663fde1c118",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (134.94470859790218 -31.49361727829557)",
+      "depth": 161.39,
+      "azimuth": 14.69,
+      "dip": -81.03,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.338Z",
+      "updated_at": "2026-05-15T14:36:44.338Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "dbf5e49c-9828-4aa5-80d4-66a016e0c988",
+    "fields": {
+      "name": "DH-LAWRENCE-001",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "a4f13b66-cf8a-425f-8ebb-92117693991a",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (132.47411319180128 -33.36025378981543)",
+      "depth": 212.37,
+      "azimuth": 338.43,
+      "dip": -62.2,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.348Z",
+      "updated_at": "2026-05-15T14:36:44.348Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "dd6d2a66-b8e1-48f6-b2b6-93cf10c1b79a",
+    "fields": {
+      "name": "DH-LAWRENCE-002",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "a4f13b66-cf8a-425f-8ebb-92117693991a",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (120.67456203261035 -22.33251652614951)",
+      "depth": 216.59,
+      "azimuth": 21.2,
+      "dip": -70.2,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.349Z",
+      "updated_at": "2026-05-15T14:36:44.349Z"
+    }
+  },
+  {
+    "model": "core.drillhole",
+    "pk": "ecf94837-908f-4e00-af5f-1cbe178baf96",
+    "fields": {
+      "name": "DH-NORTHAL-004",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "d9245ed0-02ec-46ea-8284-aee1c2c1fc0d",
+      "prospect": null,
+      "collar_location": "SRID=4326;POINT (136.2625292516002 -31.857473647598372)",
+      "depth": 422.05,
+      "azimuth": 1.2,
+      "dip": -89.71,
+      "drill_type": "",
+      "company": "",
+      "drill_company": "",
+      "current_epm": "",
+      "original_epm": "",
+      "year_report": null,
+      "company_report": "",
+      "elevation": null,
+      "date_commenced": null,
+      "date_completed": null,
+      "hole_id_original": "",
+      "comments": "",
+      "source_crs": "",
+      "source_easting": null,
+      "source_northing": null,
+      "created_at": "2026-05-15T14:36:44.324Z",
+      "updated_at": "2026-05-15T14:36:44.324Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "0afd0ef9-680f-459e-b1f8-615518dc54ee",
+    "fields": {
+      "name": "Chapman Zone",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "a4f13b66-cf8a-425f-8ebb-92117693991a",
+      "hypothesis": "Structural mapping and geochemical sampling indicate a shear-hosted gold mineralisation system associated with the regional fault corridor. Elevated Iron Ore values in rock chips and soils define a 1.7 km trend with anomalous pathfinder elements suggestive of a significant discovery.",
+      "objective": "The primary objective is to confirm continuity of the high-grade shoot identified in Phase 1 and establish an inferred resource base sufficient to support a maiden drilling programme. Secondary objective: assess metallurgical recovery potential for Iron Ore.",
+      "geom": "SRID=4326;POINT (138.49559507314655 -34.54544618057249)",
+      "area_geom": null,
+      "created_at": "2026-05-15T14:36:44.391Z",
+      "updated_at": "2026-05-15T14:36:44.391Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "1001cb6d-7063-4258-b34b-449771a16624",
+    "fields": {
+      "name": "Allen Deposit",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "20a96b39-c55d-46ed-8df5-5f7b0deed2a0",
+      "hypothesis": "Structural mapping and geochemical sampling indicate a sediment-hosted copper mineralisation system associated with the regional fault corridor. Elevated Gold values in rock chips and soils define a 1.0 km trend with anomalous pathfinder elements suggestive of a significant discovery.",
+      "objective": "The primary objective is to identify additional lodes beneath the transported cover and establish an inferred resource base sufficient to support a maiden drilling programme. Secondary objective: assess metallurgical recovery potential for Gold.",
+      "geom": "SRID=4326;POINT (119.63010990963417 -21.460424718952748)",
+      "area_geom": null,
+      "created_at": "2026-05-15T14:36:44.392Z",
+      "updated_at": "2026-05-15T14:36:44.392Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "2206069b-48e3-47fd-97e2-38b21f8d1ae7",
+    "fields": {
+      "name": "Parker Lode",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "71e4d64d-0c20-4844-a003-309d9c7b8420",
+      "hypothesis": "Structural mapping and geochemical sampling indicate a epithermal gold-silver mineralisation system associated with the regional fault corridor. Elevated Iron Ore values in rock chips and soils define a 3.7 km trend with anomalous pathfinder elements suggestive of a significant discovery.",
+      "objective": "The primary objective is to extend the known resource along strike and establish an inferred resource base sufficient to support a maiden drilling programme. Secondary objective: assess metallurgical recovery potential for Iron Ore.",
+      "geom": "SRID=4326;POINT (135.37123007792036 -32.42730415181173)",
+      "area_geom": null,
+      "created_at": "2026-05-15T14:36:44.373Z",
+      "updated_at": "2026-05-15T14:36:44.373Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "2e363237-a155-4975-ae22-1d88bebb69e3",
+    "fields": {
+      "name": "Robinson Deposit",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "71e4d64d-0c20-4844-a003-309d9c7b8420",
+      "hypothesis": "Structural mapping and geochemical sampling indicate a porphyry copper-gold mineralisation system associated with the regional fault corridor. Elevated Iron Ore values in rock chips and soils define a 1.6 km trend with anomalous pathfinder elements suggestive of a significant discovery.",
+      "objective": "The primary objective is to test the depth extent of the mineralised corridor and establish an inferred resource base sufficient to support a maiden drilling programme. Secondary objective: assess metallurgical recovery potential for Iron Ore.",
+      "geom": "SRID=4326;POINT (116.01483078564705 -26.32656954334021)",
+      "area_geom": null,
+      "created_at": "2026-05-15T14:36:44.375Z",
+      "updated_at": "2026-05-15T14:36:44.375Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "3bbc43f7-0db3-4262-8b0f-0c999ecdc444",
+    "fields": {
+      "name": "Martin Deposit",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "a4f13b66-cf8a-425f-8ebb-92117693991a",
+      "hypothesis": "Structural mapping and geochemical sampling indicate a porphyry copper-gold mineralisation system associated with the regional fault corridor. Elevated Iron Ore values in rock chips and soils define a 1.9 km trend with anomalous pathfinder elements suggestive of a significant discovery.",
+      "objective": "The primary objective is to identify additional lodes beneath the transported cover and establish an inferred resource base sufficient to support a maiden drilling programme. Secondary objective: assess metallurgical recovery potential for Iron Ore.",
+      "geom": "SRID=4326;POINT (126.06655821239015 -24.336521795287155)",
+      "area_geom": null,
+      "created_at": "2026-05-15T14:36:44.389Z",
+      "updated_at": "2026-05-15T14:36:44.389Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "3ef03428-703b-4d3e-bfe3-579a681f3dc5",
+    "fields": {
+      "name": "Chaney Deposit",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "20a96b39-c55d-46ed-8df5-5f7b0deed2a0",
+      "hypothesis": "Structural mapping and geochemical sampling indicate a sediment-hosted copper mineralisation system associated with the regional fault corridor. Elevated Gold values in rock chips and soils define a 2.9 km trend with anomalous pathfinder elements suggestive of a significant discovery.",
+      "objective": "The primary objective is to delineate the footprint of the anomaly for drill targeting and establish an inferred resource base sufficient to support a maiden drilling programme. Secondary objective: assess metallurgical recovery potential for Gold.",
+      "geom": "SRID=4326;POINT (149.18059536451767 -31.077116795176824)",
+      "area_geom": null,
+      "created_at": "2026-05-15T14:36:44.394Z",
+      "updated_at": "2026-05-15T14:36:44.394Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "586155d4-b08b-43e1-b2ef-ade6b79aa79c",
+    "fields": {
+      "name": "Mcgee Deposit",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "4243fa19-ae93-4612-9bff-f446df5a86d0",
+      "hypothesis": "Structural mapping and geochemical sampling indicate a sediment-hosted copper mineralisation system associated with the regional fault corridor. Elevated Coal values in rock chips and soils define a 1.0 km trend with anomalous pathfinder elements suggestive of a significant discovery.",
+      "objective": "The primary objective is to extend the known resource along strike and establish an inferred resource base sufficient to support a maiden drilling programme. Secondary objective: assess metallurgical recovery potential for Coal.",
+      "geom": "SRID=4326;POINT (138.76256152574095 -32.27787624816153)",
+      "area_geom": null,
+      "created_at": "2026-05-15T14:36:44.387Z",
+      "updated_at": "2026-05-15T14:36:44.387Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "6ebdffb9-0bb0-459e-ad23-d2ec464f5169",
+    "fields": {
+      "name": "Walker Zone",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "4243fa19-ae93-4612-9bff-f446df5a86d0",
+      "hypothesis": "Structural mapping and geochemical sampling indicate a VMS mineralisation system associated with the regional fault corridor. Elevated Coal values in rock chips and soils define a 2.9 km trend with anomalous pathfinder elements suggestive of a significant discovery.",
+      "objective": "The primary objective is to extend the known resource along strike and establish an inferred resource base sufficient to support a maiden drilling programme. Secondary objective: assess metallurgical recovery potential for Coal.",
+      "geom": "SRID=4326;POINT (136.72371462177733 -31.0921140101953)",
+      "area_geom": null,
+      "created_at": "2026-05-15T14:36:44.385Z",
+      "updated_at": "2026-05-15T14:36:44.385Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "747d8b76-56b1-4164-93e6-07011cf0de45",
+    "fields": {
+      "name": "Rodriguez Deposit",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "d9245ed0-02ec-46ea-8284-aee1c2c1fc0d",
+      "hypothesis": "Structural mapping and geochemical sampling indicate a orogenic gold mineralisation system associated with the regional fault corridor. Elevated Coal values in rock chips and soils define a 2.0 km trend with anomalous pathfinder elements suggestive of a significant discovery.",
+      "objective": "The primary objective is to extend the known resource along strike and establish an inferred resource base sufficient to support a maiden drilling programme. Secondary objective: assess metallurgical recovery potential for Coal.",
+      "geom": "SRID=4326;POINT (125.6301929791433 -30.76323767340447)",
+      "area_geom": null,
+      "created_at": "2026-05-15T14:36:44.362Z",
+      "updated_at": "2026-05-15T14:36:44.362Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "90af1872-4ee9-4807-9583-ee3220b7bca5",
+    "fields": {
+      "name": "Brown Zone",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "e67e80de-06a4-49b5-a8ef-3663fde1c118",
+      "hypothesis": "Structural mapping and geochemical sampling indicate a sediment-hosted copper mineralisation system associated with the regional fault corridor. Elevated Gold values in rock chips and soils define a 3.7 km trend with anomalous pathfinder elements suggestive of a significant discovery.",
+      "objective": "The primary objective is to test the depth extent of the mineralised corridor and establish an inferred resource base sufficient to support a maiden drilling programme. Secondary objective: assess metallurgical recovery potential for Gold.",
+      "geom": "SRID=4326;POINT (118.4414802539725 -34.19241011917789)",
+      "area_geom": null,
+      "created_at": "2026-05-15T14:36:44.382Z",
+      "updated_at": "2026-05-15T14:36:44.382Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "a9e8fd79-5d17-4667-ba78-9e930937223e",
+    "fields": {
+      "name": "Bentley Reef",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "430eff73-15ac-4ae9-9d38-ba80746c4513",
+      "hypothesis": "Structural mapping and geochemical sampling indicate a IOCG mineralisation system associated with the regional fault corridor. Elevated Nickel values in rock chips and soils define a 3.8 km trend with anomalous pathfinder elements suggestive of a significant discovery.",
+      "objective": "The primary objective is to identify additional lodes beneath the transported cover and establish an inferred resource base sufficient to support a maiden drilling programme. Secondary objective: assess metallurgical recovery potential for Nickel.",
+      "geom": "SRID=4326;POINT (142.7852446372881 -33.43122568994368)",
+      "area_geom": null,
+      "created_at": "2026-05-15T14:36:44.371Z",
+      "updated_at": "2026-05-15T14:36:44.371Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "b1599c16-70eb-48ac-be46-c60eaf1cf785",
+    "fields": {
+      "name": "Thompson Deposit",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "430eff73-15ac-4ae9-9d38-ba80746c4513",
+      "hypothesis": "Structural mapping and geochemical sampling indicate a skarn mineralisation system associated with the regional fault corridor. Elevated Nickel values in rock chips and soils define a 2.9 km trend with anomalous pathfinder elements suggestive of a significant discovery.",
+      "objective": "The primary objective is to test the depth extent of the mineralised corridor and establish an inferred resource base sufficient to support a maiden drilling programme. Secondary objective: assess metallurgical recovery potential for Nickel.",
+      "geom": "SRID=4326;POINT (128.91948094849184 -34.521893222919886)",
+      "area_geom": null,
+      "created_at": "2026-05-15T14:36:44.369Z",
+      "updated_at": "2026-05-15T14:36:44.369Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "bf3288dd-9b58-49c6-948d-08690974431e",
+    "fields": {
+      "name": "Porter Deposit",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "25f67889-1cfb-4232-85cf-fcf5253347c1",
+      "hypothesis": "Structural mapping and geochemical sampling indicate a sediment-hosted copper mineralisation system associated with the regional fault corridor. Elevated Iron Ore values in rock chips and soils define a 2.5 km trend with anomalous pathfinder elements suggestive of a significant discovery.",
+      "objective": "The primary objective is to identify additional lodes beneath the transported cover and establish an inferred resource base sufficient to support a maiden drilling programme. Secondary objective: assess metallurgical recovery potential for Iron Ore.",
+      "geom": "SRID=4326;POINT (138.04136135954639 -25.867880096709005)",
+      "area_geom": null,
+      "created_at": "2026-05-15T14:36:44.380Z",
+      "updated_at": "2026-05-15T14:36:44.380Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "c3df9d7a-04d6-41e4-8637-1fc47409fbf6",
+    "fields": {
+      "name": "Robinson Zone",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "e67e80de-06a4-49b5-a8ef-3663fde1c118",
+      "hypothesis": "Structural mapping and geochemical sampling indicate a orogenic gold mineralisation system associated with the regional fault corridor. Elevated Gold values in rock chips and soils define a 1.4 km trend with anomalous pathfinder elements suggestive of a significant discovery.",
+      "objective": "The primary objective is to identify additional lodes beneath the transported cover and establish an inferred resource base sufficient to support a maiden drilling programme. Secondary objective: assess metallurgical recovery potential for Gold.",
+      "geom": "SRID=4326;POINT (131.6882353145215 -22.556805620564212)",
+      "area_geom": null,
+      "created_at": "2026-05-15T14:36:44.383Z",
+      "updated_at": "2026-05-15T14:36:44.383Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "c7e14870-46df-4bbf-a550-199ca8add270",
+    "fields": {
+      "name": "Farley Zone",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "209542e4-8823-4595-a835-1f46dbe3f1d0",
+      "hypothesis": "Structural mapping and geochemical sampling indicate a orogenic gold mineralisation system associated with the regional fault corridor. Elevated Zinc values in rock chips and soils define a 1.1 km trend with anomalous pathfinder elements suggestive of a significant discovery.",
+      "objective": "The primary objective is to confirm continuity of the high-grade shoot identified in Phase 1 and establish an inferred resource base sufficient to support a maiden drilling programme. Secondary objective: assess metallurgical recovery potential for Zinc.",
+      "geom": "SRID=4326;POINT (145.82837989381417 -30.542214410786695)",
+      "area_geom": null,
+      "created_at": "2026-05-15T14:36:44.364Z",
+      "updated_at": "2026-05-15T14:36:44.364Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "ee2f2538-e7b7-4318-b173-8c27b72b58f6",
+    "fields": {
+      "name": "Davis Zone",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "25f67889-1cfb-4232-85cf-fcf5253347c1",
+      "hypothesis": "Structural mapping and geochemical sampling indicate a VMS mineralisation system associated with the regional fault corridor. Elevated Iron Ore values in rock chips and soils define a 1.9 km trend with anomalous pathfinder elements suggestive of a significant discovery.",
+      "objective": "The primary objective is to confirm continuity of the high-grade shoot identified in Phase 1 and establish an inferred resource base sufficient to support a maiden drilling programme. Secondary objective: assess metallurgical recovery potential for Iron Ore.",
+      "geom": "SRID=4326;POINT (137.41463203336187 -21.553468033748835)",
+      "area_geom": null,
+      "created_at": "2026-05-15T14:36:44.378Z",
+      "updated_at": "2026-05-15T14:36:44.378Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "f9b9bdb7-1009-44b2-a366-36d096dd5bfe",
+    "fields": {
+      "name": "Brown Deposit",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "d9245ed0-02ec-46ea-8284-aee1c2c1fc0d",
+      "hypothesis": "Structural mapping and geochemical sampling indicate a shear-hosted gold mineralisation system associated with the regional fault corridor. Elevated Coal values in rock chips and soils define a 2.3 km trend with anomalous pathfinder elements suggestive of a significant discovery.",
+      "objective": "The primary objective is to confirm continuity of the high-grade shoot identified in Phase 1 and establish an inferred resource base sufficient to support a maiden drilling programme. Secondary objective: assess metallurgical recovery potential for Coal.",
+      "geom": "SRID=4326;POINT (132.26255550214535 -30.93983586285374)",
+      "area_geom": null,
+      "created_at": "2026-05-15T14:36:44.359Z",
+      "updated_at": "2026-05-15T14:36:44.359Z"
+    }
+  },
+  {
+    "model": "core.prospect",
+    "pk": "fc6375bc-0d13-4d2e-80a5-dcb0b6d3312a",
+    "fields": {
+      "name": "Davis Deposit",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "209542e4-8823-4595-a835-1f46dbe3f1d0",
+      "hypothesis": "Structural mapping and geochemical sampling indicate a porphyry copper-gold mineralisation system associated with the regional fault corridor. Elevated Zinc values in rock chips and soils define a 2.7 km trend with anomalous pathfinder elements suggestive of a significant discovery.",
+      "objective": "The primary objective is to confirm continuity of the high-grade shoot identified in Phase 1 and establish an inferred resource base sufficient to support a maiden drilling programme. Secondary objective: assess metallurgical recovery potential for Zinc.",
+      "geom": "SRID=4326;POINT (147.89275479894908 -34.596164660842724)",
+      "area_geom": null,
+      "created_at": "2026-05-15T14:36:44.366Z",
+      "updated_at": "2026-05-15T14:36:44.366Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "65c0dcde-bf88-4d1f-95ed-b30a9d0510a7",
+    "fields": {
+      "name": "ML-9356/67",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "a4f13b66-cf8a-425f-8ebb-92117693991a",
+      "geom": "SRID=4326;MULTIPOLYGON (((143.64703794767118 -32.59711945829628, 143.7470379476712 -32.59711945829628, 143.7470379476712 -32.49711945829628, 143.64703794767118 -32.49711945829628, 143.64703794767118 -32.59711945829628)))",
+      "created_at": "2026-05-15T14:36:44.407Z",
+      "updated_at": "2026-05-15T14:36:44.407Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "6ae5dcc5-d47f-4be9-b43e-17116b0701fc",
+    "fields": {
+      "name": "ML-4745/54",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "d9245ed0-02ec-46ea-8284-aee1c2c1fc0d",
+      "geom": "SRID=4326;MULTIPOLYGON (((118.36194655930947 -29.616118437449572, 118.46194655930947 -29.616118437449572, 118.46194655930947 -29.51611843744957, 118.36194655930947 -29.51611843744957, 118.36194655930947 -29.616118437449572)))",
+      "created_at": "2026-05-15T14:36:44.396Z",
+      "updated_at": "2026-05-15T14:36:44.396Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "6b31d9c4-70dc-4f92-ad94-042f912c28a0",
+    "fields": {
+      "name": "ML-5392/28",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "e67e80de-06a4-49b5-a8ef-3663fde1c118",
+      "geom": "SRID=4326;MULTIPOLYGON (((147.3652665774951 -20.55247829900264, 147.46526657749513 -20.55247829900264, 147.46526657749513 -20.45247829900264, 147.3652665774951 -20.45247829900264, 147.3652665774951 -20.55247829900264)))",
+      "created_at": "2026-05-15T14:36:44.403Z",
+      "updated_at": "2026-05-15T14:36:44.403Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "72e4664e-87e8-453b-807c-5e39c91ce50d",
+    "fields": {
+      "name": "ML-3283/03",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "4243fa19-ae93-4612-9bff-f446df5a86d0",
+      "geom": "SRID=4326;MULTIPOLYGON (((128.17988819221483 -34.441667824631914, 128.27988819221486 -34.441667824631914, 128.27988819221486 -34.34166782463192, 128.17988819221483 -34.34166782463192, 128.17988819221483 -34.441667824631914)))",
+      "created_at": "2026-05-15T14:36:44.406Z",
+      "updated_at": "2026-05-15T14:36:44.406Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "74e82d0f-45bb-4b7b-9cc7-a0d9ff40fa75",
+    "fields": {
+      "name": "ML-1772/11",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "e67e80de-06a4-49b5-a8ef-3663fde1c118",
+      "geom": "SRID=4326;MULTIPOLYGON (((146.89404203405311 -19.125078756200548, 146.99404203405314 -19.125078756200548, 146.99404203405314 -19.025078756200546, 146.89404203405311 -19.025078756200546, 146.89404203405311 -19.125078756200548)))",
+      "created_at": "2026-05-15T14:36:44.404Z",
+      "updated_at": "2026-05-15T14:36:44.404Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "84c80bae-964d-407b-aa60-936743ebddee",
+    "fields": {
+      "name": "ML-3014/50",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "209542e4-8823-4595-a835-1f46dbe3f1d0",
+      "geom": "SRID=4326;MULTIPOLYGON (((117.19531987320096 -32.922301717857636, 117.29531987320095 -32.922301717857636, 117.29531987320095 -32.82230171785764, 117.19531987320096 -32.82230171785764, 117.19531987320096 -32.922301717857636)))",
+      "created_at": "2026-05-15T14:36:44.398Z",
+      "updated_at": "2026-05-15T14:36:44.398Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "8b5deec3-afef-4d7d-a92a-389e7582718f",
+    "fields": {
+      "name": "ML-4042/69",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "209542e4-8823-4595-a835-1f46dbe3f1d0",
+      "geom": "SRID=4326;MULTIPOLYGON (((139.70788838778554 -34.263173717777214, 139.80788838778557 -34.263173717777214, 139.80788838778557 -34.16317371777722, 139.70788838778554 -34.16317371777722, 139.70788838778554 -34.263173717777214)))",
+      "created_at": "2026-05-15T14:36:44.397Z",
+      "updated_at": "2026-05-15T14:36:44.397Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "8d2356ce-1329-4645-a306-53acb3e79063",
+    "fields": {
+      "name": "ML-7895/04",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "a4f13b66-cf8a-425f-8ebb-92117693991a",
+      "geom": "SRID=4326;MULTIPOLYGON (((120.35436572244764 -32.10593242325964, 120.45436572244763 -32.10593242325964, 120.45436572244763 -32.005932423259644, 120.35436572244764 -32.005932423259644, 120.35436572244764 -32.10593242325964)))",
+      "created_at": "2026-05-15T14:36:44.406Z",
+      "updated_at": "2026-05-15T14:36:44.406Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "9d328073-7cb3-4abb-b2a2-bee75d1764ef",
+    "fields": {
+      "name": "ML-1996/65",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "25f67889-1cfb-4232-85cf-fcf5253347c1",
+      "geom": "SRID=4326;MULTIPOLYGON (((133.4238421208552 -32.86256021264079, 133.52384212085522 -32.86256021264079, 133.52384212085522 -32.76256021264079, 133.4238421208552 -32.76256021264079, 133.4238421208552 -32.86256021264079)))",
+      "created_at": "2026-05-15T14:36:44.403Z",
+      "updated_at": "2026-05-15T14:36:44.403Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "b3faf986-299f-47ba-b5c1-82ec3c6344e2",
+    "fields": {
+      "name": "ML-5079/84",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "430eff73-15ac-4ae9-9d38-ba80746c4513",
+      "geom": "SRID=4326;MULTIPOLYGON (((124.64114224038067 -25.89947913538549, 124.74114224038067 -25.89947913538549, 124.74114224038067 -25.79947913538549, 124.64114224038067 -25.79947913538549, 124.64114224038067 -25.89947913538549)))",
+      "created_at": "2026-05-15T14:36:44.399Z",
+      "updated_at": "2026-05-15T14:36:44.399Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "bcaf8c7f-dc3b-4b7e-af74-c9531baa40da",
+    "fields": {
+      "name": "ML-2177/46",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "20a96b39-c55d-46ed-8df5-5f7b0deed2a0",
+      "geom": "SRID=4326;MULTIPOLYGON (((127.57984783926874 -32.80355105203976, 127.67984783926873 -32.80355105203976, 127.67984783926873 -32.703551052039764, 127.57984783926874 -32.703551052039764, 127.57984783926874 -32.80355105203976)))",
+      "created_at": "2026-05-15T14:36:44.409Z",
+      "updated_at": "2026-05-15T14:36:44.409Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "bd511cd8-8f62-4057-abfd-0695572f4f95",
+    "fields": {
+      "name": "ML-4822/92",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "4243fa19-ae93-4612-9bff-f446df5a86d0",
+      "geom": "SRID=4326;MULTIPOLYGON (((143.25322566503291 -18.611165789077184, 143.35322566503294 -18.611165789077184, 143.35322566503294 -18.511165789077182, 143.25322566503291 -18.511165789077182, 143.25322566503291 -18.611165789077184)))",
+      "created_at": "2026-05-15T14:36:44.405Z",
+      "updated_at": "2026-05-15T14:36:44.405Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "c4e710b2-3d36-4f19-a49c-69f20673debc",
+    "fields": {
+      "name": "ML-4523/01",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "430eff73-15ac-4ae9-9d38-ba80746c4513",
+      "geom": "SRID=4326;MULTIPOLYGON (((124.0791865376248 -33.42399804793267, 124.1791865376248 -33.42399804793267, 124.1791865376248 -33.323998047932676, 124.0791865376248 -33.323998047932676, 124.0791865376248 -33.42399804793267)))",
+      "created_at": "2026-05-15T14:36:44.398Z",
+      "updated_at": "2026-05-15T14:36:44.398Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "cdc434b3-1a8c-4c40-8d4a-b763cc057f62",
+    "fields": {
+      "name": "ML-4861/33",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "25f67889-1cfb-4232-85cf-fcf5253347c1",
+      "geom": "SRID=4326;MULTIPOLYGON (((138.9230284746591 -33.35962711639307, 139.02302847465913 -33.35962711639307, 139.02302847465913 -33.25962711639308, 138.9230284746591 -33.25962711639308, 138.9230284746591 -33.35962711639307)))",
+      "created_at": "2026-05-15T14:36:44.402Z",
+      "updated_at": "2026-05-15T14:36:44.402Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "cf5d3303-fa51-48a2-9779-5e397b7f3fce",
+    "fields": {
+      "name": "ML-2983/76",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "71e4d64d-0c20-4844-a003-309d9c7b8420",
+      "geom": "SRID=4326;MULTIPOLYGON (((137.41006906809955 -27.601036339369813, 137.51006906809957 -27.601036339369813, 137.51006906809957 -27.50103633936981, 137.41006906809955 -27.50103633936981, 137.41006906809955 -27.601036339369813)))",
+      "created_at": "2026-05-15T14:36:44.401Z",
+      "updated_at": "2026-05-15T14:36:44.401Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "d9f2b4d6-4c41-48d9-8df4-6f709c44b199",
+    "fields": {
+      "name": "ML-4693/79",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "d9245ed0-02ec-46ea-8284-aee1c2c1fc0d",
+      "geom": "SRID=4326;MULTIPOLYGON (((132.1555851693592 -26.410389495037766, 132.25558516935922 -26.410389495037766, 132.25558516935922 -26.310389495037764, 132.1555851693592 -26.310389495037764, 132.1555851693592 -26.410389495037766)))",
+      "created_at": "2026-05-15T14:36:44.395Z",
+      "updated_at": "2026-05-15T14:36:44.395Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "da04fa08-a963-443b-893a-4b65236aca46",
+    "fields": {
+      "name": "ML-6839/96",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "20a96b39-c55d-46ed-8df5-5f7b0deed2a0",
+      "geom": "SRID=4326;MULTIPOLYGON (((120.4084448843075 -33.77721386994379, 120.5084448843075 -33.77721386994379, 120.5084448843075 -33.6772138699438, 120.4084448843075 -33.6772138699438, 120.4084448843075 -33.77721386994379)))",
+      "created_at": "2026-05-15T14:36:44.408Z",
+      "updated_at": "2026-05-15T14:36:44.408Z"
+    }
+  },
+  {
+    "model": "core.tenement",
+    "pk": "e3fddb0c-3395-472b-8389-28b6d4ea5077",
+    "fields": {
+      "name": "ML-6087/45",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "71e4d64d-0c20-4844-a003-309d9c7b8420",
+      "geom": "SRID=4326;MULTIPOLYGON (((115.69983895074954 -29.695133490421338, 115.79983895074953 -29.695133490421338, 115.79983895074953 -29.595133490421336, 115.69983895074954 -29.595133490421336, 115.69983895074954 -29.695133490421338)))",
+      "created_at": "2026-05-15T14:36:44.400Z",
+      "updated_at": "2026-05-15T14:36:44.400Z"
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "014ea404-6075-4a0e-9a45-f26e5df257e3",
+    "fields": {
+      "title": "Bill teach least.",
+      "file": "docs/valmin_014ea4.pdf",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "20a96b39-c55d-46ed-8df5-5f7b0deed2a0",
+      "tags": "[\"7\", \"11\"]",
+      "analysis_text": "",
+      "timestamp": "2026-04-15",
+      "doc_type": "VALMIN",
+      "confidentiality": "CONFIDENTIAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "10fcce008607d2d3463390cc4e5fd8f41d5f84dd8dc4980bd6afb8c2bdf765e8",
+      "search_tsv": "'bill':1A 'least':3A 'teach':2A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.836Z",
+      "updated_at": "2026-05-15T14:36:44.836Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "0eaab743-9f5e-40b1-82cc-5ee8987ad2e0",
+    "fields": {
+      "title": "Table unit another view.",
+      "file": "docs/technical_0eaab7.pdf",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "71e4d64d-0c20-4844-a003-309d9c7b8420",
+      "tags": "[\"11\", \"15\"]",
+      "analysis_text": "",
+      "timestamp": "2026-03-13",
+      "doc_type": "TECHNICAL",
+      "confidentiality": "RESTRICTED",
+      "created_by": ["admin"],
+      "checksum_sha256": "459741f3057350f627ba038f6a15f06f359f2b014ea0ea1664542f0f08c48c0d",
+      "search_tsv": "'anoth':3A 'tabl':1A 'unit':2A 'view':4A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.589Z",
+      "updated_at": "2026-05-15T14:36:44.589Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "1092add8-756e-478c-97e1-54e86452a7b4",
+    "fields": {
+      "title": "Maybe Mr probably will.",
+      "file": "docs/environmental_1092ad.pdf",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "209542e4-8823-4595-a835-1f46dbe3f1d0",
+      "tags": "[\"11\"]",
+      "analysis_text": "",
+      "timestamp": "2025-10-10",
+      "doc_type": "ENVIRONMENTAL",
+      "confidentiality": "RESTRICTED",
+      "created_by": ["admin"],
+      "checksum_sha256": "17a5e59f0656eaca039a4536393a2cddf7273092ce04ec22cac41e3067d59e18",
+      "search_tsv": "'mayb':1A 'mr':2A 'probabl':3A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.504Z",
+      "updated_at": "2026-05-15T14:36:44.504Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "169b2290-d3ba-48d8-a4a1-1ea55904e049",
+    "fields": {
+      "title": "Past we window financial fire again.",
+      "file": "docs/environmental_169b22.pdf",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "71e4d64d-0c20-4844-a003-309d9c7b8420",
+      "tags": "[\"1\", \"3\", \"18\"]",
+      "analysis_text": "",
+      "timestamp": "2024-08-11",
+      "doc_type": "ENVIRONMENTAL",
+      "confidentiality": "RESTRICTED",
+      "created_by": ["admin"],
+      "checksum_sha256": "acd9123a2977e4f867c679fa91d62f92731d788b996db9229dbec486d81c4622",
+      "search_tsv": "'financi':4A 'fire':5A 'past':1A 'window':3A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.567Z",
+      "updated_at": "2026-05-15T14:36:44.567Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "33738869-a9a6-4f17-87fa-03462f0e7796",
+    "fields": {
+      "title": "Do board road price could.",
+      "file": "docs/environmental_337388.pdf",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "a4f13b66-cf8a-425f-8ebb-92117693991a",
+      "tags": "[\"3\", \"6\", \"11\"]",
+      "analysis_text": "",
+      "timestamp": "2025-04-06",
+      "doc_type": "ENVIRONMENTAL",
+      "confidentiality": "PUBLIC",
+      "created_by": ["admin"],
+      "checksum_sha256": "10ba213d5b04a1243db1adb3e9252a7863b739ecab831d2aab80c49be92d65b7",
+      "search_tsv": "'board':2A 'could':5A 'price':4A 'road':3A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.758Z",
+      "updated_at": "2026-05-15T14:36:44.758Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "3688f4ca-d73e-464f-a592-6324d6779dff",
+    "fields": {
+      "title": "Major rule occur become.",
+      "file": "docs/jorc_3688f4.pdf",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "20a96b39-c55d-46ed-8df5-5f7b0deed2a0",
+      "tags": "[\"5\"]",
+      "analysis_text": "",
+      "timestamp": "2024-11-27",
+      "doc_type": "JORC",
+      "confidentiality": "CONFIDENTIAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "16d301b4d2aee673a63d7f824f4b9064305b1d6872f6d8c87ff9ff730852b498",
+      "search_tsv": "'becom':4A 'major':1A 'occur':3A 'rule':2A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.816Z",
+      "updated_at": "2026-05-15T14:36:44.816Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "3bbc3882-2d3a-4d00-8ce3-a9136e9ad169",
+    "fields": {
+      "title": "Together really cut personal agreement huge.",
+      "file": "docs/environmental_3bbc38.pdf",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "209542e4-8823-4595-a835-1f46dbe3f1d0",
+      "tags": "[\"4\"]",
+      "analysis_text": "",
+      "timestamp": "2024-10-19",
+      "doc_type": "ENVIRONMENTAL",
+      "confidentiality": "RESTRICTED",
+      "created_by": ["admin"],
+      "checksum_sha256": "7e77c3825b0502cf4b8a084d872f20bf111bb313e240a971ae10279e15ef18d5",
+      "search_tsv": "'agreement':5A 'cut':3A 'huge':6A 'person':4A 'realli':2A 'togeth':1A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.477Z",
+      "updated_at": "2026-05-15T14:36:44.477Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "3db3265e-f111-44c0-b479-16bfb6c87854",
+    "fields": {
+      "title": "Network heavy too board much.",
+      "file": "docs/jorc_3db326.pdf",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "25f67889-1cfb-4232-85cf-fcf5253347c1",
+      "tags": "[\"6\", \"8\", \"9\", \"14\"]",
+      "analysis_text": "",
+      "timestamp": "2025-04-19",
+      "doc_type": "JORC",
+      "confidentiality": "PUBLIC",
+      "created_by": ["admin"],
+      "checksum_sha256": "ffff8d106c166ebac812ba67a36211dfd7e6b51f444d0175626f03dd1ca7ff3c",
+      "search_tsv": "'board':4A 'heavi':2A 'much':5A 'network':1A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.639Z",
+      "updated_at": "2026-05-15T14:36:44.639Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "4f404060-cde9-4b28-a28c-c1f5ad1dcdd4",
+    "fields": {
+      "title": "Business mouth whatever sport.",
+      "file": "docs/internal_4f4040.pdf",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "4243fa19-ae93-4612-9bff-f446df5a86d0",
+      "tags": "[\"2\", \"3\", \"5\", \"14\"]",
+      "analysis_text": "",
+      "timestamp": "2025-05-02",
+      "doc_type": "INTERNAL",
+      "confidentiality": "INTERNAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "dc8c752bcca4c7cd433109805af8f4f454fd2d1389d2c61eaa1ae95abfcf1fd4",
+      "search_tsv": "'busi':1A 'mouth':2A 'sport':4A 'whatev':3A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.713Z",
+      "updated_at": "2026-05-15T14:36:44.713Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "500b40cd-9980-4a6c-9844-5f1f7dd3d2f6",
+    "fields": {
+      "title": "Certain star ground avoid choose author.",
+      "file": "docs/internal_500b40.pdf",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "25f67889-1cfb-4232-85cf-fcf5253347c1",
+      "tags": "[\"5\", \"8\", \"12\", \"14\"]",
+      "analysis_text": "",
+      "timestamp": "2026-01-26",
+      "doc_type": "INTERNAL",
+      "confidentiality": "RESTRICTED",
+      "created_by": ["admin"],
+      "checksum_sha256": "383cac60159c9a6e44b9ff178b6e878cbd715b0a2dcd62937a21053db228db62",
+      "search_tsv": "'author':6A 'avoid':4A 'certain':1A 'choos':5A 'ground':3A 'star':2A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.607Z",
+      "updated_at": "2026-05-15T14:36:44.607Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "51c3893e-0b0f-44d9-a0f1-c33b45546dad",
+    "fields": {
+      "title": "Rule live wonder read building.",
+      "file": "docs/valmin_51c389.pdf",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "430eff73-15ac-4ae9-9d38-ba80746c4513",
+      "tags": "[\"10\"]",
+      "analysis_text": "",
+      "timestamp": "2025-03-25",
+      "doc_type": "VALMIN",
+      "confidentiality": "RESTRICTED",
+      "created_by": ["admin"],
+      "checksum_sha256": "cfffb5fdc3ad819f9dd59e1fa47a6ae10ee4e73a4eae05f62c54bdc66953b2c6",
+      "search_tsv": "'build':5A 'live':2A 'read':4A 'rule':1A 'wonder':3A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.517Z",
+      "updated_at": "2026-05-15T14:36:44.517Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "5259053b-7ac3-470e-b3b7-7a5ed9770f67",
+    "fields": {
+      "title": "Weight later window science century.",
+      "file": "docs/environmental_525905.pdf",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "4243fa19-ae93-4612-9bff-f446df5a86d0",
+      "tags": "[\"11\", \"14\", \"18\"]",
+      "analysis_text": "",
+      "timestamp": "2026-01-11",
+      "doc_type": "ENVIRONMENTAL",
+      "confidentiality": "RESTRICTED",
+      "created_by": ["admin"],
+      "checksum_sha256": "cf33869858f054edcfd9702e3c91b9041af000307e633f3b9db8592abf154ed6",
+      "search_tsv": "'centuri':5A 'later':2A 'scienc':4A 'weight':1A 'window':3A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.728Z",
+      "updated_at": "2026-05-15T14:36:44.728Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "570c61f5-2388-49e1-aa04-2b2cbbac2742",
+    "fields": {
+      "title": "Practice available tonight.",
+      "file": "docs/valmin_570c61.pdf",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "d9245ed0-02ec-46ea-8284-aee1c2c1fc0d",
+      "tags": "[\"3\", \"6\", \"9\", \"11\"]",
+      "analysis_text": "",
+      "timestamp": "2024-07-04",
+      "doc_type": "VALMIN",
+      "confidentiality": "RESTRICTED",
+      "created_by": ["admin"],
+      "checksum_sha256": "40a4749772b443be75c19c81820bdaca4d3b225e8c9fcf724c6eae1e12d3c2fd",
+      "search_tsv": "'avail':2A 'practic':1A 'tonight':3A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.452Z",
+      "updated_at": "2026-05-15T14:36:44.452Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "6f8c696c-1abb-4b92-945c-ca61d47cf9ec",
+    "fields": {
+      "title": "Identify experience model.",
+      "file": "docs/jorc_6f8c69.pdf",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "e67e80de-06a4-49b5-a8ef-3663fde1c118",
+      "tags": "[\"4\", \"7\"]",
+      "analysis_text": "",
+      "timestamp": "2024-10-26",
+      "doc_type": "JORC",
+      "confidentiality": "RESTRICTED",
+      "created_by": ["admin"],
+      "checksum_sha256": "a394e3b80456763432c548a17195ae29343a099976ee51ec39b0dc87793b46c3",
+      "search_tsv": "'experi':2A 'identifi':1A 'model':3A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.662Z",
+      "updated_at": "2026-05-15T14:36:44.662Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "766827ac-50c6-4e71-91f3-c9fb840d292d",
+    "fields": {
+      "title": "Study performance member.",
+      "file": "docs/internal_766827.pdf",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "209542e4-8823-4595-a835-1f46dbe3f1d0",
+      "tags": "[\"5\", \"8\", \"9\", \"10\"]",
+      "analysis_text": "",
+      "timestamp": "2024-06-05",
+      "doc_type": "INTERNAL",
+      "confidentiality": "INTERNAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "49850b596407bbfbb36946ddb8b322d023b59b4e39479c28c56da04d0033d8d7",
+      "search_tsv": "'member':3A 'perform':2A 'studi':1A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.490Z",
+      "updated_at": "2026-05-15T14:36:44.490Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "79663341-a04e-47ee-bf2a-85d7679d7657",
+    "fields": {
+      "title": "Hand activity shoulder.",
+      "file": "docs/environmental_796633.pdf",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "a4f13b66-cf8a-425f-8ebb-92117693991a",
+      "tags": "[\"8\", \"14\"]",
+      "analysis_text": "",
+      "timestamp": "2025-04-17",
+      "doc_type": "ENVIRONMENTAL",
+      "confidentiality": "INTERNAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "112b8b43e5e96d8a4dba7aa01dbfb1d588fc2300ff579480ef9df20ab073da3c",
+      "search_tsv": "'activ':2A 'hand':1A 'shoulder':3A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.771Z",
+      "updated_at": "2026-05-15T14:36:44.771Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "8a4fe8be-e38b-4569-a0f9-2e8a24cd9017",
+    "fields": {
+      "title": "Which science skill degree hospital accept.",
+      "file": "docs/valmin_8a4fe8.pdf",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "e67e80de-06a4-49b5-a8ef-3663fde1c118",
+      "tags": "[\"13\", \"14\", \"19\"]",
+      "analysis_text": "",
+      "timestamp": "2026-04-24",
+      "doc_type": "VALMIN",
+      "confidentiality": "CONFIDENTIAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "bd8d466842d835e6c6227b0a4185e2ffaae3d2c5cddac2e22bf310f048006137",
+      "search_tsv": "'accept':6A 'degre':4A 'hospit':5A 'scienc':2A 'skill':3A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.681Z",
+      "updated_at": "2026-05-15T14:36:44.681Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "9541ca80-1158-474b-bb9e-b9e76afc4cd3",
+    "fields": {
+      "title": "Wear best agency good radio.",
+      "file": "docs/environmental_9541ca.pdf",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "20a96b39-c55d-46ed-8df5-5f7b0deed2a0",
+      "tags": "[\"1\", \"8\", \"17\", \"18\"]",
+      "analysis_text": "",
+      "timestamp": "2025-03-30",
+      "doc_type": "ENVIRONMENTAL",
+      "confidentiality": "RESTRICTED",
+      "created_by": ["admin"],
+      "checksum_sha256": "c8e608963eb0fbb29e36a1c86afd0234af5a3fc90845d11e5da4ed5897a3f585",
+      "search_tsv": "'agenc':3A 'best':2A 'good':4A 'radio':5A 'wear':1A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.853Z",
+      "updated_at": "2026-05-15T14:36:44.853Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "a1300477-3026-4c11-8b12-7ba2e70a6e9e",
+    "fields": {
+      "title": "Find physical first always.",
+      "file": "docs/environmental_a13004.pdf",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "430eff73-15ac-4ae9-9d38-ba80746c4513",
+      "tags": "[\"2\", \"6\", \"8\", \"12\"]",
+      "analysis_text": "",
+      "timestamp": "2024-11-10",
+      "doc_type": "ENVIRONMENTAL",
+      "confidentiality": "INTERNAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "6e82f6bc1f5fd88a06dd0fb9445717705a6a2c529311986c31d74c25f4e0141f",
+      "search_tsv": "'alway':4A 'find':1A 'first':3A 'physic':2A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.529Z",
+      "updated_at": "2026-05-15T14:36:44.529Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "b170c63d-0dcd-4ddb-aacd-ddada49e77d6",
+    "fields": {
+      "title": "Interesting buy design pattern.",
+      "file": "docs/technical_b170c6.pdf",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "d9245ed0-02ec-46ea-8284-aee1c2c1fc0d",
+      "tags": "[\"4\", \"13\"]",
+      "analysis_text": "",
+      "timestamp": "2026-03-19",
+      "doc_type": "TECHNICAL",
+      "confidentiality": "PUBLIC",
+      "created_by": ["admin"],
+      "checksum_sha256": "73d06875f3edca0ba1e3fa7806c222cb618d40b43afec92748bc9350b1fdc352",
+      "search_tsv": "'buy':2A 'design':3A 'interest':1A 'pattern':4A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.468Z",
+      "updated_at": "2026-05-15T14:36:44.468Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "c68a4d4d-731b-4f32-825e-2118416f4689",
+    "fields": {
+      "title": "Town time build event moment ago.",
+      "file": "docs/technical_c68a4d.pdf",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "4243fa19-ae93-4612-9bff-f446df5a86d0",
+      "tags": "[\"3\", \"11\", \"16\", \"18\"]",
+      "analysis_text": "",
+      "timestamp": "2026-05-07",
+      "doc_type": "TECHNICAL",
+      "confidentiality": "CONFIDENTIAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "1430ccd3e52d26a36721a026e87df65e79fe1992554e6bc55deb37619ec767e2",
+      "search_tsv": "'ago':6A 'build':3A 'event':4A 'moment':5A 'time':2A 'town':1A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.743Z",
+      "updated_at": "2026-05-15T14:36:44.743Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "c7b523b6-e7e6-4f07-9e19-0727e9c4a39b",
+    "fields": {
+      "title": "Step federal natural material reality letter.",
+      "file": "docs/jorc_c7b523.pdf",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "430eff73-15ac-4ae9-9d38-ba80746c4513",
+      "tags": "[\"5\", \"6\"]",
+      "analysis_text": "",
+      "timestamp": "2025-02-07",
+      "doc_type": "JORC",
+      "confidentiality": "PUBLIC",
+      "created_by": ["admin"],
+      "checksum_sha256": "d7b8120f4cab40dbeef99959e6ef74612d524d619e64cbccef95e85c65c8e7ec",
+      "search_tsv": "'feder':2A 'letter':6A 'materi':4A 'natur':3A 'realiti':5A 'step':1A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.543Z",
+      "updated_at": "2026-05-15T14:36:44.543Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "cd546af1-18b5-42ce-8c03-5258b7470817",
+    "fields": {
+      "title": "Production no practice ten trial.",
+      "file": "docs/compliance_cd546a.pdf",
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "process": "d9245ed0-02ec-46ea-8284-aee1c2c1fc0d",
+      "tags": "[\"5\", \"9\", \"17\", \"19\"]",
+      "analysis_text": "",
+      "timestamp": "2024-08-02",
+      "doc_type": "COMPLIANCE",
+      "confidentiality": "CONFIDENTIAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "1a583de5dc5451950fb10743aa152252420e699c562e0f61a12780c73c3caea0",
+      "search_tsv": "'practic':3A 'product':1A 'ten':4A 'trial':5A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.460Z",
+      "updated_at": "2026-05-15T14:36:44.460Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "da026ee1-a253-4620-9109-f335a8966860",
+    "fields": {
+      "title": "Us college resource his know this.",
+      "file": "docs/environmental_da026e.pdf",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "25f67889-1cfb-4232-85cf-fcf5253347c1",
+      "tags": "[\"3\", \"4\", \"9\"]",
+      "analysis_text": "",
+      "timestamp": "2024-11-18",
+      "doc_type": "ENVIRONMENTAL",
+      "confidentiality": "INTERNAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "2eb91acbc7b6c62fed55a18d01425d400726eabb9a312a9eb6a6849d2c688eea",
+      "search_tsv": "'colleg':2A 'know':5A 'resourc':3A 'us':1A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.620Z",
+      "updated_at": "2026-05-15T14:36:44.620Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "dd08c827-9906-4688-867f-a9d4a0806a83",
+    "fields": {
+      "title": "Medical yourself tree baby.",
+      "file": "docs/jorc_dd08c8.pdf",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "e67e80de-06a4-49b5-a8ef-3663fde1c118",
+      "tags": "[\"1\", \"10\", \"15\"]",
+      "analysis_text": "",
+      "timestamp": "2026-04-06",
+      "doc_type": "JORC",
+      "confidentiality": "PUBLIC",
+      "created_by": ["admin"],
+      "checksum_sha256": "bbe5af4a476b3fa82c991057a1d0eb16ad0ce69f645e149df079ea89269ebd2c",
+      "search_tsv": "'babi':4A 'medic':1A 'tree':3A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.698Z",
+      "updated_at": "2026-05-15T14:36:44.698Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "df2bf594-b314-4305-930f-433ed13b0c43",
+    "fields": {
+      "title": "Keep wear just.",
+      "file": "docs/environmental_df2bf5.pdf",
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "process": "a4f13b66-cf8a-425f-8ebb-92117693991a",
+      "tags": "[\"1\"]",
+      "analysis_text": "",
+      "timestamp": "2026-05-02",
+      "doc_type": "ENVIRONMENTAL",
+      "confidentiality": "CONFIDENTIAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "9b24f71110dc5c5ef7179492e679badc042eb8ad2b12fcfded2c42952fa8fcb8",
+      "search_tsv": "'keep':1A 'wear':2A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.791Z",
+      "updated_at": "2026-05-15T14:36:44.791Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.document",
+    "pk": "feac14e2-b195-4be8-88cd-68185167e5c3",
+    "fields": {
+      "title": "Trial change move set world.",
+      "file": "docs/valmin_feac14.pdf",
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "process": "71e4d64d-0c20-4844-a003-309d9c7b8420",
+      "tags": "[\"18\"]",
+      "analysis_text": "",
+      "timestamp": "2026-04-06",
+      "doc_type": "VALMIN",
+      "confidentiality": "CONFIDENTIAL",
+      "created_by": ["admin"],
+      "checksum_sha256": "21d95eab0d2245cd83c746abc6459b1ad02d48d8d38ac1a5c55fab1a9dc3b03c",
+      "search_tsv": "'chang':2A 'move':3A 'set':4A 'trial':1A 'world':5A",
+      "extracted_text": "",
+      "created_at": "2026-05-15T14:36:44.555Z",
+      "updated_at": "2026-05-15T14:36:44.555Z",
+      "version_number": 1,
+      "parent_document": null,
+      "is_latest": true,
+      "tenement": null,
+      "commodity": "",
+      "reporting_stage": "",
+      "author_name": ""
+    }
+  },
+  {
+    "model": "core.userprofile",
+    "pk": 182,
+    "fields": {
+      "user": ["admin"],
+      "organisation": null,
+      "role": "ADMIN",
+      "clearance_level": "INTERNAL",
+      "department": "",
+      "phone": "",
+      "employee_id": null,
+      "can_approve_jorc": false,
+      "can_approve_valmin": false,
+      "created_at": "2026-05-15T14:36:42.664Z",
+      "updated_at": "2026-05-15T14:36:42.765Z"
+    }
+  },
+  {
+    "model": "core.userprofile",
+    "pk": 183,
+    "fields": {
+      "user": ["david.hamilton.9309"],
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "role": "MANAGER",
+      "clearance_level": "CONFIDENTIAL",
+      "department": "Mining Ops",
+      "phone": "(498)425-1869",
+      "employee_id": "EMP-4370",
+      "can_approve_jorc": true,
+      "can_approve_valmin": true,
+      "created_at": "2026-05-15T14:36:42.864Z",
+      "updated_at": "2026-05-15T14:36:42.868Z"
+    }
+  },
+  {
+    "model": "core.userprofile",
+    "pk": 184,
+    "fields": {
+      "user": ["jennifer.lee.5696"],
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "role": "FIELD_TECH",
+      "clearance_level": "RESTRICTED",
+      "department": "Mining Ops",
+      "phone": "4756086002",
+      "employee_id": "EMP-2630",
+      "can_approve_jorc": false,
+      "can_approve_valmin": false,
+      "created_at": "2026-05-15T14:36:42.967Z",
+      "updated_at": "2026-05-15T14:36:42.971Z"
+    }
+  },
+  {
+    "model": "core.userprofile",
+    "pk": 185,
+    "fields": {
+      "user": ["denise.rodriguez.9571"],
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "role": "GEOLOGIST",
+      "clearance_level": "RESTRICTED",
+      "department": "Compliance",
+      "phone": "001-663-889-5031x7382",
+      "employee_id": "EMP-9490",
+      "can_approve_jorc": false,
+      "can_approve_valmin": false,
+      "created_at": "2026-05-15T14:36:43.072Z",
+      "updated_at": "2026-05-15T14:36:43.075Z"
+    }
+  },
+  {
+    "model": "core.userprofile",
+    "pk": 186,
+    "fields": {
+      "user": ["sabrina.anderson.2789"],
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "role": "FIELD_TECH",
+      "clearance_level": "INTERNAL",
+      "department": "Compliance",
+      "phone": "2232585265",
+      "employee_id": "EMP-1997",
+      "can_approve_jorc": false,
+      "can_approve_valmin": false,
+      "created_at": "2026-05-15T14:36:43.173Z",
+      "updated_at": "2026-05-15T14:36:43.176Z"
+    }
+  },
+  {
+    "model": "core.userprofile",
+    "pk": 187,
+    "fields": {
+      "user": ["competent.person.oconnor-wilkins"],
+      "organisation": "16a12510-1e9b-4e97-ac6a-99874a15007e",
+      "role": "COMPETENT_PERSON",
+      "clearance_level": "JORC_APPROVED",
+      "department": "",
+      "phone": "",
+      "employee_id": "CP-8292",
+      "can_approve_jorc": true,
+      "can_approve_valmin": false,
+      "created_at": "2026-05-15T14:36:43.178Z",
+      "updated_at": "2026-05-15T14:36:43.278Z"
+    }
+  },
+  {
+    "model": "core.userprofile",
+    "pk": 188,
+    "fields": {
+      "user": ["christian.vang.3040"],
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "role": "MANAGER",
+      "clearance_level": "PUBLIC",
+      "department": "Environment",
+      "phone": "001-553-781-7900x75968",
+      "employee_id": "EMP-2955",
+      "can_approve_jorc": true,
+      "can_approve_valmin": true,
+      "created_at": "2026-05-15T14:36:43.376Z",
+      "updated_at": "2026-05-15T14:36:43.380Z"
+    }
+  },
+  {
+    "model": "core.userprofile",
+    "pk": 189,
+    "fields": {
+      "user": ["angela.miller.2802"],
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "role": "FIELD_TECH",
+      "clearance_level": "INTERNAL",
+      "department": "Mining Ops",
+      "phone": "232.424.2818",
+      "employee_id": "EMP-1052",
+      "can_approve_jorc": false,
+      "can_approve_valmin": false,
+      "created_at": "2026-05-15T14:36:43.479Z",
+      "updated_at": "2026-05-15T14:36:43.482Z"
+    }
+  },
+  {
+    "model": "core.userprofile",
+    "pk": 190,
+    "fields": {
+      "user": ["diane.blackwell.1670"],
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "role": "GEOLOGIST",
+      "clearance_level": "INTERNAL",
+      "department": "Compliance",
+      "phone": "461.576.2320x55262",
+      "employee_id": "EMP-7770",
+      "can_approve_jorc": false,
+      "can_approve_valmin": false,
+      "created_at": "2026-05-15T14:36:43.581Z",
+      "updated_at": "2026-05-15T14:36:43.585Z"
+    }
+  },
+  {
+    "model": "core.userprofile",
+    "pk": 191,
+    "fields": {
+      "user": ["william.butler.2068"],
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "role": "GEOLOGIST",
+      "clearance_level": "RESTRICTED",
+      "department": "Compliance",
+      "phone": "+1-273-699-3283x5942",
+      "employee_id": "EMP-7993",
+      "can_approve_jorc": false,
+      "can_approve_valmin": false,
+      "created_at": "2026-05-15T14:36:43.682Z",
+      "updated_at": "2026-05-15T14:36:43.686Z"
+    }
+  },
+  {
+    "model": "core.userprofile",
+    "pk": 192,
+    "fields": {
+      "user": ["competent.person.wyatt-huynh"],
+      "organisation": "42d564cc-1228-44bf-b13a-48b14fb60d46",
+      "role": "COMPETENT_PERSON",
+      "clearance_level": "JORC_APPROVED",
+      "department": "",
+      "phone": "",
+      "employee_id": "CP-1721",
+      "can_approve_jorc": true,
+      "can_approve_valmin": false,
+      "created_at": "2026-05-15T14:36:43.687Z",
+      "updated_at": "2026-05-15T14:36:43.787Z"
+    }
+  },
+  {
+    "model": "core.userprofile",
+    "pk": 193,
+    "fields": {
+      "user": ["michael.black.9505"],
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "role": "MANAGER",
+      "clearance_level": "PUBLIC",
+      "department": "Environment",
+      "phone": "+1-612-950-4756x4794",
+      "employee_id": "EMP-8870",
+      "can_approve_jorc": true,
+      "can_approve_valmin": true,
+      "created_at": "2026-05-15T14:36:43.884Z",
+      "updated_at": "2026-05-15T14:36:43.888Z"
+    }
+  },
+  {
+    "model": "core.userprofile",
+    "pk": 194,
+    "fields": {
+      "user": ["brent.griffin.3698"],
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "role": "GEOLOGIST",
+      "clearance_level": "PUBLIC",
+      "department": "Mining Ops",
+      "phone": "(401)601-9367",
+      "employee_id": "EMP-6720",
+      "can_approve_jorc": false,
+      "can_approve_valmin": false,
+      "created_at": "2026-05-15T14:36:43.986Z",
+      "updated_at": "2026-05-15T14:36:43.989Z"
+    }
+  },
+  {
+    "model": "core.userprofile",
+    "pk": 195,
+    "fields": {
+      "user": ["jason.evans.5265"],
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "role": "ANALYST",
+      "clearance_level": "PUBLIC",
+      "department": "Geology",
+      "phone": "494-650-6321",
+      "employee_id": "EMP-4805",
+      "can_approve_jorc": false,
+      "can_approve_valmin": false,
+      "created_at": "2026-05-15T14:36:44.087Z",
+      "updated_at": "2026-05-15T14:36:44.090Z"
+    }
+  },
+  {
+    "model": "core.userprofile",
+    "pk": 196,
+    "fields": {
+      "user": ["marvin.harris.2555"],
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "role": "FIELD_TECH",
+      "clearance_level": "INTERNAL",
+      "department": "Geology",
+      "phone": "705.465.0317x29349",
+      "employee_id": "EMP-5654",
+      "can_approve_jorc": false,
+      "can_approve_valmin": false,
+      "created_at": "2026-05-15T14:36:44.189Z",
+      "updated_at": "2026-05-15T14:36:44.192Z"
+    }
+  },
+  {
+    "model": "core.userprofile",
+    "pk": 197,
+    "fields": {
+      "user": ["competent.person.knight-martin"],
+      "organisation": "f34c0cdb-546e-45b0-9e43-09ca4a2b17f4",
+      "role": "COMPETENT_PERSON",
+      "clearance_level": "JORC_APPROVED",
+      "department": "",
+      "phone": "",
+      "employee_id": "CP-1622",
+      "can_approve_jorc": true,
+      "can_approve_valmin": false,
+      "created_at": "2026-05-15T14:36:44.194Z",
+      "updated_at": "2026-05-15T14:36:44.294Z"
+    }
+  },
+  {
+    "model": "core.approvalworkflow",
+    "pk": 49,
+    "fields": {
+      "content_type": ["core", "document"],
+      "object_id": "3688f4ca-d73e-464f-a592-6324d6779dff",
+      "workflow_type": "VALMIN",
+      "status": "REJECTED",
+      "submitted_by": ["angela.miller.2802"],
+      "approved_by": ["admin"],
+      "submission_notes": "Program century one physical crime.",
+      "approval_notes": "Question year position customer that.",
+      "submitted_at": "2026-05-15T14:36:44.857Z",
+      "reviewed_at": "2026-04-21T14:36:44.856Z"
+    }
+  },
+  {
+    "model": "core.approvalworkflow",
+    "pk": 50,
+    "fields": {
+      "content_type": ["core", "document"],
+      "object_id": "cd546af1-18b5-42ce-8c03-5258b7470817",
+      "workflow_type": "JORC",
+      "status": "PENDING",
+      "submitted_by": ["denise.rodriguez.9571"],
+      "approved_by": null,
+      "submission_notes": "Institution each cover level strategy do. Subject soldier kitchen computer American voice study usually.",
+      "approval_notes": "",
+      "submitted_at": "2026-05-15T14:36:44.859Z",
+      "reviewed_at": null
+    }
+  },
+  {
+    "model": "core.approvalworkflow",
+    "pk": 51,
+    "fields": {
+      "content_type": ["core", "document"],
+      "object_id": "79663341-a04e-47ee-bf2a-85d7679d7657",
+      "workflow_type": "JORC",
+      "status": "REJECTED",
+      "submitted_by": ["competent.person.wyatt-huynh"],
+      "approved_by": ["christian.vang.3040"],
+      "submission_notes": "Letter program good dinner.",
+      "approval_notes": "Citizen that simple build.",
+      "submitted_at": "2026-05-15T14:36:44.860Z",
+      "reviewed_at": "2026-04-05T14:36:44.860Z"
+    }
+  },
+  {
+    "model": "core.approvalworkflow",
+    "pk": 52,
+    "fields": {
+      "content_type": ["core", "document"],
+      "object_id": "3db3265e-f111-44c0-b479-16bfb6c87854",
+      "workflow_type": "VALMIN",
+      "status": "APPROVED",
+      "submitted_by": ["christian.vang.3040"],
+      "approved_by": ["admin"],
+      "submission_notes": "Official thousand simply meet decision beat. Know bring politics news born.",
+      "approval_notes": "Central upon develop task who.",
+      "submitted_at": "2026-05-15T14:36:44.861Z",
+      "reviewed_at": "2026-04-14T14:36:44.861Z"
+    }
+  },
+  {
+    "model": "core.approvalworkflow",
+    "pk": 53,
+    "fields": {
+      "content_type": ["core", "document"],
+      "object_id": "766827ac-50c6-4e71-91f3-c9fb840d292d",
+      "workflow_type": "VALMIN",
+      "status": "PENDING",
+      "submitted_by": ["christian.vang.3040"],
+      "approved_by": null,
+      "submission_notes": "Enter maintain special. Tend son probably ago hand remember.",
+      "approval_notes": "",
+      "submitted_at": "2026-05-15T14:36:44.863Z",
+      "reviewed_at": null
+    }
+  },
+  {
+    "model": "core.approvalworkflow",
+    "pk": 54,
+    "fields": {
+      "content_type": ["core", "document"],
+      "object_id": "9541ca80-1158-474b-bb9e-b9e76afc4cd3",
+      "workflow_type": "JORC",
+      "status": "PENDING",
+      "submitted_by": ["michael.black.9505"],
+      "approved_by": null,
+      "submission_notes": "As order shoulder.",
+      "approval_notes": "",
+      "submitted_at": "2026-05-15T14:36:44.864Z",
+      "reviewed_at": null
+    }
+  },
+  {
+    "model": "core.auditlog",
+    "pk": 170,
+    "fields": {
+      "user": ["diane.blackwell.1670"],
+      "action": "CREATE",
+      "content_type": ["core", "document"],
+      "object_id": "3bbc3882-2d3a-4d00-8ce3-a9136e9ad169",
+      "description": "Rock large allow quite throughout military.",
+      "ip_address": "192.168.164.62",
+      "user_agent": "Mozilla/5.0 (Android 6.0.1; Mobile; rv:28.0) Gecko/28.0 Firefox/28.0",
+      "timestamp": "2026-05-15T14:36:44.866Z"
+    }
+  },
+  {
+    "model": "core.auditlog",
+    "pk": 171,
+    "fields": {
+      "user": ["competent.person.knight-martin"],
+      "action": "UPDATE",
+      "content_type": ["core", "document"],
+      "object_id": "169b2290-d3ba-48d8-a4a1-1ea55904e049",
+      "description": "Radio into low.",
+      "ip_address": "172.22.229.146",
+      "user_agent": "Mozilla/5.0 (iPod; U; CPU iPhone OS 4_0 like Mac OS X; es-CU) AppleWebKit/531.1.6 (KHTML, like Gecko) Version/4.0.5 Mobile/8B117 Safari/6531.1.6",
+      "timestamp": "2026-05-15T14:36:44.868Z"
+    }
+  },
+  {
+    "model": "core.auditlog",
+    "pk": 172,
+    "fields": {
+      "user": ["competent.person.knight-martin"],
+      "action": "DELETE",
+      "content_type": ["core", "document"],
+      "object_id": "c7b523b6-e7e6-4f07-9e19-0727e9c4a39b",
+      "description": "Not send away board.",
+      "ip_address": "192.168.18.93",
+      "user_agent": "Mozilla/5.0 (Windows NT 5.1; ckb-IQ; rv:1.9.0.20) Gecko/4518-12-09 09:19:51.202316 Firefox/7.0",
+      "timestamp": "2026-05-15T14:36:44.870Z"
+    }
+  },
+  {
+    "model": "core.auditlog",
+    "pk": 173,
+    "fields": {
+      "user": ["competent.person.wyatt-huynh"],
+      "action": "CREATE",
+      "content_type": ["core", "document"],
+      "object_id": "014ea404-6075-4a0e-9a45-f26e5df257e3",
+      "description": "North behind how executive bill hear itself.",
+      "ip_address": "192.168.213.78",
+      "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/533.2 (KHTML, like Gecko) Chrome/47.0.884.0 Safari/533.2",
+      "timestamp": "2026-05-15T14:36:44.871Z"
+    }
+  },
+  {
+    "model": "core.auditlog",
+    "pk": 174,
+    "fields": {
+      "user": ["michael.black.9505"],
+      "action": "CREATE",
+      "content_type": ["core", "document"],
+      "object_id": "33738869-a9a6-4f17-87fa-03462f0e7796",
+      "description": "Save miss such yet.",
+      "ip_address": "10.198.66.17",
+      "user_agent": "Mozilla/5.0 (compatible; MSIE 5.0; Windows 95; Trident/3.0)",
+      "timestamp": "2026-05-15T14:36:44.873Z"
+    }
+  },
+  {
+    "model": "core.auditlog",
+    "pk": 175,
+    "fields": {
+      "user": ["admin"],
+      "action": "UPDATE",
+      "content_type": ["core", "document"],
+      "object_id": "79663341-a04e-47ee-bf2a-85d7679d7657",
+      "description": "Do character week senior.",
+      "ip_address": "10.180.137.227",
+      "user_agent": "Mozilla/5.0 (compatible; MSIE 5.0; Windows CE; Trident/3.1)",
+      "timestamp": "2026-05-15T14:36:44.874Z"
+    }
+  },
+  {
+    "model": "core.auditlog",
+    "pk": 176,
+    "fields": {
+      "user": ["angela.miller.2802"],
+      "action": "UPDATE",
+      "content_type": ["core", "document"],
+      "object_id": "79663341-a04e-47ee-bf2a-85d7679d7657",
+      "description": "Trade let enjoy likely star debate.",
+      "ip_address": "10.217.33.161",
+      "user_agent": "Opera/9.86.(X11; Linux x86_64; nso-ZA) Presto/2.9.172 Version/11.00",
+      "timestamp": "2026-05-15T14:36:44.876Z"
+    }
+  },
+  {
+    "model": "core.auditlog",
+    "pk": 177,
+    "fields": {
+      "user": ["marvin.harris.2555"],
+      "action": "DELETE",
+      "content_type": ["core", "document"],
+      "object_id": "df2bf594-b314-4305-930f-433ed13b0c43",
+      "description": "Individual wonder before study surface edge.",
+      "ip_address": "172.20.95.1",
+      "user_agent": "Mozilla/5.0 (Macintosh; U; PPC Mac OS X 10_5_8 rv:6.0; mhr-RU) AppleWebKit/534.30.6 (KHTML, like Gecko) Version/5.0.1 Safari/534.30.6",
+      "timestamp": "2026-05-15T14:36:44.877Z"
+    }
+  },
+  {
+    "model": "core.auditlog",
+    "pk": 178,
+    "fields": {
+      "user": ["jennifer.lee.5696"],
+      "action": "CREATE",
+      "content_type": ["core", "document"],
+      "object_id": "cd546af1-18b5-42ce-8c03-5258b7470817",
+      "description": "Whose dream take half bring couple improve central.",
+      "ip_address": "172.30.45.221",
+      "user_agent": "Mozilla/5.0 (iPod; U; CPU iPhone OS 4_1 like Mac OS X; wa-BE) AppleWebKit/533.46.1 (KHTML, like Gecko) Version/4.0.5 Mobile/8B113 Safari/6533.46.1",
+      "timestamp": "2026-05-15T14:36:44.879Z"
+    }
+  },
+  {
+    "model": "core.auditlog",
+    "pk": 179,
+    "fields": {
+      "user": ["competent.person.wyatt-huynh"],
+      "action": "CREATE",
+      "content_type": ["core", "document"],
+      "object_id": "4f404060-cde9-4b28-a28c-c1f5ad1dcdd4",
+      "description": "Themselves choose base grow ten again.",
+      "ip_address": "10.65.153.217",
+      "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 4_3_5 like Mac OS X) AppleWebKit/531.2 (KHTML, like Gecko) CriOS/56.0.851.0 Mobile/82C595 Safari/531.2",
+      "timestamp": "2026-05-15T14:36:44.881Z"
+    }
+  },
+  {
+    "model": "core.auditlog",
+    "pk": 180,
+    "fields": {
+      "user": ["competent.person.wyatt-huynh"],
+      "action": "VIEW",
+      "content_type": ["core", "document"],
+      "object_id": "4f404060-cde9-4b28-a28c-c1f5ad1dcdd4",
+      "description": "Together if hit area receive perform.",
+      "ip_address": "172.29.54.65",
+      "user_agent": "Opera/9.78.(X11; Linux x86_64; es-BO) Presto/2.9.186 Version/10.00",
+      "timestamp": "2026-05-15T14:36:44.883Z"
+    }
+  },
+  {
+    "model": "core.auditlog",
+    "pk": 181,
+    "fields": {
+      "user": ["denise.rodriguez.9571"],
+      "action": "CREATE",
+      "content_type": ["core", "document"],
+      "object_id": "9541ca80-1158-474b-bb9e-b9e76afc4cd3",
+      "description": "Man likely direction someone woman history.",
+      "ip_address": "192.168.48.224",
+      "user_agent": "Opera/9.18.(X11; Linux i686; ky-KG) Presto/2.9.176 Version/10.00",
+      "timestamp": "2026-05-15T14:36:44.885Z"
+    }
+  },
+  {
+    "model": "core.auditlog",
+    "pk": 182,
+    "fields": {
+      "user": ["sabrina.anderson.2789"],
+      "action": "DELETE",
+      "content_type": ["core", "document"],
+      "object_id": "51c3893e-0b0f-44d9-a0f1-c33b45546dad",
+      "description": "Possible win center next today.",
+      "ip_address": "172.29.132.242",
+      "user_agent": "Mozilla/5.0 (iPod; U; CPU iPhone OS 3_3 like Mac OS X; kk-KZ) AppleWebKit/531.19.3 (KHTML, like Gecko) Version/3.0.5 Mobile/8B111 Safari/6531.19.3",
+      "timestamp": "2026-05-15T14:36:44.886Z"
+    }
+  },
+  {
+    "model": "core.auditlog",
+    "pk": 183,
+    "fields": {
+      "user": ["marvin.harris.2555"],
+      "action": "UPDATE",
+      "content_type": ["core", "document"],
+      "object_id": "da026ee1-a253-4620-9109-f335a8966860",
+      "description": "Company ever I.",
+      "ip_address": "172.25.224.127",
+      "user_agent": "Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.1 (KHTML, like Gecko) Chrome/33.0.856.0 Safari/534.1",
+      "timestamp": "2026-05-15T14:36:44.888Z"
+    }
+  },
+  {
+    "model": "core.auditlog",
+    "pk": 184,
+    "fields": {
+      "user": ["michael.black.9505"],
+      "action": "VIEW",
+      "content_type": ["core", "document"],
+      "object_id": "1092add8-756e-478c-97e1-54e86452a7b4",
+      "description": "Organization couple range if price energy buy.",
+      "ip_address": "192.168.108.6",
+      "user_agent": "Mozilla/5.0 (iPad; CPU iPad OS 5_1_1 like Mac OS X) AppleWebKit/531.2 (KHTML, like Gecko) CriOS/45.0.865.0 Mobile/66B209 Safari/531.2",
+      "timestamp": "2026-05-15T14:36:44.890Z"
+    }
+  },
+  {
+    "model": "core.auditlog",
+    "pk": 185,
+    "fields": {
+      "user": ["marvin.harris.2555"],
+      "action": "UPDATE",
+      "content_type": ["core", "document"],
+      "object_id": "0eaab743-9f5e-40b1-82cc-5ee8987ad2e0",
+      "description": "Enjoy professional bar risk term ball why.",
+      "ip_address": "172.30.255.99",
+      "user_agent": "Mozilla/5.0 (Windows; U; Windows NT 5.0) AppleWebKit/534.19.3 (KHTML, like Gecko) Version/4.0 Safari/534.19.3",
+      "timestamp": "2026-05-15T14:36:44.891Z"
+    }
+  },
+  {
+    "model": "core.auditlog",
+    "pk": 186,
+    "fields": {
+      "user": ["william.butler.2068"],
+      "action": "VIEW",
+      "content_type": ["core", "document"],
+      "object_id": "df2bf594-b314-4305-930f-433ed13b0c43",
+      "description": "Myself tax administration blue it politics in.",
+      "ip_address": "172.20.61.14",
+      "user_agent": "Mozilla/5.0 (iPod; U; CPU iPhone OS 4_1 like Mac OS X; kw-GB) AppleWebKit/535.48.1 (KHTML, like Gecko) Version/4.0.5 Mobile/8B111 Safari/6535.48.1",
+      "timestamp": "2026-05-15T14:36:44.892Z"
+    }
+  },
+  {
+    "model": "core.auditlog",
+    "pk": 187,
+    "fields": {
+      "user": ["angela.miller.2802"],
+      "action": "CREATE",
+      "content_type": ["core", "document"],
+      "object_id": "da026ee1-a253-4620-9109-f335a8966860",
+      "description": "Check city reason smile about draw.",
+      "ip_address": "192.168.76.137",
+      "user_agent": "Mozilla/5.0 (Android 4.1.1; Mobile; rv:25.0) Gecko/25.0 Firefox/25.0",
+      "timestamp": "2026-05-15T14:36:44.894Z"
+    }
+  },
+  {
+    "model": "core.auditlog",
+    "pk": 188,
+    "fields": {
+      "user": ["competent.person.wyatt-huynh"],
+      "action": "CREATE",
+      "content_type": ["core", "document"],
+      "object_id": "1092add8-756e-478c-97e1-54e86452a7b4",
+      "description": "Later change clearly dinner political.",
+      "ip_address": "10.22.41.134",
+      "user_agent": "Mozilla/5.0 (compatible; MSIE 5.0; Windows NT 10.0; Trident/3.1)",
+      "timestamp": "2026-05-15T14:36:44.896Z"
+    }
+  },
+  {
+    "model": "core.auditlog",
+    "pk": 189,
+    "fields": {
+      "user": ["competent.person.wyatt-huynh"],
+      "action": "CREATE",
+      "content_type": ["core", "document"],
+      "object_id": "6f8c696c-1abb-4b92-945c-ca61d47cf9ec",
+      "description": "Image many fast professor.",
+      "ip_address": "192.168.233.133",
+      "user_agent": "Mozilla/5.0 (iPod; U; CPU iPhone OS 3_3 like Mac OS X; be-BY) AppleWebKit/533.32.7 (KHTML, like Gecko) Version/3.0.5 Mobile/8B111 Safari/6533.32.7",
+      "timestamp": "2026-05-15T14:36:44.897Z"
+    }
+  },
+  {
+    "model": "core.documentview",
+    "pk": 123,
+    "fields": {
+      "user": ["competent.person.knight-martin"],
+      "document": "c7b523b6-e7e6-4f07-9e19-0727e9c4a39b",
+      "viewed_at": "2026-05-15T14:36:44.898Z",
+      "ip_address": "10.91.98.221"
+    }
+  },
+  {
+    "model": "core.documentview",
+    "pk": 124,
+    "fields": {
+      "user": ["competent.person.wyatt-huynh"],
+      "document": "c7b523b6-e7e6-4f07-9e19-0727e9c4a39b",
+      "viewed_at": "2026-05-15T14:36:44.900Z",
+      "ip_address": "172.21.234.92"
+    }
+  },
+  {
+    "model": "core.documentview",
+    "pk": 125,
+    "fields": {
+      "user": ["christian.vang.3040"],
+      "document": "3688f4ca-d73e-464f-a592-6324d6779dff",
+      "viewed_at": "2026-05-15T14:36:44.901Z",
+      "ip_address": "10.71.75.206"
+    }
+  },
+  {
+    "model": "core.documentview",
+    "pk": 126,
+    "fields": {
+      "user": ["admin"],
+      "document": "79663341-a04e-47ee-bf2a-85d7679d7657",
+      "viewed_at": "2026-05-15T14:36:44.903Z",
+      "ip_address": "10.112.176.35"
+    }
+  },
+  {
+    "model": "core.documentview",
+    "pk": 127,
+    "fields": {
+      "user": ["michael.black.9505"],
+      "document": "570c61f5-2388-49e1-aa04-2b2cbbac2742",
+      "viewed_at": "2026-05-15T14:36:44.905Z",
+      "ip_address": "192.168.201.126"
+    }
+  },
+  {
+    "model": "core.documentview",
+    "pk": 128,
+    "fields": {
+      "user": ["competent.person.oconnor-wilkins"],
+      "document": "1092add8-756e-478c-97e1-54e86452a7b4",
+      "viewed_at": "2026-05-15T14:36:44.906Z",
+      "ip_address": "10.109.175.150"
+    }
+  },
+  {
+    "model": "core.documentview",
+    "pk": 129,
+    "fields": {
+      "user": ["brent.griffin.3698"],
+      "document": "feac14e2-b195-4be8-88cd-68185167e5c3",
+      "viewed_at": "2026-05-15T14:36:44.908Z",
+      "ip_address": "192.168.169.22"
+    }
+  },
+  {
+    "model": "core.documentview",
+    "pk": 130,
+    "fields": {
+      "user": ["jennifer.lee.5696"],
+      "document": "8a4fe8be-e38b-4569-a0f9-2e8a24cd9017",
+      "viewed_at": "2026-05-15T14:36:44.909Z",
+      "ip_address": "192.168.64.36"
+    }
+  },
+  {
+    "model": "core.documentview",
+    "pk": 131,
+    "fields": {
+      "user": ["jennifer.lee.5696"],
+      "document": "014ea404-6075-4a0e-9a45-f26e5df257e3",
+      "viewed_at": "2026-05-15T14:36:44.910Z",
+      "ip_address": "172.20.235.56"
+    }
+  },
+  {
+    "model": "core.documentview",
+    "pk": 132,
+    "fields": {
+      "user": ["brent.griffin.3698"],
+      "document": "0eaab743-9f5e-40b1-82cc-5ee8987ad2e0",
+      "viewed_at": "2026-05-15T14:36:44.912Z",
+      "ip_address": "10.162.179.79"
+    }
+  },
+  {
+    "model": "core.documentview",
+    "pk": 133,
+    "fields": {
+      "user": ["denise.rodriguez.9571"],
+      "document": "79663341-a04e-47ee-bf2a-85d7679d7657",
+      "viewed_at": "2026-05-15T14:36:44.913Z",
+      "ip_address": "172.24.76.149"
+    }
+  },
+  {
+    "model": "core.documentview",
+    "pk": 134,
+    "fields": {
+      "user": ["jason.evans.5265"],
+      "document": "4f404060-cde9-4b28-a28c-c1f5ad1dcdd4",
+      "viewed_at": "2026-05-15T14:36:44.914Z",
+      "ip_address": "192.168.25.217"
+    }
+  },
+  {
+    "model": "core.documentview",
+    "pk": 135,
+    "fields": {
+      "user": ["denise.rodriguez.9571"],
+      "document": "33738869-a9a6-4f17-87fa-03462f0e7796",
+      "viewed_at": "2026-05-15T14:36:44.915Z",
+      "ip_address": "10.166.113.60"
+    }
+  },
+  {
+    "model": "core.documentview",
+    "pk": 136,
+    "fields": {
+      "user": ["competent.person.oconnor-wilkins"],
+      "document": "79663341-a04e-47ee-bf2a-85d7679d7657",
+      "viewed_at": "2026-05-15T14:36:44.917Z",
+      "ip_address": "10.98.63.240"
+    }
+  },
+  {
+    "model": "core.documentview",
+    "pk": 137,
+    "fields": {
+      "user": ["competent.person.oconnor-wilkins"],
+      "document": "cd546af1-18b5-42ce-8c03-5258b7470817",
+      "viewed_at": "2026-05-15T14:36:44.918Z",
+      "ip_address": "192.168.200.23"
+    }
+  }
+]
