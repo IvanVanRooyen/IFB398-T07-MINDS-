@@ -6,16 +6,18 @@ from functools import wraps
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseForbidden
 
+from .instrument import instrument
 from .models import UserProfile, log_audit, AuditLog
 
 
+@instrument
 def role_required(*allowed_roles):
     # Decorator to checks if user has one of the allowed roles.
 
     #Usage:
         #@role_required(UserProfile.RoleChoices.FIELD_LEAD, UserProfile.RoleChoices.ADMIN)
         #def approve_document(request, doc_id):
-            
+      
     def decorator(view_func):
         @wraps(view_func)
         def wrapper(request, *args, **kwargs):
@@ -34,6 +36,7 @@ def role_required(*allowed_roles):
     return decorator
 
 
+@instrument
 def organisation_access_required(view_func):
     #Decorator to ensure user can only access their organisation data.
     #Adds user_organisation to request object.
@@ -56,6 +59,7 @@ def organisation_access_required(view_func):
     return wrapper
 
 
+@instrument
 def clearance_required(min_level):
     #Decorator to check if user has sufficient clearance
 
@@ -90,6 +94,7 @@ def clearance_required(min_level):
     return decorator
 
 
+@instrument
 def log_view_access(model_class):
     #Decorator to automatically log when users view objects for audit trail
 
@@ -143,6 +148,7 @@ def log_view_access(model_class):
     return decorator
 
 
+@instrument
 def can_approve_workflow(user, workflow_type):
     #Check if a user can approve a specific workflow type
 

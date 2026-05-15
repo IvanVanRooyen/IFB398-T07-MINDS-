@@ -4,7 +4,10 @@ import logging
 
 from django.contrib.gis.db import models
 
+from .instrument import instrument
 
+
+@instrument
 def sha256_file(django_file) -> str:
     pos = django_file.tell()  # remember current position
     django_file.seek(0)
@@ -26,6 +29,7 @@ def sha256_file(django_file) -> str:
 
 log = logging.getLogger(__name__)
 
+@instrument
 def extract_text(file_field) -> str:
     """
     Extract plain text from supported document types.
@@ -57,7 +61,9 @@ def extract_text(file_field) -> str:
     except Exception as e:
         log.warning("Text extraction failed for %s: %s", getattr(file_field, "name", "unknown"), e)
         return ""
-    
+   
+
+@instrument   
 def chunk_text(text: str, chunk_size: int = 500, overlap: int = 50) -> list[str]:
     """
     Split text into overlapping chunks for RAG retrieval
@@ -81,35 +87,3 @@ def chunk_text(text: str, chunk_size: int = 500, overlap: int = 50) -> list[str]
         start += chunk_size - overlap
     
     return chunks
-
-# class AutoConstraintMeta(type(models.Model)):
-#     """
-#     Metaclass to automatically generate constraints for choice field validation
-#     """
-#
-#     def __new__(mcs, name, bases, namespace, **kwargs):
-#         cls: models.Model = super().__new__(mcs, name, bases, namespace, **kwargs)
-#
-#         if namespace.get("Meta") and getattr(namespace["Meta"], "abstract", False):
-#             return cls
-#
-#         if not hasattr(cls._meta, "constraints"):
-#             cls._meta.constraints = []
-#
-#         for field in cls._meta.fields:
-#             if field.choices and not any(
-#                 field.name in str(c.check) for c in cls._meta.constraints
-#             ):
-#                 constraint = choice_constraint(
-#                     field.name,
-#                     field.choices,
-#                     f"valid_{cls._meta.db_table}_{field.name}",
-#                 )
-#                 cls._meta.constraints.append(constraint)
-#
-#         return cls
-
-
-# class AutoConstrainedModel(ValidatedChoiceModel,):
-#     class Meta:
-#         abstract = True

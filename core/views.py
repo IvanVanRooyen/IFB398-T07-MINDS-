@@ -1,50 +1,78 @@
 # core/views.py
 from __future__ import annotations
-from pydoc import doc
+
+import io
+import logging
+import re
+from types import SimpleNamespace
 
 from django.apps import apps
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_POST
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.search import SearchQuery, SearchRank
+from django.core.cache import cache
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.core.exceptions import PermissionDenied
-from django.http import Http404, HttpResponse, JsonResponse, HttpResponseBadRequest
+from django.http import Http404, HttpResponse, HttpResponseBadRequest, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.views.decorators.http import require_GET, require_http_methods
-from django.contrib import messages
-from django.core.cache import cache
-from django.shortcuts import render, get_object_or_404, redirect
-from core.ai.report_service import generate_project_report
-from .ai.granite_client import GraniteClient
-
-from types import SimpleNamespace
-import logging
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
+from docx import Document as DocxDocument
+from docx.shared import Pt
+from reportlab.lib import colors
 
 # Exporting report
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm
-from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.enums import TA_LEFT
-from docx import Document as DocxDocument
-from docx.shared import Pt, RGBColor
-import re, io
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.postgres.search import SearchQuery, SearchRank
-from .forms import DocumentForm, DocumentSearchForm, ProspectForm, TenementForm, SampleForm, SurveyForm
-from .models import Document, Process, SavedReport, AuditLog, log_audit, Prospect, DocLink, UserProfile, Drillhole, DrillholeSurvey, LithologyInterval, AssayResult, Organisation, Tenement, ApprovalWorkflow, Sample, Survey
+from core.ai.report_service import generate_project_report
+
+from .ai.granite_client import GraniteClient
+from .forms import (
+    DocumentForm,
+    DocumentSearchForm,
+    ProspectForm,
+    SampleForm,
+    SurveyForm,
+    TenementForm,
+)
 from .importers import run_drillhole_import
-from .permissions import role_required, clearance_required, log_view_access
-from .utils import sha256_file, extract_text, chunk_text
-
+from .models import (
+    ApprovalWorkflow,
+    AssayResult,
+    AuditLog,
+    DocLink,
+    Document,
+    Drillhole,
+    DrillholeSurvey,
+    LithologyInterval,
+    Organisation,
+    Process,
+    Prospect,
+    Sample,
+    SavedReport,
+    Survey,
+    Tenement,
+    UserProfile,
+    log_audit,
+)
+from .permissions import log_view_access, role_required
 from .tagging import TAG_LABEL
+from .utils import chunk_text, extract_text, sha256_file
+
+from .instrument import instrument
+
+log = logging.getLogger(__name__)
 
 
 # ---------- Helpers ----------
 
 
+@instrument
 def _get_model(app_label: str, model_name: str):
     """
     Best-effort dynamic model fetch (lets views work even if model doesn’t exist yet).
@@ -55,6 +83,7 @@ def _get_model(app_label: str, model_name: str):
         return None
 
 
+@instrument
 def _count_model(app_label: str, model_name: str, where_clause: str = None) -> int:
     mdl = _get_model(app_label, model_name)
     if mdl is None:
@@ -62,12 +91,14 @@ def _count_model(app_label: str, model_name: str, where_clause: str = None) -> i
     return mdl.objects.count()
 
 
+@instrument
 def _paginate(queryset, request, per_page: int = 20):
     paginator = Paginator(queryset, per_page)
     page_number = request.GET.get("page")
     return paginator.get_page(page_number)
 
 
+@instrument
 def _org_qs_filter(request):
     """
     Returns a Q object for organisation-scoped queryset filtering.
@@ -77,7 +108,7 @@ def _org_qs_filter(request):
     """
     if request.user.is_superuser:
         return Q()
-    if request.user.is_authenticated and hasattr(request.user, 'profile'):
+    if request.user.is_authenticated and hasattr(request.user, "profile"):
         org = request.user.profile.organisation
         if org is not None:
             return Q(organisation=org)
@@ -89,13 +120,16 @@ def _org_qs_filter(request):
 
 @login_required
 @require_GET
+@instrument
 def home(request):
     """
     Simple landing that shows recent Projects & Documents (as per your snippet).
     """
     org_filter = _org_qs_filter(request)
     projects = Process.objects.filter(org_filter).order_by("-created_at")[:10]
-    docs = Document.objects.filter(org_filter, is_latest=True).order_by("-created_at")[:10]
+    docs = Document.objects.filter(org_filter, is_latest=True).order_by("-created_at")[
+        :10
+    ]
     return render(
         request,
         "core/home.html",
@@ -105,6 +139,7 @@ def home(request):
 
 @login_required
 @require_GET
+@instrument
 def dashboard(request):
     """
     Dashboard cards + quick links. Works even if domain models aren’t ready yet.
@@ -116,11 +151,19 @@ def dashboard(request):
     metrics = {
         "project_count": Process.objects.filter(org_filter).count(),
         "document_count": Document.objects.filter(org_filter, is_latest=True).count(),
-        "prospect_count": Prospect.objects.filter(org_filter).count() if Prospect else 0,
-        "drillhole_count": Drillhole.objects.filter(org_filter).count() if Drillhole else 0,
-        "tenement_count": Tenement.objects.filter(org_filter).count() if Tenement else 0,
+        "prospect_count": Prospect.objects.filter(org_filter).count()
+        if Prospect
+        else 0,
+        "drillhole_count": Drillhole.objects.filter(org_filter).count()
+        if Drillhole
+        else 0,
+        "tenement_count": Tenement.objects.filter(org_filter).count()
+        if Tenement
+        else 0,
     }
-    recent_docs = Document.objects.filter(org_filter, is_latest=True).order_by("-created_at")[:8]
+    recent_docs = Document.objects.filter(org_filter, is_latest=True).order_by(
+        "-created_at"
+    )[:8]
     return render(
         request,
         "core/dashboard.html",
@@ -131,6 +174,7 @@ def dashboard(request):
 # Optional: HTMX endpoint to refresh stats without reloading the whole page
 @login_required
 @require_GET
+@instrument
 def stats_partial(request):
     org_filter = _org_qs_filter(request)
     Prospect = _get_model("core", "Prospect")
@@ -139,9 +183,15 @@ def stats_partial(request):
     ctx = {
         "project_count": Process.objects.filter(org_filter).count(),
         "document_count": Document.objects.filter(org_filter, is_latest=True).count(),
-        "prospect_count": Prospect.objects.filter(org_filter).count() if Prospect else 0,
-        "drillhole_count": Drillhole.objects.filter(org_filter).count() if Drillhole else 0,
-        "tenement_count": Tenement.objects.filter(org_filter).count() if Tenement else 0,
+        "prospect_count": Prospect.objects.filter(org_filter).count()
+        if Prospect
+        else 0,
+        "drillhole_count": Drillhole.objects.filter(org_filter).count()
+        if Drillhole
+        else 0,
+        "tenement_count": Tenement.objects.filter(org_filter).count()
+        if Tenement
+        else 0,
     }
     return render(request, "core/partials/stats.html", ctx)
 
@@ -152,12 +202,13 @@ DOCS_CACHE_KEY = "docs:unfiltered:page1:v1"
 DOCS_CACHE_TTL = 120  # 2 minutes
 
 
+@instrument
 def _docs_cache_key(request):
     """Per-organisation cache key so users only see their own org's cached documents."""
     if request.user.is_superuser:
         return "docs:unfiltered:page1:v1:all"
     org = None
-    if request.user.is_authenticated and hasattr(request.user, 'profile'):
+    if request.user.is_authenticated and hasattr(request.user, "profile"):
         org = request.user.profile.organisation
     org_id = str(org.id) if org else "noorg"
     return f"docs:unfiltered:page1:v1:{org_id}"
@@ -165,9 +216,8 @@ def _docs_cache_key(request):
 
 # ---------- Documents ----------
 
-log = logging.getLogger(__name__)
 
-
+@instrument
 def _get_clearance_level(request) -> str:
     """return the requesting user's clearance level string, defaulting to PUBLIC"""
     if request.user.is_authenticated and hasattr(request.user, "profile"):
@@ -175,11 +225,15 @@ def _get_clearance_level(request) -> str:
     return "PUBLIC"
 
 
+@instrument
 def _report_cache_key(process_id: str, clearance_level: str, latest_doc_ts) -> str:
-    doc_fingerprint = latest_doc_ts.strftime("%Y%m%d%H%M%S%f") if latest_doc_ts else "empty"
+    doc_fingerprint = (
+        latest_doc_ts.strftime("%Y%m%d%H%M%S%f") if latest_doc_ts else "empty"
+    )
     return f"report:v1:{process_id}:{clearance_level}:{doc_fingerprint}"
 
 
+@instrument
 def _get_cached_report_bundle(process_id: str, clearance_level: str) -> dict:
     """
     Return cached {"md": str, "doc_ids": [str, ...]} for this process + clearance,
@@ -189,8 +243,7 @@ def _get_cached_report_bundle(process_id: str, clearance_level: str) -> dict:
     whenever a new document is added to the project.
     """
     latest_doc_ts = (
-        Document.objects
-        .filter(process_id=process_id)
+        Document.objects.filter(process_id=process_id)
         .order_by("-created_at")
         .values_list("created_at", flat=True)
         .first()
@@ -200,14 +253,18 @@ def _get_cached_report_bundle(process_id: str, clearance_level: str) -> dict:
     cached = cache.get(cache_key)
     # Regenerate for any non-dict cached value (None, legacy str, or tuple from old code)
     if not isinstance(cached, dict):
-        md, doc_ids = generate_project_report(process_id, clearance_level=clearance_level)
+        md, doc_ids = generate_project_report(
+            process_id, clearance_level=clearance_level
+        )
         cached = {"md": md, "doc_ids": doc_ids}
         cache.set(cache_key, cached, 86400)  # 24 hours
     return cached
 
 
+@instrument
 def _get_cached_report_md(process_id: str, clearance_level: str) -> str:
     return _get_cached_report_bundle(process_id, clearance_level)["md"]
+
 
 @login_required
 @role_required(
@@ -220,20 +277,25 @@ def _get_cached_report_md(process_id: str, clearance_level: str) -> str:
     UserProfile.RoleChoices.ADMIN,
 )
 @require_http_methods(["GET", "POST"])
+@instrument
 def upload_doc(request):
     """
     Upload with SHA-256 de-duplication (your original logic, with tiny polish).
     """
     if request.method == "POST":
-        _upload_org = getattr(getattr(request.user, "profile", None), "organisation", None)
+        _upload_org = getattr(
+            getattr(request.user, "profile", None), "organisation", None
+        )
         form = DocumentForm(request.POST, request.FILES, organisation=_upload_org)
-        log.debug("FILES keys: %s", list(request.FILES.keys()))  # debug: ensure 'file' is present
+        log.debug(
+            "FILES keys: %s", list(request.FILES.keys())
+        )  # debug: ensure 'file' is present
         if form.is_valid():
             doc = form.save(commit=False)
             # Only set if user is authenticated (created_by is nullable)
             if request.user.is_authenticated:
                 doc.created_by = request.user
-            
+
             # Give extracted text a safe default in case extraction fails, to avoid null issues in search
             doc.extracted_text = ""
 
@@ -242,11 +304,16 @@ def upload_doc(request):
                 doc.checksum_sha256 = sha256_file(doc.file)
                 doc.extracted_text = extract_text(doc.file) or ""
 
-            if doc.checksum_sha256 and Document.objects.filter(
-                checksum_sha256=doc.checksum_sha256
-            ).exists():
+            if (
+                doc.checksum_sha256
+                and Document.objects.filter(
+                    checksum_sha256=doc.checksum_sha256
+                ).exists()
+            ):
                 # Duplicate detected — re-render with error + keep their form state
-                docs = Document.objects.filter(_org_qs_filter(request), is_latest=True).order_by("-created_at")[:20]
+                docs = Document.objects.filter(
+                    _org_qs_filter(request), is_latest=True
+                ).order_by("-created_at")[:20]
                 return render(
                     request,
                     "core/upload.html",
@@ -259,38 +326,48 @@ def upload_doc(request):
 
             doc.extracted_text = doc.extracted_text or ""
 
-            #Debug
+            # Debug
             print("BEFORE SAVE extracted_text:", repr(doc.extracted_text))
             print("BEFORE SAVE type:", type(doc.extracted_text))
-            print("BEFORE SAVE dict:", {
-                "title": doc.title,
-                "doc_type": doc.doc_type,
-                "confidentiality": doc.confidentiality,
-                "organisation_id": doc.organisation_id,
-                "process_id": doc.process_id,
-                "created_by_id": doc.created_by_id,
-                "extracted_text": repr(doc.extracted_text),
-            })
+            print(
+                "BEFORE SAVE dict:",
+                {
+                    "title": doc.title,
+                    "doc_type": doc.doc_type,
+                    "confidentiality": doc.confidentiality,
+                    "organisation_id": doc.organisation_id,
+                    "process_id": doc.process_id,
+                    "created_by_id": doc.created_by_id,
+                    "extracted_text": repr(doc.extracted_text),
+                },
+            )
 
             doc.save()
-            log_audit(request.user, AuditLog.ActionType.CREATE, doc,
-                      f"Uploaded document '{doc.title}'",
-                      ip_address=request.META.get("REMOTE_ADDR"))
+            log_audit(
+                request.user,
+                AuditLog.ActionType.CREATE,
+                doc,
+                f"Uploaded document '{doc.title}'",
+                ip_address=request.META.get("REMOTE_ADDR"),
+            )
             # Build text chunks for RAG retrieval
             if doc.extracted_text:
                 from .models import DocumentChunk
+
                 chunks = chunk_text(doc.extracted_text)
-                DocumentChunk.objects.bulk_create([
-                    DocumentChunk(
-                    document=doc,
-                    chunk_index=i,
-                    text=chunk,
-                    process=doc.process,
-                    doc_type=doc.doc_type,
-                    timestamp=doc.timestamp,
-                    )
-                    for i, chunk in enumerate(chunks)
-                ])
+                DocumentChunk.objects.bulk_create(
+                    [
+                        DocumentChunk(
+                            document=doc,
+                            chunk_index=i,
+                            text=chunk,
+                            process=doc.process,
+                            doc_type=doc.doc_type,
+                            timestamp=doc.timestamp,
+                        )
+                        for i, chunk in enumerate(chunks)
+                    ]
+                )
 
             # Invalidate the unfiltered document list cache so the new doc appears immediately
             cache.delete(_docs_cache_key(request))
@@ -305,7 +382,9 @@ def upload_doc(request):
                     warm_md, warm_doc_ids = generate_project_report(
                         str(doc.process_id), clearance_level=uploader_clearance
                     )
-                    cache.set(warm_cache_key, {"md": warm_md, "doc_ids": warm_doc_ids}, 86400)
+                    cache.set(
+                        warm_cache_key, {"md": warm_md, "doc_ids": warm_doc_ids}, 86400
+                    )
                 except Exception:
                     # Granite unavailable — report will be generated on first view request
                     pass
@@ -315,30 +394,38 @@ def upload_doc(request):
             # Show validation errors + keep the recent docs list
             # Show *why* it failed
             log.warning("Upload invalid: %s", form.errors)
-            docs = Document.objects.filter(_org_qs_filter(request), is_latest=True).order_by("-created_at")[:20]
+            docs = Document.objects.filter(
+                _org_qs_filter(request), is_latest=True
+            ).order_by("-created_at")[:20]
             return render(
                 request,
                 "core/upload.html",
-                {"form": form, "docs": docs, "error": "Please correct the errors below."},
+                {
+                    "form": form,
+                    "docs": docs,
+                    "error": "Please correct the errors below.",
+                },
             )
 
     # GET
     _upload_org = getattr(getattr(request.user, "profile", None), "organisation", None)
     form = DocumentForm(organisation=_upload_org)
-    docs = Document.objects.filter(_org_qs_filter(request), is_latest=True).order_by("-created_at")[:20]
+    docs = Document.objects.filter(_org_qs_filter(request), is_latest=True).order_by(
+        "-created_at"
+    )[:20]
     return render(request, "core/upload.html", {"form": form, "docs": docs})
 
 
 @login_required
 @require_GET
+@instrument
 def documents(request):
     """
     Document library with search + tag + pagination.
     """
     # Build doc_type choices from whatever is actually in the DB
     existing_types = (
-        Document.objects
-        .filter(_org_qs_filter(request))
+        Document.objects.filter(_org_qs_filter(request))
         .exclude(doc_type="")
         .exclude(doc_type__isnull=True)
         .values_list("doc_type", flat=True)
@@ -349,20 +436,24 @@ def documents(request):
     type_choices = [("", "All types")] + [(t, t) for t in existing_types]
 
     org = getattr(getattr(request.user, "profile", None), "organisation", None)
-    form = DocumentSearchForm(request.GET or None, doc_type_choices=type_choices, organisation=org)
-    qs = Document.objects.filter(_org_qs_filter(request), is_latest=True).select_related("process", "organisation").order_by("-created_at")
+    form = DocumentSearchForm(
+        request.GET or None, doc_type_choices=type_choices, organisation=org
+    )
+    qs = (
+        Document.objects.filter(_org_qs_filter(request), is_latest=True)
+        .select_related("process", "organisation")
+        .order_by("-created_at")
+    )
 
     q_value = ""
     if form.is_valid():
-
         # Full-text : title, doc_type, confidentiality, project name, org
         q = form.cleaned_data.get("q", "").strip()
 
         if q:
-            search_query = SearchQuery(q, search_type='websearch', config='english')
+            search_query = SearchQuery(q, search_type="websearch", config="english")
             qs = (
-                qs
-                .annotate(rank=SearchRank('search_tsv', search_query))
+                qs.annotate(rank=SearchRank("search_tsv", search_query))
                 .filter(
                     Q(search_tsv=search_query)
                     | Q(doc_type__icontains=q)
@@ -370,32 +461,32 @@ def documents(request):
                     | Q(process__name__icontains=q)
                     | Q(organisation__name__icontains=q)
                 )
-                .order_by('-rank', '-created_at')
+                .order_by("-rank", "-created_at")
             )
 
         # Project
         process = form.cleaned_data.get("process")
         if process:
             qs = qs.filter(process=process)
- 
+
         # Date range (inclusive, on the document's own date)
         date_from = form.cleaned_data.get("date_from")
         if date_from:
             qs = qs.filter(timestamp__gte=date_from)
- 
+
         date_to = form.cleaned_data.get("date_to")
         if date_to:
             qs = qs.filter(timestamp__lte=date_to)
- 
+
         # Metadata
         doc_type = form.cleaned_data.get("doc_type")
         if doc_type:
             qs = qs.filter(doc_type__iexact=doc_type)
- 
+
         confidentiality = form.cleaned_data.get("confidentiality")
         if confidentiality:
             qs = qs.filter(confidentiality__iexact=confidentiality)
- 
+
         tag = form.cleaned_data.get("tag")
         if tag:
             try:
@@ -412,9 +503,22 @@ def documents(request):
         if form.cleaned_data.get("reporting_stage"):
             qs = qs.filter(reporting_stage=form.cleaned_data["reporting_stage"])
 
-    filters_active = any(request.GET.get(f) for f in
-                         ["q", "process", "date_from", "date_to", "doc_type", "confidentiality", "tag",
-                          "tenement", "author_name", "commodity", "reporting_stage"])
+    filters_active = any(
+        request.GET.get(f)
+        for f in [
+            "q",
+            "process",
+            "date_from",
+            "date_to",
+            "doc_type",
+            "confidentiality",
+            "tag",
+            "tenement",
+            "author_name",
+            "commodity",
+            "reporting_stage",
+        ]
+    )
 
     page_num = request.GET.get("page", "1")
 
@@ -434,42 +538,59 @@ def documents(request):
                 previous_page_number=cached["prev_page_number"],
                 next_page_number=cached["next_page_number"],
             )
-            return render(request, "core/documents.html", {
-                "form": form,
-                "page": page_proxy,
-                "q": "",
-                "filters_active": False,
-            })
+            return render(
+                request,
+                "core/documents.html",
+                {
+                    "form": form,
+                    "page": page_proxy,
+                    "q": "",
+                    "filters_active": False,
+                },
+            )
 
     page = _paginate(qs, request, per_page=24)
 
     # cache only the unfiltered page-1 result abd Store a plain dict rather than the Page object to avoid serialising the full queryset into Redis
     if not filters_active and page_num == "1":
-        cache.set(_docs_cache_key(request), {
-            "docs": list(page.object_list),
-            "num_pages": page.paginator.num_pages,
-            "has_next": page.has_next(),
-            "has_previous": page.has_previous(),
-            "next_page_number": page.next_page_number() if page.has_next() else None,
-            "prev_page_number": page.previous_page_number() if page.has_previous() else None,
-        }, DOCS_CACHE_TTL)
+        cache.set(
+            _docs_cache_key(request),
+            {
+                "docs": list(page.object_list),
+                "num_pages": page.paginator.num_pages,
+                "has_next": page.has_next(),
+                "has_previous": page.has_previous(),
+                "next_page_number": page.next_page_number()
+                if page.has_next()
+                else None,
+                "prev_page_number": page.previous_page_number()
+                if page.has_previous()
+                else None,
+            },
+            DOCS_CACHE_TTL,
+        )
 
-    return render(request, "core/documents.html", {
-        "form": form,
-        "page": page,
-        "q": q_value,
-        "filters_active": filters_active,
-    })
+    return render(
+        request,
+        "core/documents.html",
+        {
+            "form": form,
+            "page": page,
+            "q": q_value,
+            "filters_active": filters_active,
+        },
+    )
 
 
 @login_required
 @log_view_access(Document)
 @require_GET
+@instrument
 def document_detail(request, pk):
     doc = get_object_or_404(Document, pk=pk)
     if not request.user.is_superuser:
         if (
-            hasattr(request.user, 'profile')
+            hasattr(request.user, "profile")
             and request.user.profile.organisation
             and doc.organisation
             and doc.organisation != request.user.profile.organisation
@@ -484,13 +605,17 @@ def document_detail(request, pk):
         UserProfile.RoleChoices.DATA_MANAGER,
         UserProfile.RoleChoices.ADMIN,
     )
-    return render(request, "core/document_detail.html", {
-        "doc": doc,
-        "tag_labels": tag_labels,
-        "version_family": version_family,
-        "latest_version": latest_version,
-        "can_upload_version": can_upload_version,
-    })
+    return render(
+        request,
+        "core/document_detail.html",
+        {
+            "doc": doc,
+            "tag_labels": tag_labels,
+            "version_family": version_family,
+            "latest_version": latest_version,
+            "can_upload_version": can_upload_version,
+        },
+    )
 
 
 @login_required
@@ -501,6 +626,7 @@ def document_detail(request, pk):
     UserProfile.RoleChoices.ADMIN,
 )
 @require_http_methods(["POST", "DELETE"])
+@instrument
 def delete_document(request, pk):
     """
     Delete a document and its associated file from storage (MinIO).
@@ -508,7 +634,7 @@ def delete_document(request, pk):
     doc = get_object_or_404(Document, pk=pk)
     if not request.user.is_superuser:
         if (
-            hasattr(request.user, 'profile')
+            hasattr(request.user, "profile")
             and request.user.profile.organisation
             and doc.organisation
             and doc.organisation != request.user.profile.organisation
@@ -519,30 +645,36 @@ def delete_document(request, pk):
     doc_title = doc.title
 
     try:
-        log_audit(request.user, AuditLog.ActionType.DELETE, doc,
-                  f"Deleted document '{doc_title}'",
-                  ip_address=request.META.get("REMOTE_ADDR"))
+        log_audit(
+            request.user,
+            AuditLog.ActionType.DELETE,
+            doc,
+            f"Deleted document '{doc_title}'",
+            ip_address=request.META.get("REMOTE_ADDR"),
+        )
         doc.delete()
 
         # Invalidate the document list cache so the deletion is reflected immediately
         cache.delete(_docs_cache_key(request))
 
         # Return JSON response for HTMX/AJAX requests
-        if request.headers.get('HX-Request'):
-            return JsonResponse({
-                "success": True,
-                "message": f"Document '{doc_title}' deleted successfully."
-            })
+        if request.headers.get("HX-Request"):
+            return JsonResponse(
+                {
+                    "success": True,
+                    "message": f"Document '{doc_title}' deleted successfully.",
+                }
+            )
 
         # Redirect for regular form submissions
         return redirect("upload")
 
     except Exception as e:
-        if request.headers.get('HX-Request'):
-            return JsonResponse({
-                "success": False,
-                "message": f"Error deleting document: {str(e)}"
-            }, status=500)
+        if request.headers.get("HX-Request"):
+            return JsonResponse(
+                {"success": False, "message": f"Error deleting document: {str(e)}"},
+                status=500,
+            )
 
         # For regular requests, redirect with error (would need messages framework)
         return redirect("upload")
@@ -550,6 +682,7 @@ def delete_document(request, pk):
 
 @login_required
 @require_GET
+@instrument
 def download_document(request, pk):
     doc = get_object_or_404(Document, pk=pk)
     profile = getattr(request.user, "profile", None)
@@ -557,7 +690,9 @@ def download_document(request, pk):
         if profile and not profile.can_access_document(doc):
             raise PermissionDenied
     log_audit(
-        request.user, AuditLog.ActionType.DOWNLOAD, doc,
+        request.user,
+        AuditLog.ActionType.DOWNLOAD,
+        doc,
         f"Downloaded '{doc.title}'",
         ip_address=request.META.get("REMOTE_ADDR"),
         user_agent=request.META.get("HTTP_USER_AGENT", "")[:500],
@@ -573,6 +708,7 @@ def download_document(request, pk):
     UserProfile.RoleChoices.DATA_MANAGER,
     UserProfile.RoleChoices.ADMIN,
 )
+@instrument
 def replace_document(request, pk):
     org = getattr(getattr(request.user, "profile", None), "organisation", None)
     parent = get_object_or_404(Document, pk=pk, organisation=org)
@@ -586,7 +722,9 @@ def replace_document(request, pk):
         messages.error(request, str(e))
         return redirect("document_detail", pk=pk)
     log_audit(
-        request.user, AuditLog.ActionType.CREATE, doc,
+        request.user,
+        AuditLog.ActionType.CREATE,
+        doc,
         f"Uploaded version {doc.version_number} of '{parent.title}'",
         ip_address=request.META.get("REMOTE_ADDR"),
     )
@@ -600,12 +738,13 @@ def replace_document(request, pk):
 
 @login_required
 @require_GET
+@instrument
 def projects(request):
     from django.db.models import Count
+
     org_filter = _org_qs_filter(request)
     qs = (
-        Process.objects
-        .filter(org_filter)
+        Process.objects.filter(org_filter)
         .select_related("organisation")
         .annotate(
             prospect_count=Count("prospect", distinct=True),
@@ -620,30 +759,39 @@ def projects(request):
 
 @login_required
 @require_GET
+@instrument
 def project_detail(request, pk):
     from .models import Tenement
+
     org_filter = _org_qs_filter(request)
     process = get_object_or_404(Process.objects.filter(org_filter), pk=pk)
 
     prospects_qs = Prospect.objects.filter(process=process).order_by("-created_at")
     drillholes_qs = Drillhole.objects.filter(process=process).order_by("name")
     tenements_qs = Tenement.objects.filter(process=process).order_by("name")
-    documents_qs = Document.objects.filter(process=process, is_latest=True).order_by("-created_at")
+    documents_qs = Document.objects.filter(process=process, is_latest=True).order_by(
+        "-created_at"
+    )
     reports_qs = SavedReport.objects.filter(process=process).order_by("-created_at")
 
-    return render(request, "core/project_detail.html", {
-        "process":    process,
-        "prospects":  prospects_qs,
-        "drillholes": drillholes_qs,
-        "tenements":  tenements_qs,
-        "documents":  documents_qs[:10],
-        "documents_total": documents_qs.count(),
-        "reports":    reports_qs,
-    })
+    return render(
+        request,
+        "core/project_detail.html",
+        {
+            "process": process,
+            "prospects": prospects_qs,
+            "drillholes": drillholes_qs,
+            "tenements": tenements_qs,
+            "documents": documents_qs[:10],
+            "documents_total": documents_qs.count(),
+            "reports": reports_qs,
+        },
+    )
 
 
 @login_required
 @require_GET
+@instrument
 def prospects(request):
     Prospect = _get_model("core", "Prospect")
     if Prospect:
@@ -659,57 +807,73 @@ def prospects(request):
 
 
 @login_required
+@instrument
 def prospect_detail(request, pk):
     import json
+
     from django.core.serializers import serialize
 
     prospect = get_object_or_404(Prospect, pk=pk)
     if not request.user.is_superuser:
         if (
-            hasattr(request.user, 'profile')
+            hasattr(request.user, "profile")
             and request.user.profile.organisation
             and prospect.organisation
             and prospect.organisation != request.user.profile.organisation
         ):
             raise PermissionDenied
 
-    doc_links = DocLink.objects.filter(
-        content_type=ContentType.objects.get_for_model(Prospect),
-        object_id=prospect.pk,
-    ).select_related("document", "created_by").order_by("-created_at")
+    doc_links = (
+        DocLink.objects.filter(
+            content_type=ContentType.objects.get_for_model(Prospect),
+            object_id=prospect.pk,
+        )
+        .select_related("document", "created_by")
+        .order_by("-created_at")
+    )
 
     drillholes = Drillhole.objects.filter(prospect=prospect).order_by("name")
     tenements = Tenement.objects.filter(process=prospect.process).order_by("name")
-    prospect_reports = SavedReport.objects.filter(prospect=prospect).order_by("-created_at")
+    prospect_reports = SavedReport.objects.filter(prospect=prospect).order_by(
+        "-created_at"
+    )
     samples = Sample.objects.filter(prospect=prospect).order_by("-created_at")
     surveys = Survey.objects.filter(prospect=prospect).order_by("-created_at")
 
     drillholes_geojson = serialize(
-        'geojson',
+        "geojson",
         drillholes.exclude(collar_location__isnull=True),
-        geometry_field='collar_location',
-        fields=['name', 'depth', 'drill_type'],
+        geometry_field="collar_location",
+        fields=["name", "depth", "drill_type"],
     )
     tenements_geojson = serialize(
-        'geojson',
+        "geojson",
         tenements.exclude(geom__isnull=True),
-        geometry_field='geom',
-        fields=['name'],
+        geometry_field="geom",
+        fields=["name"],
     )
-    area_geom_geojson = json.dumps(json.loads(prospect.area_geom.geojson)) if prospect.area_geom else "null"
+    area_geom_geojson = (
+        json.dumps(json.loads(prospect.area_geom.geojson))
+        if prospect.area_geom
+        else "null"
+    )
 
-    return render(request, "core/prospect_detail.html", {
-        "prospect":           prospect,
-        "doc_links":          doc_links,
-        "drillholes":         drillholes,
-        "tenements":          tenements,
-        "prospect_reports":   prospect_reports,
-        "samples":            samples,
-        "surveys":            surveys,
-        "drillholes_geojson": drillholes_geojson,
-        "tenements_geojson":  tenements_geojson,
-        "area_geom_geojson":  area_geom_geojson,
-    })
+    return render(
+        request,
+        "core/prospect_detail.html",
+        {
+            "prospect": prospect,
+            "doc_links": doc_links,
+            "drillholes": drillholes,
+            "tenements": tenements,
+            "prospect_reports": prospect_reports,
+            "samples": samples,
+            "surveys": surveys,
+            "drillholes_geojson": drillholes_geojson,
+            "tenements_geojson": tenements_geojson,
+            "area_geom_geojson": area_geom_geojson,
+        },
+    )
 
 
 @login_required
@@ -720,24 +884,32 @@ def prospect_detail(request, pk):
     UserProfile.RoleChoices.ADMIN,
 )
 @require_http_methods(["GET", "POST"])
+@instrument
 def create_prospect(request):
     from django.contrib.gis.geos import Point
 
     org = getattr(getattr(request.user, "profile", None), "organisation", None)
     if org is None:
-        messages.error(request, "Your account is not linked to an organisation. Ask an administrator to assign one before creating prospects.")
+        messages.error(
+            request,
+            "Your account is not linked to an organisation. Ask an administrator to assign one before creating prospects.",
+        )
         return redirect("prospects")
 
     initial_process_id = request.GET.get("project")
     initial_process = None
     if initial_process_id:
         try:
-            initial_process = Process.objects.get(pk=initial_process_id, organisation=org)
+            initial_process = Process.objects.get(
+                pk=initial_process_id, organisation=org
+            )
         except Process.DoesNotExist:
             pass
 
     if request.method == "POST":
-        form = ProspectForm(request.POST, organisation=org, initial_process=initial_process)
+        form = ProspectForm(
+            request.POST, organisation=org, initial_process=initial_process
+        )
         if form.is_valid():
             prospect = form.save(commit=False)
             prospect.organisation = org
@@ -745,28 +917,42 @@ def create_prospect(request):
             lng = form.cleaned_data["longitude"]
             prospect.geom = Point(float(lng), float(lat), srid=4326)
             prospect.save()
-            log_audit(request.user, AuditLog.ActionType.CREATE, prospect,
-                      f"Created prospect '{prospect.name}'",
-                      ip_address=request.META.get("REMOTE_ADDR"))
+            log_audit(
+                request.user,
+                AuditLog.ActionType.CREATE,
+                prospect,
+                f"Created prospect '{prospect.name}'",
+                ip_address=request.META.get("REMOTE_ADDR"),
+            )
             return redirect("prospect_detail", pk=prospect.pk)
         if request.headers.get("HX-Request"):
-            return render(request, "core/partials/prospect_form_partial.html", {"form": form})
-        return render(request, "core/prospect_form.html", {
+            return render(
+                request, "core/partials/prospect_form_partial.html", {"form": form}
+            )
+        return render(
+            request,
+            "core/prospect_form.html",
+            {
+                "form": form,
+                "initial_lat": -25.0,
+                "initial_lng": 133.0,
+                "initial_zoom": 4,
+                "initial_area_geojson": "null",
+            },
+        )
+
+    form = ProspectForm(organisation=org, initial_process=initial_process)
+    return render(
+        request,
+        "core/prospect_form.html",
+        {
             "form": form,
             "initial_lat": -25.0,
             "initial_lng": 133.0,
             "initial_zoom": 4,
             "initial_area_geojson": "null",
-        })
-
-    form = ProspectForm(organisation=org, initial_process=initial_process)
-    return render(request, "core/prospect_form.html", {
-        "form": form,
-        "initial_lat": -25.0,
-        "initial_lng": 133.0,
-        "initial_zoom": 4,
-        "initial_area_geojson": "null",
-    })
+        },
+    )
 
 
 @login_required
@@ -777,6 +963,7 @@ def create_prospect(request):
     UserProfile.RoleChoices.ADMIN,
 )
 @require_http_methods(["GET", "POST"])
+@instrument
 def edit_prospect(request, pk):
     from django.contrib.gis.geos import Point
 
@@ -794,38 +981,60 @@ def edit_prospect(request, pk):
             lng = form.cleaned_data["longitude"]
             updated.geom = Point(float(lng), float(lat), srid=4326)
             updated.save()
-            log_audit(request.user, AuditLog.ActionType.EDIT, updated,
-                      f"Edited prospect '{updated.name}'",
-                      ip_address=request.META.get("REMOTE_ADDR"))
+            log_audit(
+                request.user,
+                AuditLog.ActionType.EDIT,
+                updated,
+                f"Edited prospect '{updated.name}'",
+                ip_address=request.META.get("REMOTE_ADDR"),
+            )
             return redirect("prospect_detail", pk=prospect.pk)
         import json as _json
+
         err_lat = prospect.geom.y if prospect.geom else -25.0
         err_lng = prospect.geom.x if prospect.geom else 133.0
-        err_area = _json.dumps(_json.loads(prospect.area_geom.geojson)) if prospect.area_geom else "null"
-        return render(request, "core/prospect_form.html", {
+        err_area = (
+            _json.dumps(_json.loads(prospect.area_geom.geojson))
+            if prospect.area_geom
+            else "null"
+        )
+        return render(
+            request,
+            "core/prospect_form.html",
+            {
+                "form": form,
+                "editing": True,
+                "prospect": prospect,
+                "initial_lat": err_lat,
+                "initial_lng": err_lng,
+                "initial_zoom": 10 if prospect.geom else 4,
+                "initial_area_geojson": err_area,
+            },
+        )
+
+    import json as _json
+
+    initial_lat = prospect.geom.y if prospect.geom else -25.0
+    initial_lng = prospect.geom.x if prospect.geom else 133.0
+    initial_area = (
+        _json.dumps(_json.loads(prospect.area_geom.geojson))
+        if prospect.area_geom
+        else "null"
+    )
+    form = ProspectForm(instance=prospect, organisation=org)
+    return render(
+        request,
+        "core/prospect_form.html",
+        {
             "form": form,
             "editing": True,
             "prospect": prospect,
-            "initial_lat": err_lat,
-            "initial_lng": err_lng,
+            "initial_lat": initial_lat,
+            "initial_lng": initial_lng,
             "initial_zoom": 10 if prospect.geom else 4,
-            "initial_area_geojson": err_area,
-        })
-
-    import json as _json
-    initial_lat = prospect.geom.y if prospect.geom else -25.0
-    initial_lng = prospect.geom.x if prospect.geom else 133.0
-    initial_area = _json.dumps(_json.loads(prospect.area_geom.geojson)) if prospect.area_geom else "null"
-    form = ProspectForm(instance=prospect, organisation=org)
-    return render(request, "core/prospect_form.html", {
-        "form": form,
-        "editing": True,
-        "prospect": prospect,
-        "initial_lat": initial_lat,
-        "initial_lng": initial_lng,
-        "initial_zoom": 10 if prospect.geom else 4,
-        "initial_area_geojson": initial_area,
-    })
+            "initial_area_geojson": initial_area,
+        },
+    )
 
 
 @login_required
@@ -836,26 +1045,35 @@ def edit_prospect(request, pk):
     UserProfile.RoleChoices.ADMIN,
 )
 @require_POST
+@instrument
 def generate_prospect_report(request, pk):
     import hashlib
+
     prospect = get_object_or_404(Prospect, pk=pk)
     org_filter = _org_qs_filter(request)
     if not Prospect.objects.filter(org_filter, pk=pk).exists():
         raise PermissionDenied
 
     clearance_level = _get_clearance_level(request)
-    report_title = request.POST.get("report_title", "").strip() or f"{prospect.name} — Prospect Report"
+    report_title = (
+        request.POST.get("report_title", "").strip()
+        or f"{prospect.name} — Prospect Report"
+    )
 
     try:
-        md, doc_ids = generate_project_report(str(prospect.process_id), clearance_level=clearance_level)
+        md, doc_ids = generate_project_report(
+            str(prospect.process_id), clearance_level=clearance_level
+        )
     except Exception as e:
         log.error("Prospect report generation failed: %s", e)
         messages.error(request, f"Report generation failed: {e}")
         return redirect("prospect_detail", pk=pk)
 
-    existing = SavedReport.objects.filter(
-        prospect=prospect, title=report_title
-    ).order_by("-version_number").first()
+    existing = (
+        SavedReport.objects.filter(prospect=prospect, title=report_title)
+        .order_by("-version_number")
+        .first()
+    )
 
     if existing:
         report = SavedReport.create_version(
@@ -888,12 +1106,13 @@ def generate_prospect_report(request, pk):
 
 @login_required
 @require_POST
+@instrument
 def assign_report_prospect(request, report_id):
     """Assign or clear the prospect linked to a saved report."""
     report = get_object_or_404(SavedReport, pk=report_id)
     if not request.user.is_superuser:
         if (
-            hasattr(request.user, 'profile')
+            hasattr(request.user, "profile")
             and request.user.profile.organisation
             and report.organisation
             and report.organisation != request.user.profile.organisation
@@ -907,10 +1126,12 @@ def assign_report_prospect(request, report_id):
     else:
         report.prospect = None
     report.save(update_fields=["prospect"])
-    return JsonResponse({
-        "success": True,
-        "prospect_id": str(report.prospect_id) if report.prospect_id else None,
-    })
+    return JsonResponse(
+        {
+            "success": True,
+            "prospect_id": str(report.prospect_id) if report.prospect_id else None,
+        }
+    )
 
 
 # ---------- Samples ----------
@@ -919,7 +1140,11 @@ def assign_report_prospect(request, report_id):
 @login_required
 @require_GET
 def samples(request):
-    qs = Sample.objects.filter(_org_qs_filter(request)).select_related("process", "prospect").order_by("-created_at")
+    qs = (
+        Sample.objects.filter(_org_qs_filter(request))
+        .select_related("process", "prospect")
+        .order_by("-created_at")
+    )
     prospect_id = request.GET.get("prospect")
     if prospect_id:
         qs = qs.filter(prospect_id=prospect_id)
@@ -935,6 +1160,7 @@ def samples(request):
     UserProfile.RoleChoices.ADMIN,
 )
 @require_http_methods(["GET", "POST"])
+@instrument
 def create_sample(request):
     org = getattr(getattr(request.user, "profile", None), "organisation", None)
     if org is None:
@@ -944,7 +1170,9 @@ def create_sample(request):
     initial_prospect = None
     prospect_id = request.GET.get("prospect")
     if prospect_id:
-        initial_prospect = Prospect.objects.filter(pk=prospect_id, organisation=org).first()
+        initial_prospect = Prospect.objects.filter(
+            pk=prospect_id, organisation=org
+        ).first()
 
     if request.method == "POST":
         form = SampleForm(request.POST, organisation=org)
@@ -952,9 +1180,13 @@ def create_sample(request):
             sample = form.save(commit=False)
             sample.organisation = org
             sample.save()
-            log_audit(request.user, AuditLog.ActionType.CREATE, sample,
-                      f"Created sample '{sample.name}'",
-                      ip_address=request.META.get("REMOTE_ADDR"))
+            log_audit(
+                request.user,
+                AuditLog.ActionType.CREATE,
+                sample,
+                f"Created sample '{sample.name}'",
+                ip_address=request.META.get("REMOTE_ADDR"),
+            )
             redirect_to = request.POST.get("next") or "sample_detail"
             if redirect_to == "prospect" and sample.prospect_id:
                 return redirect("prospect_detail", pk=sample.prospect_id)
@@ -962,16 +1194,21 @@ def create_sample(request):
         return render(request, "core/sample_form.html", {"form": form})
 
     form = SampleForm(organisation=org, initial_prospect=initial_prospect)
-    return render(request, "core/sample_form.html", {"form": form, "initial_prospect": initial_prospect})
+    return render(
+        request,
+        "core/sample_form.html",
+        {"form": form, "initial_prospect": initial_prospect},
+    )
 
 
 @login_required
 @require_GET
+@instrument
 def sample_detail(request, pk):
     sample = get_object_or_404(Sample, pk=pk)
     if not request.user.is_superuser:
         if (
-            hasattr(request.user, 'profile')
+            hasattr(request.user, "profile")
             and request.user.profile.organisation
             and sample.organisation != request.user.profile.organisation
         ):
@@ -984,8 +1221,13 @@ def sample_detail(request, pk):
 
 @login_required
 @require_GET
+@instrument
 def surveys(request):
-    qs = Survey.objects.filter(_org_qs_filter(request)).select_related("process", "prospect").order_by("-created_at")
+    qs = (
+        Survey.objects.filter(_org_qs_filter(request))
+        .select_related("process", "prospect")
+        .order_by("-created_at")
+    )
     prospect_id = request.GET.get("prospect")
     if prospect_id:
         qs = qs.filter(prospect_id=prospect_id)
@@ -1001,6 +1243,7 @@ def surveys(request):
     UserProfile.RoleChoices.ADMIN,
 )
 @require_http_methods(["GET", "POST"])
+@instrument
 def create_survey(request):
     org = getattr(getattr(request.user, "profile", None), "organisation", None)
     if org is None:
@@ -1010,7 +1253,9 @@ def create_survey(request):
     initial_prospect = None
     prospect_id = request.GET.get("prospect")
     if prospect_id:
-        initial_prospect = Prospect.objects.filter(pk=prospect_id, organisation=org).first()
+        initial_prospect = Prospect.objects.filter(
+            pk=prospect_id, organisation=org
+        ).first()
 
     if request.method == "POST":
         form = SurveyForm(request.POST, organisation=org)
@@ -1018,25 +1263,34 @@ def create_survey(request):
             survey = form.save(commit=False)
             survey.organisation = org
             survey.save()
-            log_audit(request.user, AuditLog.ActionType.CREATE, survey,
-                      f"Created survey '{survey.name}'",
-                      ip_address=request.META.get("REMOTE_ADDR"))
+            log_audit(
+                request.user,
+                AuditLog.ActionType.CREATE,
+                survey,
+                f"Created survey '{survey.name}'",
+                ip_address=request.META.get("REMOTE_ADDR"),
+            )
             if survey.prospect_id:
                 return redirect("prospect_detail", pk=survey.prospect_id)
             return redirect("survey_detail", pk=survey.pk)
         return render(request, "core/survey_form.html", {"form": form})
 
     form = SurveyForm(organisation=org, initial_prospect=initial_prospect)
-    return render(request, "core/survey_form.html", {"form": form, "initial_prospect": initial_prospect})
+    return render(
+        request,
+        "core/survey_form.html",
+        {"form": form, "initial_prospect": initial_prospect},
+    )
 
 
 @login_required
 @require_GET
+@instrument
 def survey_detail(request, pk):
     survey = get_object_or_404(Survey, pk=pk)
     if not request.user.is_superuser:
         if (
-            hasattr(request.user, 'profile')
+            hasattr(request.user, "profile")
             and request.user.profile.organisation
             and survey.organisation != request.user.profile.organisation
         ):
@@ -1044,11 +1298,16 @@ def survey_detail(request, pk):
     area_geom_geojson = "null"
     if survey.geom:
         import json
+
         area_geom_geojson = json.dumps(json.loads(survey.geom.geojson))
-    return render(request, "core/survey_detail.html", {
-        "survey": survey,
-        "area_geom_geojson": area_geom_geojson,
-    })
+    return render(
+        request,
+        "core/survey_detail.html",
+        {
+            "survey": survey,
+            "area_geom_geojson": area_geom_geojson,
+        },
+    )
 
 
 # ---------- DocLink Views ----------
@@ -1063,6 +1322,7 @@ _LINKABLE_MODELS = {
 
 @login_required
 @require_http_methods(["GET"])
+@instrument
 def doc_link_picker(request):
     """HTMX partial: render the document picker modal for linking a document to an entity."""
     content_type_label = request.GET.get("content_type", "")
@@ -1071,16 +1331,23 @@ def doc_link_picker(request):
     if content_type_label not in _LINKABLE_MODELS:
         return HttpResponseBadRequest("Invalid content type.")
 
-    documents = Document.objects.filter(_org_qs_filter(request)).order_by("-created_at")[:100]
-    return render(request, "core/partials/doc_link_picker.html", {
-        "documents": documents,
-        "content_type_label": content_type_label,
-        "object_id": object_id,
-    })
+    documents = Document.objects.filter(_org_qs_filter(request)).order_by(
+        "-created_at"
+    )[:100]
+    return render(
+        request,
+        "core/partials/doc_link_picker.html",
+        {
+            "documents": documents,
+            "content_type_label": content_type_label,
+            "object_id": object_id,
+        },
+    )
 
 
 @login_required
 @require_POST
+@instrument
 def create_doc_link(request):
     """Create one or more DocLinks between documents and a target entity."""
     document_ids = request.POST.getlist("document_id")
@@ -1109,27 +1376,40 @@ def create_doc_link(request):
             defaults={"created_by": created_by},
         )
         if created:
-            log_audit(request.user, AuditLog.ActionType.EDIT, document,
-                      f"Linked document '{document.title}' to {content_type_label} {object_id}",
-                      ip_address=request.META.get("REMOTE_ADDR"))
+            log_audit(
+                request.user,
+                AuditLog.ActionType.EDIT,
+                document,
+                f"Linked document '{document.title}' to {content_type_label} {object_id}",
+                ip_address=request.META.get("REMOTE_ADDR"),
+            )
 
     if content_type_label == "prospect":
         prospect = get_object_or_404(Prospect, pk=object_id)
-        doc_links = DocLink.objects.filter(
-            content_type=ct,
-            object_id=object_id,
-        ).select_related("document", "created_by").order_by("-created_at")
-        return render(request, "core/partials/linked_documents.html", {
-            "entity": prospect,
-            "doc_links": doc_links,
-            "content_type_label": content_type_label,
-        })
+        doc_links = (
+            DocLink.objects.filter(
+                content_type=ct,
+                object_id=object_id,
+            )
+            .select_related("document", "created_by")
+            .order_by("-created_at")
+        )
+        return render(
+            request,
+            "core/partials/linked_documents.html",
+            {
+                "entity": prospect,
+                "doc_links": doc_links,
+                "content_type_label": content_type_label,
+            },
+        )
 
     return HttpResponse(status=204)
 
 
 @login_required
 @require_POST
+@instrument
 def delete_doc_link(request, pk):
     """Delete a DocLink record and re-render the linked documents section."""
     link = get_object_or_404(DocLink, pk=pk)
@@ -1137,22 +1417,34 @@ def delete_doc_link(request, pk):
     object_id = link.object_id
     content_type_label = ct.model
 
-    log_audit(request.user, AuditLog.ActionType.DELETE, link.document,
-              f"Unlinked document '{link.document.title}' from {content_type_label} {object_id}",
-              ip_address=request.META.get("REMOTE_ADDR"))
+    log_audit(
+        request.user,
+        AuditLog.ActionType.DELETE,
+        link.document,
+        f"Unlinked document '{link.document.title}' from {content_type_label} {object_id}",
+        ip_address=request.META.get("REMOTE_ADDR"),
+    )
     link.delete()
 
     if content_type_label == "prospect":
         prospect = get_object_or_404(Prospect, pk=object_id)
-        doc_links = DocLink.objects.filter(
-            content_type=ct,
-            object_id=object_id,
-        ).select_related("document", "created_by").order_by("-created_at")
-        return render(request, "core/partials/linked_documents.html", {
-            "entity": prospect,
-            "doc_links": doc_links,
-            "content_type_label": content_type_label,
-        })
+        doc_links = (
+            DocLink.objects.filter(
+                content_type=ct,
+                object_id=object_id,
+            )
+            .select_related("document", "created_by")
+            .order_by("-created_at")
+        )
+        return render(
+            request,
+            "core/partials/linked_documents.html",
+            {
+                "entity": prospect,
+                "doc_links": doc_links,
+                "content_type_label": content_type_label,
+            },
+        )
 
     return HttpResponse(status=204)
 
@@ -1162,6 +1454,7 @@ def delete_doc_link(request, pk):
 
 @login_required
 @require_GET
+@instrument
 def drillhole_link_picker(request):
     prospect_id = request.GET.get("prospect_id")
     prospect = get_object_or_404(Prospect, pk=prospect_id)
@@ -1169,47 +1462,62 @@ def drillhole_link_picker(request):
         process=prospect.process,
         prospect__isnull=True,
     ).order_by("name")
-    return render(request, "core/partials/drillhole_link_picker.html", {
-        "available_drillholes": available_drillholes,
-        "prospect_id": prospect_id,
-    })
+    return render(
+        request,
+        "core/partials/drillhole_link_picker.html",
+        {
+            "available_drillholes": available_drillholes,
+            "prospect_id": prospect_id,
+        },
+    )
 
 
 @login_required
 @require_POST
+@instrument
 def link_drillhole(request):
     drillhole_id = request.POST.get("drillhole_id")
-    prospect_id  = request.POST.get("prospect_id")
-    prospect  = get_object_or_404(Prospect, pk=prospect_id)
+    prospect_id = request.POST.get("prospect_id")
+    prospect = get_object_or_404(Prospect, pk=prospect_id)
     drillhole = get_object_or_404(Drillhole, pk=drillhole_id)
     drillhole.prospect = prospect
     drillhole.save(update_fields=["prospect"])
     drillholes = Drillhole.objects.filter(prospect=prospect).order_by("name")
-    return render(request, "core/partials/linked_drillholes.html", {
-        "prospect":   prospect,
-        "drillholes": drillholes,
-    })
+    return render(
+        request,
+        "core/partials/linked_drillholes.html",
+        {
+            "prospect": prospect,
+            "drillholes": drillholes,
+        },
+    )
 
 
 @login_required
 @require_POST
+@instrument
 def unlink_drillhole(request, pk):
     drillhole = get_object_or_404(Drillhole, pk=pk)
-    prospect  = drillhole.prospect
+    prospect = drillhole.prospect
     drillhole.prospect = None
     drillhole.save(update_fields=["prospect"])
     drillholes = Drillhole.objects.filter(prospect=prospect).order_by("name")
-    return render(request, "core/partials/linked_drillholes.html", {
-        "prospect":   prospect,
-        "drillholes": drillholes,
-    })
+    return render(
+        request,
+        "core/partials/linked_drillholes.html",
+        {
+            "prospect": prospect,
+            "drillholes": drillholes,
+        },
+    )
 
 
 @login_required
 @require_POST
+@instrument
 def bulk_link_drillholes(request):
     """HTMX: link multiple drillholes to a prospect in one action."""
-    prospect_id  = request.POST.get("prospect_id")
+    prospect_id = request.POST.get("prospect_id")
     drillhole_ids = request.POST.getlist("drillhole_id")
     prospect = get_object_or_404(Prospect, pk=prospect_id)
     if drillhole_ids:
@@ -1218,17 +1526,22 @@ def bulk_link_drillholes(request):
             process=prospect.process,
         ).update(prospect=prospect)
     drillholes = Drillhole.objects.filter(prospect=prospect).order_by("name")
-    return render(request, "core/partials/linked_drillholes.html", {
-        "prospect":   prospect,
-        "drillholes": drillholes,
-    })
+    return render(
+        request,
+        "core/partials/linked_drillholes.html",
+        {
+            "prospect": prospect,
+            "drillholes": drillholes,
+        },
+    )
 
 
 @login_required
 @require_POST
+@instrument
 def bulk_assign_drillholes(request):
     """Bulk-assign selected drillholes to a prospect from the drillholes list page."""
-    prospect_id   = request.POST.get("prospect_id")
+    prospect_id = request.POST.get("prospect_id")
     drillhole_ids = request.POST.getlist("drillhole_ids")
 
     if not prospect_id or not drillhole_ids:
@@ -1255,6 +1568,7 @@ def bulk_assign_drillholes(request):
 
 @login_required
 @require_GET
+@instrument
 def drillholes(request):
     Drillhole = _get_model("core", "Drillhole")
     if Drillhole:
@@ -1262,7 +1576,11 @@ def drillholes(request):
         page = _paginate(qs, request)
     else:
         qs, page = [], None
-    prospects = Prospect.objects.filter(_org_qs_filter(request)).select_related("process").order_by("process__name", "name")
+    prospects = (
+        Prospect.objects.filter(_org_qs_filter(request))
+        .select_related("process")
+        .order_by("process__name", "name")
+    )
     return render(
         request,
         "core/drillholes.html",
@@ -1272,6 +1590,7 @@ def drillholes(request):
 
 @login_required
 @require_GET
+@instrument
 def drillhole_detail(request, pk):
     drillhole = get_object_or_404(Drillhole, pk=pk)
     if not request.user.is_superuser:
@@ -1283,18 +1602,25 @@ def drillhole_detail(request, pk):
         ):
             raise PermissionDenied
     surveys = DrillholeSurvey.objects.filter(drillhole=drillhole).order_by("depth")
-    lithology = LithologyInterval.objects.filter(drillhole=drillhole).order_by("from_depth")
+    lithology = LithologyInterval.objects.filter(drillhole=drillhole).order_by(
+        "from_depth"
+    )
     assays = AssayResult.objects.filter(drillhole=drillhole).order_by("from_depth")
-    return render(request, "core/drillhole_detail.html", {
-        "drillhole": drillhole,
-        "surveys":   surveys,
-        "lithology": lithology,
-        "assays":    assays,
-    })
+    return render(
+        request,
+        "core/drillhole_detail.html",
+        {
+            "drillhole": drillhole,
+            "surveys": surveys,
+            "lithology": lithology,
+            "assays": assays,
+        },
+    )
 
 
 @login_required
 @require_http_methods(["GET", "POST"])
+@instrument
 def drillhole_import(request):
     if not request.user.is_superuser:
         profile = getattr(request.user, "profile", None)
@@ -1304,16 +1630,20 @@ def drillhole_import(request):
 
     org_filter = _org_qs_filter(request)
     organisations = Organisation.objects.filter(org_filter).order_by("name")
-    processes     = Process.objects.filter(org_filter).select_related("organisation").order_by("name")
+    processes = (
+        Process.objects.filter(org_filter)
+        .select_related("organisation")
+        .order_by("name")
+    )
 
     context = {"organisations": organisations, "processes": processes}
 
     if request.method == "POST":
-        file    = request.FILES.get("file")
-        org_id  = request.POST.get("organisation", "").strip()
+        file = request.FILES.get("file")
+        org_id = request.POST.get("organisation", "").strip()
         proc_id = request.POST.get("process", "").strip()
         dry_run = request.POST.get("dry_run") == "on"
-        update  = request.POST.get("update") == "on"
+        update = request.POST.get("update") == "on"
 
         form_errors = []
         if not file:
@@ -1325,25 +1655,31 @@ def drillhole_import(request):
 
         if not form_errors:
             try:
-                org     = Organisation.objects.get(pk=org_id)
+                org = Organisation.objects.get(pk=org_id)
                 process = Process.objects.get(pk=proc_id, organisation=org)
-                result  = run_drillhole_import(
+                result = run_drillhole_import(
                     file, org=org, process=process, dry_run=dry_run, update=update
                 )
                 if not dry_run:
                     c = result.get("counters", {})
-                    log_audit(request.user, AuditLog.ActionType.CREATE, process,
-                              f"Imported drillholes: {c.get('created', 0)} created, "
-                              f"{c.get('updated', 0)} updated, {c.get('skipped', 0)} skipped",
-                              ip_address=request.META.get("REMOTE_ADDR"))
-                context.update({
-                    "result":       result,
-                    "counters":     result["counters"],
-                    "import_errors": result["errors"],
-                    "dry_run":      dry_run,
-                    "selected_org":  org_id,
-                    "selected_proc": proc_id,
-                })
+                    log_audit(
+                        request.user,
+                        AuditLog.ActionType.CREATE,
+                        process,
+                        f"Imported drillholes: {c.get('created', 0)} created, "
+                        f"{c.get('updated', 0)} updated, {c.get('skipped', 0)} skipped",
+                        ip_address=request.META.get("REMOTE_ADDR"),
+                    )
+                context.update(
+                    {
+                        "result": result,
+                        "counters": result["counters"],
+                        "import_errors": result["errors"],
+                        "dry_run": dry_run,
+                        "selected_org": org_id,
+                        "selected_proc": proc_id,
+                    }
+                )
             except Exception as e:
                 log.error("Drillhole import failed: %s", e, exc_info=True)
                 form_errors.append(str(e))
@@ -1355,6 +1691,7 @@ def drillhole_import(request):
 
 @login_required
 @require_GET
+@instrument
 def tenements(request):
     Tenement = _get_model("core", "Tenement")
     if Tenement:
@@ -1371,14 +1708,19 @@ def tenements(request):
 
 @login_required
 @require_http_methods(["GET", "POST"])
+@instrument
 def create_tenement(request):
     org = getattr(getattr(request.user, "profile", None), "organisation", None)
     if request.method == "POST":
         form = TenementForm(request.POST, organisation=org)
         if form.is_valid():
             tenement = form.save()
-            log_audit(request.user, AuditLog.ActionType.CREATE, tenement,
-                      f"Created tenement '{tenement.name}'")
+            log_audit(
+                request.user,
+                AuditLog.ActionType.CREATE,
+                tenement,
+                f"Created tenement '{tenement.name}'",
+            )
             messages.success(request, f"Tenement '{tenement.name}' created.")
             return redirect("tenement_detail", pk=tenement.pk)
     else:
@@ -1392,22 +1734,27 @@ def create_tenement(request):
 
 @login_required
 @require_GET
+@instrument
 def tenement_detail(request, pk):
     tenement = get_object_or_404(
         Tenement.objects.filter(_org_qs_filter(request)), pk=pk
     )
-    documents = (
-        Document.objects.filter(tenement=tenement, is_latest=True)
-        .order_by("-created_at")[:10]
+    documents = Document.objects.filter(tenement=tenement, is_latest=True).order_by(
+        "-created_at"
+    )[:10]
+    return render(
+        request,
+        "core/tenement_detail.html",
+        {
+            "tenement": tenement,
+            "documents": documents,
+        },
     )
-    return render(request, "core/tenement_detail.html", {
-        "tenement": tenement,
-        "documents": documents,
-    })
 
 
 @login_required
 @require_http_methods(["GET", "POST"])
+@instrument
 def edit_tenement(request, pk):
     tenement = get_object_or_404(
         Tenement.objects.filter(_org_qs_filter(request)), pk=pk
@@ -1417,29 +1764,37 @@ def edit_tenement(request, pk):
         form = TenementForm(request.POST, instance=tenement, organisation=org)
         if form.is_valid():
             form.save()
-            log_audit(request.user, AuditLog.ActionType.EDIT, tenement,
-                      f"Edited tenement '{tenement.name}'")
+            log_audit(
+                request.user,
+                AuditLog.ActionType.EDIT,
+                tenement,
+                f"Edited tenement '{tenement.name}'",
+            )
             messages.success(request, f"Tenement '{tenement.name}' updated.")
             return redirect("tenement_detail", pk=tenement.pk)
     else:
         form = TenementForm(instance=tenement, organisation=org)
     initial_geojson = tenement.geom.json if tenement.geom else ""
-    return render(request, "core/tenement_form.html", {
-        "form": form,
-        "editing": True,
-        "tenement": tenement,
-        "initial_geojson": initial_geojson,
-    })
+    return render(
+        request,
+        "core/tenement_form.html",
+        {
+            "form": form,
+            "editing": True,
+            "tenement": tenement,
+            "initial_geojson": initial_geojson,
+        },
+    )
 
 
 @login_required
 @require_http_methods(["GET", "POST"])
+@instrument
 def edit_process_geometry(request, pk):
-    process = get_object_or_404(
-        Process.objects.filter(_org_qs_filter(request)), pk=pk
-    )
+    process = get_object_or_404(Process.objects.filter(_org_qs_filter(request)), pk=pk)
     if request.method == "POST":
         from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon
+
         geojson = request.POST.get("geom_geojson", "").strip()
         if geojson:
             try:
@@ -1448,20 +1803,32 @@ def edit_process_geometry(request, pk):
                     geom = MultiPolygon(geom)
                 process.geom = geom
                 process.save()
-                log_audit(request.user, AuditLog.ActionType.EDIT, process,
-                          f"Updated spatial boundary for '{process.name}'")
+                log_audit(
+                    request.user,
+                    AuditLog.ActionType.EDIT,
+                    process,
+                    f"Updated spatial boundary for '{process.name}'",
+                )
                 messages.success(request, "Project boundary updated.")
                 return redirect("project_detail", pk=process.pk)
             except Exception:
-                messages.error(request, "Invalid geometry — please redraw the boundary.")
+                messages.error(
+                    request, "Invalid geometry — please redraw the boundary."
+                )
         else:
-            messages.error(request, "No geometry provided — please draw a boundary on the map.")
+            messages.error(
+                request, "No geometry provided — please draw a boundary on the map."
+            )
 
     initial_geojson = process.geom.json if process.geom else ""
-    return render(request, "core/process_geometry_form.html", {
-        "process": process,
-        "initial_geojson": initial_geojson,
-    })
+    return render(
+        request,
+        "core/process_geometry_form.html",
+        {
+            "process": process,
+            "initial_geojson": initial_geojson,
+        },
+    )
 
 
 # ---------- AI / Map / Utilities ----------
@@ -1469,6 +1836,7 @@ def edit_process_geometry(request, pk):
 
 @login_required
 @require_GET
+@instrument
 def ai_insights(request):
     """
     Placeholder page for AI features (report generation, summarization, etc.).
@@ -1479,15 +1847,22 @@ def ai_insights(request):
         request,
         "core/ai_insights.html",
         {
-            "recent_docs": Document.objects.filter(org_filter).order_by("-created_at")[:12],
-            "recent_projects": Process.objects.filter(org_filter).order_by("-created_at")[:8],
-            "recent_reports": SavedReport.objects.filter(org_filter).select_related("process").order_by("-created_at")[:10],
+            "recent_docs": Document.objects.filter(org_filter).order_by("-created_at")[
+                :12
+            ],
+            "recent_projects": Process.objects.filter(org_filter).order_by(
+                "-created_at"
+            )[:8],
+            "recent_reports": SavedReport.objects.filter(org_filter)
+            .select_related("process")
+            .order_by("-created_at")[:10],
         },
     )
 
 
 @login_required
 @require_GET
+@instrument
 def map_view(request):
     """
     Simple map page that we should consider wiring to Leaflet / PostGIS endpoints.
@@ -1496,6 +1871,7 @@ def map_view(request):
 
 
 @require_GET
+@instrument
 def healthcheck(request):
     """
     Lightweight container health endpoint (used by k8s/docker healthchecks later).
@@ -1503,10 +1879,9 @@ def healthcheck(request):
     return JsonResponse({"status": "ok"})
 
 
-
-
 @login_required
 @require_GET
+@instrument
 def project_report_pdf(request, process_id: str):
     org_filter = _org_qs_filter(request)
     if not Process.objects.filter(org_filter, pk=process_id).exists():
@@ -1517,49 +1892,81 @@ def project_report_pdf(request, process_id: str):
         md_text = _get_cached_report_md(process_id, clearance_level)
     except Exception as e:
         log.error("PDF export failed for process %s: %s", process_id, e)
-        return HttpResponse("Report generation failed: Granite model unavailable.", status=503, content_type="text/plain")
+        return HttpResponse(
+            "Report generation failed: Granite model unavailable.",
+            status=503,
+            content_type="text/plain",
+        )
     process = Process.objects.get(pk=process_id)
 
     buf = io.BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=A4,
-                            leftMargin=2*cm, rightMargin=2*cm,
-                            topMargin=2*cm, bottomMargin=2*cm)
+    doc = SimpleDocTemplate(
+        buf,
+        pagesize=A4,
+        leftMargin=2 * cm,
+        rightMargin=2 * cm,
+        topMargin=2 * cm,
+        bottomMargin=2 * cm,
+    )
 
     styles = getSampleStyleSheet()
     # Custom styles
-    h1 = ParagraphStyle('h1', parent=styles['Heading1'], textColor=colors.HexColor('#0e7490'), spaceAfter=10)
-    h2 = ParagraphStyle('h2', parent=styles['Heading2'], textColor=colors.HexColor('#155e75'), spaceAfter=6)
-    h3 = ParagraphStyle('h3', parent=styles['Heading3'], textColor=colors.HexColor('#1e4d5c'), spaceAfter=4)
-    body = ParagraphStyle('body', parent=styles['Normal'], spaceAfter=6, leading=16)
-    bullet = ParagraphStyle('bullet', parent=styles['Normal'], leftIndent=20, spaceAfter=4,
-                             bulletIndent=10, leading=16)
+    h1 = ParagraphStyle(
+        "h1",
+        parent=styles["Heading1"],
+        textColor=colors.HexColor("#0e7490"),
+        spaceAfter=10,
+    )
+    h2 = ParagraphStyle(
+        "h2",
+        parent=styles["Heading2"],
+        textColor=colors.HexColor("#155e75"),
+        spaceAfter=6,
+    )
+    h3 = ParagraphStyle(
+        "h3",
+        parent=styles["Heading3"],
+        textColor=colors.HexColor("#1e4d5c"),
+        spaceAfter=4,
+    )
+    body = ParagraphStyle("body", parent=styles["Normal"], spaceAfter=6, leading=16)
+    bullet = ParagraphStyle(
+        "bullet",
+        parent=styles["Normal"],
+        leftIndent=20,
+        spaceAfter=4,
+        bulletIndent=10,
+        leading=16,
+    )
 
     story = []
     for line in md_text.splitlines():
-        if line.startswith('### '):
+        if line.startswith("### "):
             story.append(Paragraph(line[4:], h3))
-        elif line.startswith('## '):
+        elif line.startswith("## "):
             story.append(Paragraph(line[3:], h2))
-        elif line.startswith('# '):
+        elif line.startswith("# "):
             story.append(Paragraph(line[2:], h1))
-        elif line.startswith('- ') or line.startswith('* '):
-            story.append(Paragraph(f'• {line[2:]}', bullet))
-        elif re.match(r'^\d+\. ', line):
-            story.append(Paragraph(re.sub(r'^\d+\. ', '', line), bullet))
-        elif line.strip() == '':
+        elif line.startswith("- ") or line.startswith("* "):
+            story.append(Paragraph(f"• {line[2:]}", bullet))
+        elif re.match(r"^\d+\. ", line):
+            story.append(Paragraph(re.sub(r"^\d+\. ", "", line), bullet))
+        elif line.strip() == "":
             story.append(Spacer(1, 8))
         else:
             story.append(Paragraph(line, body))
 
     doc.build(story)
     buf.seek(0)
-    slug = re.sub(r'[^\w-]', '_', process.name or str(process_id))
-    response = HttpResponse(buf.getvalue(), content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{slug}_report.pdf"'
+    slug = re.sub(r"[^\w-]", "_", process.name or str(process_id))
+    response = HttpResponse(buf.getvalue(), content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="{slug}_report.pdf"'
     return response
+
 
 @login_required
 @require_GET
+@instrument
 def project_report_docx(request, process_id: str):
     org_filter = _org_qs_filter(request)
     if not Process.objects.filter(org_filter, pk=process_id).exists():
@@ -1570,7 +1977,11 @@ def project_report_docx(request, process_id: str):
         md_text = _get_cached_report_md(process_id, clearance_level)
     except Exception as e:
         log.error("DOCX export failed for process %s: %s", process_id, e)
-        return HttpResponse("Report generation failed: Granite model unavailable.", status=503, content_type="text/plain")
+        return HttpResponse(
+            "Report generation failed: Granite model unavailable.",
+            status=503,
+            content_type="text/plain",
+        )
     process = Process.objects.get(pk=process_id)
 
     doc = DocxDocument()
@@ -1605,27 +2016,37 @@ def project_report_docx(request, process_id: str):
     response["Content-Disposition"] = f'attachment; filename="{slug}_report.docx"'
     return response
 
+
 @login_required
+@instrument
 def document_analysis_detail(request, pk):
     document = get_object_or_404(Document, pk=pk)
     if not request.user.is_superuser:
         if (
-            hasattr(request.user, 'profile')
+            hasattr(request.user, "profile")
             and request.user.profile.organisation
             and document.organisation
             and document.organisation != request.user.profile.organisation
         ):
             raise PermissionDenied
 
-    analysis_text = getattr(document, "analysis_text", "") or "No insights available yet."
+    analysis_text = (
+        getattr(document, "analysis_text", "") or "No insights available yet."
+    )
 
-    return render(request, "core/document_analysis_detail.html", {
-        "document": document,
-        "analysis": analysis_text,
-    })
+    return render(
+        request,
+        "core/document_analysis_detail.html",
+        {
+            "document": document,
+            "analysis": analysis_text,
+        },
+    )
+
 
 @login_required
 @require_POST
+@instrument
 def save_document_analysis(request, pk):
     return HttpResponse("Save document analysis placeholder")
 
@@ -1635,65 +2056,72 @@ def save_document_analysis(request, pk):
 
 @login_required
 @require_GET
+@instrument
 def geojson_projects(request):
     """
     GeoJSON endpoint for Process (projects/operations) with spatial data
     Returns all processes with geometry for da map
     """
     from django.core.serializers import serialize
+
     from .models import Process
 
     # Only include processes with geometry
     processes = Process.objects.filter(
         _org_qs_filter(request), geom__isnull=False
-    ).select_related('organisation')
+    ).select_related("organisation")
 
     if not processes.exists():
         return JsonResponse({"type": "FeatureCollection", "features": []})
 
     # Use GeoDjangos built in serialiser (lets us take coordinates and translate into GeoJSOn text for geodata)
     geojson_data = serialize(
-        'geojson',
+        "geojson",
         processes,
-        geometry_field='geom',
-        fields=('name', 'mode', 'commodity', 'organisation')
+        geometry_field="geom",
+        fields=("name", "mode", "commodity", "organisation"),
     )
 
     # Parse and return as JSON (serialise returns a string )
     import json
+
     return JsonResponse(json.loads(geojson_data), safe=False)
 
 
 @login_required
 @require_GET
+@instrument
 def geojson_tenements(request):
     """
     GeoJSON endpoint for Tenement boundaries.
     Returns all tenements with geometry for map visualisation
     """
     from django.core.serializers import serialize
+
     from .models import Tenement
 
     tenements = Tenement.objects.filter(
         _org_qs_filter(request), geom__isnull=False
-    ).select_related('organisation', 'process')
+    ).select_related("organisation", "process")
 
     if not tenements.exists():
         return JsonResponse({"type": "FeatureCollection", "features": []})
 
     geojson_data = serialize(
-        'geojson',
+        "geojson",
         tenements,
-        geometry_field='geom',
-        fields=('name', 'organisation', 'process')
+        geometry_field="geom",
+        fields=("name", "organisation", "process"),
     )
 
     import json
+
     return JsonResponse(json.loads(geojson_data), safe=False)
 
 
 @login_required
 @require_GET
+@instrument
 def geojson_prospects(request):
     """
     GeoJSON endpoint for Prospect locations.
@@ -1703,7 +2131,7 @@ def geojson_prospects(request):
 
     prospects = Prospect.objects.filter(
         _org_qs_filter(request), geom__isnull=False
-    ).select_related('organisation', 'process')
+    ).select_related("organisation", "process")
 
     features = []
     for p in prospects:
@@ -1715,45 +2143,51 @@ def geojson_prospects(request):
         }
         if p.area_geom:
             props["area_geom_geojson"] = json.loads(p.area_geom.geojson)
-        features.append({
-            "type": "Feature",
-            "geometry": json.loads(p.geom.geojson),
-            "properties": props,
-        })
+        features.append(
+            {
+                "type": "Feature",
+                "geometry": json.loads(p.geom.geojson),
+                "properties": props,
+            }
+        )
 
     return JsonResponse({"type": "FeatureCollection", "features": features})
 
 
 @login_required
 @require_GET
+@instrument
 def geojson_drillholes(request):
     """
     GeoJSON endpoint for Drillhole collar locations
-    Returns all drillholes with collar locations 
+    Returns all drillholes with collar locations
     """
     from django.core.serializers import serialize
+
     from .models import Drillhole
 
     drillholes = Drillhole.objects.filter(
         _org_qs_filter(request), collar_location__isnull=False
-    ).select_related('organisation', 'process')
+    ).select_related("organisation", "process")
 
     if not drillholes.exists():
         return JsonResponse({"type": "FeatureCollection", "features": []})
 
     geojson_data = serialize(
-        'geojson',
+        "geojson",
         drillholes,
-        geometry_field='collar_location',
-        fields=('name', 'depth', 'azimuth', 'dip', 'organisation', 'process')
+        geometry_field="collar_location",
+        fields=("name", "depth", "azimuth", "dip", "organisation", "process"),
     )
 
     import json
+
     return JsonResponse(json.loads(geojson_data), safe=False)
 
 
 @login_required
 @require_POST
+@instrument
 def spatial_search(request):
     """
     POST body (application/json):
@@ -1766,6 +2200,7 @@ def spatial_search(request):
     for injection into the map's results panel.
     """
     import json
+
     from django.contrib.gis.geos import GEOSGeometry
 
     try:
@@ -1782,7 +2217,7 @@ def spatial_search(request):
 
     # For a point + radius: buffer the point into an approximate circle
     # (1 degree ≈ 111,111 m at the equator; acceptable approximation for Australia)
-    if geom.geom_type == 'Point' and radius_m:
+    if geom.geom_type == "Point" and radius_m:
         radius_deg = float(radius_m) / 111111.0
         search_geom = geom.buffer(radius_deg)
     else:
@@ -1792,89 +2227,127 @@ def spatial_search(request):
     TenementModel = _get_model("core", "Tenement")
     DrillholeModel = _get_model("core", "Drillhole")
 
-    processes  = Process.objects.filter(org_filter, geom__intersects=search_geom).order_by('name').values('id', 'name', 'mode')
-    tenements  = TenementModel.objects.filter(org_filter, geom__intersects=search_geom).order_by('name').values('id', 'name') if TenementModel else []
-    prospects  = ProspectModel.objects.filter(org_filter, geom__intersects=search_geom).order_by('name').values('id', 'name') if ProspectModel else []
-    drillholes = DrillholeModel.objects.filter(org_filter, collar_location__intersects=search_geom).order_by('name').values('id', 'name', 'depth') if DrillholeModel else []
+    processes = (
+        Process.objects.filter(org_filter, geom__intersects=search_geom)
+        .order_by("name")
+        .values("id", "name", "mode")
+    )
+    tenements = (
+        TenementModel.objects.filter(org_filter, geom__intersects=search_geom)
+        .order_by("name")
+        .values("id", "name")
+        if TenementModel
+        else []
+    )
+    prospects = (
+        ProspectModel.objects.filter(org_filter, geom__intersects=search_geom)
+        .order_by("name")
+        .values("id", "name")
+        if ProspectModel
+        else []
+    )
+    drillholes = (
+        DrillholeModel.objects.filter(
+            org_filter, collar_location__intersects=search_geom
+        )
+        .order_by("name")
+        .values("id", "name", "depth")
+        if DrillholeModel
+        else []
+    )
 
     # Find documents linked to matched spatial entities via DocLink (Group 1)
     documents = []
     DocLinkModel = _get_model("core", "DocLink")
     if DocLinkModel and (prospects or drillholes or processes):
         from django.contrib.contenttypes.models import ContentType
+
         linked_doc_ids = set()
 
         if ProspectModel and prospects:
             ct = ContentType.objects.get_for_model(ProspectModel)
-            ids = [str(r['id']) for r in prospects]
+            ids = [str(r["id"]) for r in prospects]
             linked_doc_ids.update(
-                DocLinkModel.objects.filter(content_type=ct, object_id__in=ids)
-                .values_list('document_id', flat=True)
+                DocLinkModel.objects.filter(
+                    content_type=ct, object_id__in=ids
+                ).values_list("document_id", flat=True)
             )
 
         if DrillholeModel and drillholes:
             ct = ContentType.objects.get_for_model(DrillholeModel)
-            ids = [str(r['id']) for r in drillholes]
+            ids = [str(r["id"]) for r in drillholes]
             linked_doc_ids.update(
-                DocLinkModel.objects.filter(content_type=ct, object_id__in=ids)
-                .values_list('document_id', flat=True)
+                DocLinkModel.objects.filter(
+                    content_type=ct, object_id__in=ids
+                ).values_list("document_id", flat=True)
             )
 
         if processes:
             ct = ContentType.objects.get_for_model(Process)
-            ids = [str(r['id']) for r in processes]
+            ids = [str(r["id"]) for r in processes]
             linked_doc_ids.update(
-                DocLinkModel.objects.filter(content_type=ct, object_id__in=ids)
-                .values_list('document_id', flat=True)
+                DocLinkModel.objects.filter(
+                    content_type=ct, object_id__in=ids
+                ).values_list("document_id", flat=True)
             )
 
         if linked_doc_ids:
             documents = list(
-                Document.objects.filter(org_filter, id__in=linked_doc_ids)
-                .values('id', 'title', 'doc_type', 'created_at')[:20]
+                Document.objects.filter(org_filter, id__in=linked_doc_ids).values(
+                    "id", "title", "doc_type", "created_at"
+                )[:20]
             )
 
-    processes_list  = list(processes[:20])
-    tenements_list  = list(tenements[:20])
-    prospects_list  = list(prospects[:20])
+    processes_list = list(processes[:20])
+    tenements_list = list(tenements[:20])
+    prospects_list = list(prospects[:20])
     drillholes_list = list(drillholes[:20])
 
-    return render(request, "core/partials/spatial_search_results.html", {
-        "processes":  processes_list,
-        "tenements":  tenements_list,
-        "prospects":  prospects_list,
-        "drillholes": drillholes_list,
-        "documents":  documents,
-        "total": sum([
-            len(processes_list), len(tenements_list),
-            len(prospects_list), len(drillholes_list),
-        ]),
-    })
+    return render(
+        request,
+        "core/partials/spatial_search_results.html",
+        {
+            "processes": processes_list,
+            "tenements": tenements_list,
+            "prospects": prospects_list,
+            "drillholes": drillholes_list,
+            "documents": documents,
+            "total": sum(
+                [
+                    len(processes_list),
+                    len(tenements_list),
+                    len(prospects_list),
+                    len(drillholes_list),
+                ]
+            ),
+        },
+    )
 
 
 # ---------- AI Report Generation & Document Analysis Pages ----------
 
+
 @login_required
+@instrument
 def report_list_page(request):
     clearance_rank = {"PUBLIC": 0, "INTERNAL": 1, "CONFIDENTIAL": 2, "JORC_APPROVED": 3}
     user_clearance = _get_clearance_level(request)
     user_rank = clearance_rank.get(user_clearance, 0)
 
-    accessible_levels = [lvl for lvl, rank in clearance_rank.items() if rank <= user_rank]
+    accessible_levels = [
+        lvl for lvl, rank in clearance_rank.items() if rank <= user_rank
+    ]
     org_filter = _org_qs_filter(request)
     q = request.GET.get("q", "").strip()
 
-    base_qs = (
-        SavedReport.objects
-        .filter(org_filter, clearance_level__in=accessible_levels)
-        .select_related("process")
-    )
+    base_qs = SavedReport.objects.filter(
+        org_filter, clearance_level__in=accessible_levels
+    ).select_related("process")
 
     if q:
         sq = SearchQuery(q, search_type="websearch")
         recent_reports = (
-            base_qs
-            .annotate(rank=SearchRank("search_tsv", sq))
+            base_qs.annotate(rank=SearchRank("search_tsv", sq))
             .filter(Q(search_tsv=sq) | Q(title__icontains=q))
             .order_by("-rank", "-created_at")[:20]
         )
@@ -1882,14 +2355,22 @@ def report_list_page(request):
         recent_reports = base_qs.order_by("-created_at")[:20]
 
     recent_projects = Process.objects.filter(org_filter).order_by("-created_at")[:20]
-    all_documents = Document.objects.filter(org_filter, is_latest=True).select_related("process").order_by("-created_at")
+    all_documents = (
+        Document.objects.filter(org_filter, is_latest=True)
+        .select_related("process")
+        .order_by("-created_at")
+    )
 
-    return render(request, "core/report_list.html", {
-        "recent_reports":  recent_reports,
-        "recent_projects": recent_projects,
-        "all_documents":   all_documents,
-        "q":               q,
-    })
+    return render(
+        request,
+        "core/report_list.html",
+        {
+            "recent_reports": recent_reports,
+            "recent_projects": recent_projects,
+            "all_documents": all_documents,
+            "q": q,
+        },
+    )
 
 
 @login_required
@@ -1902,6 +2383,7 @@ def report_list_page(request):
     UserProfile.RoleChoices.OPERATIONS_MANAGER,
     UserProfile.RoleChoices.ADMIN,
 )
+@instrument
 def generate_report(request):
     """
     POST: generate (or retrieve cached) report for a process and redirect to the editor.
@@ -1910,7 +2392,7 @@ def generate_report(request):
     if request.method != "POST":
         return redirect("report_list")
 
-    process_id   = request.POST.get("process_id", "").strip()
+    process_id = request.POST.get("process_id", "").strip()
     report_title = request.POST.get("report_title", "").strip()
 
     if not process_id:
@@ -1933,10 +2415,13 @@ def generate_report(request):
         return redirect("report_list")
 
     import hashlib
+
     title = report_title or f"{process.name or 'Project'} Report"
-    existing = SavedReport.objects.filter(
-        process=process, title=title
-    ).order_by("-version_number").first()
+    existing = (
+        SavedReport.objects.filter(process=process, title=title)
+        .order_by("-version_number")
+        .first()
+    )
 
     if existing:
         report = SavedReport.create_version(
@@ -1964,6 +2449,7 @@ def generate_report(request):
 
 
 @login_required
+@instrument
 def report_editor(request, process_id):
     """
     Serve the report editor page for a process
@@ -1971,7 +2457,11 @@ def report_editor(request, process_id):
     """
     org_filter = _org_qs_filter(request)
     try:
-        process = Process.objects.filter(org_filter).select_related("organisation").get(pk=process_id)
+        process = (
+            Process.objects.filter(org_filter)
+            .select_related("organisation")
+            .get(pk=process_id)
+        )
     except Process.DoesNotExist:
         raise Http404("Project not found")
 
@@ -1982,22 +2472,27 @@ def report_editor(request, process_id):
         log.error("Report editor cache miss for process %s: %s", process_id, e)
         md = f"# {process.name or 'Project'} Report\n\nReport generation failed: {e}"
 
-    custom_title  = request.GET.get("title", "").strip()
+    custom_title = request.GET.get("title", "").strip()
     default_title = custom_title or f"{process.name or 'Project'} Report"
 
-    return render(request, "core/report_editor.html", {
-        "process": process,
-        "markdown_content": md,
-        "default_title": default_title,
-        "saved_report": None,
-        "save_url": reverse("save_report"),
-        "export_url": reverse("export_report"),
-    })
+    return render(
+        request,
+        "core/report_editor.html",
+        {
+            "process": process,
+            "markdown_content": md,
+            "default_title": default_title,
+            "saved_report": None,
+            "save_url": reverse("save_report"),
+            "export_url": reverse("export_report"),
+        },
+    )
 
 
 @login_required
+@instrument
 def saved_report_editor(request, report_id):
-    """ serve the report editor page for an existing saved report """
+    """serve the report editor page for an existing saved report"""
     report = get_object_or_404(
         SavedReport.objects.select_related("process", "organisation"),
         pk=report_id,
@@ -2005,7 +2500,7 @@ def saved_report_editor(request, report_id):
 
     if not request.user.is_superuser:
         if (
-            hasattr(request.user, 'profile')
+            hasattr(request.user, "profile")
             and request.user.profile.organisation
             and report.organisation
             and report.organisation != request.user.profile.organisation
@@ -2014,40 +2509,52 @@ def saved_report_editor(request, report_id):
 
     user_clearance = _get_clearance_level(request)
     clearance_rank = {"PUBLIC": 0, "INTERNAL": 1, "CONFIDENTIAL": 2, "JORC_APPROVED": 3}
-    if clearance_rank.get(user_clearance, 0) < clearance_rank.get(report.clearance_level, 1):
+    if clearance_rank.get(user_clearance, 0) < clearance_rank.get(
+        report.clearance_level, 1
+    ):
         raise PermissionDenied
 
     process_prospects = (
         Prospect.objects.filter(process=report.process).order_by("name")
-        if report.process else []
+        if report.process
+        else []
     )
 
-    return render(request, "core/report_editor.html", {
-        "process": report.process,
-        "markdown_content": report.content_md,
-        "default_title": report.title,
-        "saved_report": report,
-        "save_url": reverse("update_saved_report", kwargs={"report_id": report_id}),
-        "export_url": reverse("export_report"),
-        "process_prospects": process_prospects,
-    })
+    return render(
+        request,
+        "core/report_editor.html",
+        {
+            "process": report.process,
+            "markdown_content": report.content_md,
+            "default_title": report.title,
+            "saved_report": report,
+            "save_url": reverse("update_saved_report", kwargs={"report_id": report_id}),
+            "export_url": reverse("export_report"),
+            "process_prospects": process_prospects,
+        },
+    )
 
 
 @login_required
 @require_POST
+@instrument
 def save_report(request):
     """
     create a new SavedReport record from the user/editors current content
     returns JSON: {success: true, report_id: "...", redirect_url: "..."}
     """
     process_id = request.POST.get("process_id", "").strip()
-    title      = request.POST.get("title", "").strip()
+    title = request.POST.get("title", "").strip()
     content_md = request.POST.get("content_md", "").strip()
 
     if not title:
-        return JsonResponse({"success": False, "error": "Title is required."}, status=400)
+        return JsonResponse(
+            {"success": False, "error": "Title is required."}, status=400
+        )
     if not content_md:
-        return JsonResponse({"success": False, "error": "Report content is empty."}, status=400)
+        return JsonResponse(
+            {"success": False, "error": "Report content is empty."}, status=400
+        )
 
     process = None
     organisation = None
@@ -2061,9 +2568,11 @@ def save_report(request):
     clearance_level = _get_clearance_level(request)
     created_by = request.user if request.user.is_authenticated else None
 
-    existing = SavedReport.objects.filter(
-        process=process, title=title
-    ).order_by("-version_number").first()
+    existing = (
+        SavedReport.objects.filter(process=process, title=title)
+        .order_by("-version_number")
+        .first()
+    )
 
     if existing:
         report = SavedReport.create_version(
@@ -2077,6 +2586,7 @@ def save_report(request):
             report.source_documents.set(existing.source_documents.all())
     else:
         import hashlib
+
         report = SavedReport.objects.create(
             process=process,
             organisation=organisation,
@@ -2099,19 +2609,28 @@ def save_report(request):
         except Exception:
             pass
 
-    log_audit(request.user, AuditLog.ActionType.CREATE, report,
-              f"Saved report '{title}' v{report.version_number}",
-              ip_address=request.META.get("REMOTE_ADDR"))
-    return JsonResponse({
-        "success": True,
-        "report_id": str(report.id),
-        "version_number": report.version_number,
-        "redirect_url": reverse("saved_report_editor", kwargs={"report_id": report.id}),
-    })
+    log_audit(
+        request.user,
+        AuditLog.ActionType.CREATE,
+        report,
+        f"Saved report '{title}' v{report.version_number}",
+        ip_address=request.META.get("REMOTE_ADDR"),
+    )
+    return JsonResponse(
+        {
+            "success": True,
+            "report_id": str(report.id),
+            "version_number": report.version_number,
+            "redirect_url": reverse(
+                "saved_report_editor", kwargs={"report_id": report.id}
+            ),
+        }
+    )
 
 
 @login_required
 @require_POST
+@instrument
 def update_saved_report(request, report_id):
     """
     overwrite of an existing SavedReport title and content
@@ -2122,20 +2641,26 @@ def update_saved_report(request, report_id):
     if report.status in (SavedReport.Status.APPROVED, SavedReport.Status.PUBLISHED):
         return JsonResponse(
             {"success": False, "error": "This report is locked and cannot be edited."},
-            status=403
+            status=403,
         )
 
     is_admin = hasattr(request.user, "profile") and request.user.profile.role == "ADMIN"
     if report.created_by != request.user and not is_admin:
-        return JsonResponse({"success": False, "error": "Permission denied."}, status=403)
+        return JsonResponse(
+            {"success": False, "error": "Permission denied."}, status=403
+        )
 
-    title      = request.POST.get("title", "").strip()
+    title = request.POST.get("title", "").strip()
     content_md = request.POST.get("content_md", "").strip()
 
     if not title:
-        return JsonResponse({"success": False, "error": "Title is required."}, status=400)
+        return JsonResponse(
+            {"success": False, "error": "Title is required."}, status=400
+        )
     if not content_md:
-        return JsonResponse({"success": False, "error": "Report content is empty."}, status=400)
+        return JsonResponse(
+            {"success": False, "error": "Report content is empty."}, status=400
+        )
 
     new_version = SavedReport.create_version(
         parent=report,
@@ -2146,20 +2671,28 @@ def update_saved_report(request, report_id):
     # Propagate source_documents to new version (new_version may equal report if content unchanged)
     if new_version.pk != report.pk and report.source_documents.exists():
         new_version.source_documents.set(report.source_documents.all())
-    log_audit(request.user, AuditLog.ActionType.EDIT, new_version,
-              f"Updated report '{new_version.title}' to v{new_version.version_number}",
-              ip_address=request.META.get("REMOTE_ADDR"))
-    return JsonResponse({
-        "success": True,
-        "new_version_id": str(new_version.id),
-        "version_number": new_version.version_number,
-    })
+    log_audit(
+        request.user,
+        AuditLog.ActionType.EDIT,
+        new_version,
+        f"Updated report '{new_version.title}' to v{new_version.version_number}",
+        ip_address=request.META.get("REMOTE_ADDR"),
+    )
+    return JsonResponse(
+        {
+            "success": True,
+            "new_version_id": str(new_version.id),
+            "version_number": new_version.version_number,
+        }
+    )
 
 
 # ---------- JORC Approval Workflow Views ----------
 
+
 @login_required
 @require_POST
+@instrument
 def submit_report_for_review(request, report_id):
     report = get_object_or_404(SavedReport, pk=report_id)
     if report.status != SavedReport.Status.DRAFT:
@@ -2168,7 +2701,11 @@ def submit_report_for_review(request, report_id):
 
     workflow_type_raw = request.POST.get("workflow_type", "JORC").upper()
     valid_types = {t.value for t in ApprovalWorkflow.WorkflowType}
-    workflow_type = workflow_type_raw if workflow_type_raw in valid_types else ApprovalWorkflow.WorkflowType.JORC
+    workflow_type = (
+        workflow_type_raw
+        if workflow_type_raw in valid_types
+        else ApprovalWorkflow.WorkflowType.JORC
+    )
     submission_notes = request.POST.get("submission_notes", "").strip()
 
     workflow = ApprovalWorkflow.objects.create(
@@ -2182,16 +2719,25 @@ def submit_report_for_review(request, report_id):
     report.status = SavedReport.Status.UNDER_REVIEW
     report.approval_workflow = workflow
     report.save(update_fields=["status", "approval_workflow"])
-    log_audit(request.user, AuditLog.ActionType.EDIT, report,
-              f"Submitted for {workflow_type} review", ip_address=request.META.get("REMOTE_ADDR"))
-    messages.success(request, f"Report submitted for {workflow.get_workflow_type_display()} review.")
+    log_audit(
+        request.user,
+        AuditLog.ActionType.EDIT,
+        report,
+        f"Submitted for {workflow_type} review",
+        ip_address=request.META.get("REMOTE_ADDR"),
+    )
+    messages.success(
+        request, f"Report submitted for {workflow.get_workflow_type_display()} review."
+    )
     return redirect("saved_report_editor", report_id=report_id)
 
 
 @login_required
 @require_POST
+@instrument
 def approve_report(request, report_id):
     from django.utils import timezone
+
     report = get_object_or_404(SavedReport, pk=report_id)
     profile = getattr(request.user, "profile", None)
 
@@ -2221,18 +2767,27 @@ def approve_report(request, report_id):
         workflow.approved_by = request.user
         workflow.approval_notes = approval_notes
         workflow.reviewed_at = timezone.now()
-        workflow.save(update_fields=["status", "approved_by", "approval_notes", "reviewed_at"])
+        workflow.save(
+            update_fields=["status", "approved_by", "approval_notes", "reviewed_at"]
+        )
 
-    log_audit(request.user, AuditLog.ActionType.APPROVE, report,
-              f"Approved ({wf_type})", ip_address=request.META.get("REMOTE_ADDR"))
+    log_audit(
+        request.user,
+        AuditLog.ActionType.APPROVE,
+        report,
+        f"Approved ({wf_type})",
+        ip_address=request.META.get("REMOTE_ADDR"),
+    )
     messages.success(request, "Report approved.")
     return redirect("saved_report_editor", report_id=report_id)
 
 
 @login_required
 @require_POST
+@instrument
 def reject_report(request, report_id):
     from django.utils import timezone
+
     report = get_object_or_404(SavedReport, pk=report_id)
     profile = getattr(request.user, "profile", None)
 
@@ -2262,54 +2817,77 @@ def reject_report(request, report_id):
         workflow.approved_by = request.user
         workflow.approval_notes = approval_notes
         workflow.reviewed_at = timezone.now()
-        workflow.save(update_fields=["status", "approved_by", "approval_notes", "reviewed_at"])
+        workflow.save(
+            update_fields=["status", "approved_by", "approval_notes", "reviewed_at"]
+        )
 
-    log_audit(request.user, AuditLog.ActionType.REJECT, report,
-              f"Rejected ({wf_type}) — returned to draft", ip_address=request.META.get("REMOTE_ADDR"))
+    log_audit(
+        request.user,
+        AuditLog.ActionType.REJECT,
+        report,
+        f"Rejected ({wf_type}) — returned to draft",
+        ip_address=request.META.get("REMOTE_ADDR"),
+    )
     messages.success(request, "Report returned to draft.")
     return redirect("saved_report_editor", report_id=report_id)
 
 
 @login_required
 @require_POST
+@instrument
 def publish_report(request, report_id):
     report = get_object_or_404(SavedReport, pk=report_id)
     profile = getattr(request.user, "profile", None)
-    if not (profile and (
-        profile.can_approve_jorc
-        or profile.role in (UserProfile.RoleChoices.ADMIN, UserProfile.RoleChoices.COMPETENT_PERSON)
-    )):
+    if not (
+        profile
+        and (
+            profile.can_approve_jorc
+            or profile.role
+            in (UserProfile.RoleChoices.ADMIN, UserProfile.RoleChoices.COMPETENT_PERSON)
+        )
+    ):
         raise PermissionDenied
     if report.status != SavedReport.Status.APPROVED:
         messages.error(request, "Only approved reports can be published.")
         return redirect("saved_report_editor", report_id=report_id)
     report.status = SavedReport.Status.PUBLISHED
     report.save(update_fields=["status"])
-    log_audit(request.user, AuditLog.ActionType.APPROVE, report,
-              "Published", ip_address=request.META.get("REMOTE_ADDR"))
+    log_audit(
+        request.user,
+        AuditLog.ActionType.APPROVE,
+        report,
+        "Published",
+        ip_address=request.META.get("REMOTE_ADDR"),
+    )
     messages.success(request, "Report published.")
     return redirect("saved_report_editor", report_id=report_id)
 
 
 @login_required
+@instrument
 def report_history(request, process_id):
     """Show all versions of reports for a process, grouped by title."""
     # Get the latest version of each distinct report title
     org_filter = _org_qs_filter(request)
-    reports = (
-        SavedReport.objects
-        .filter(org_filter, process_id=process_id)
-        .order_by("title", "-version_number")
+    reports = SavedReport.objects.filter(org_filter, process_id=process_id).order_by(
+        "title", "-version_number"
     )
     # Group by title to show each report with its version chain
     from itertools import groupby
+
     grouped = {
         title: list(versions)
         for title, versions in groupby(reports, key=lambda r: r.title)
     }
-    return render(request, "core/report_history.html", {"grouped": grouped, "process_id": process_id})
+    return render(
+        request,
+        "core/report_history.html",
+        {"grouped": grouped, "process_id": process_id},
+    )
+
 
 @login_required
+@instrument
 def report_version_detail(request, report_id):
     """View a specific report version."""
     report = get_object_or_404(SavedReport, pk=report_id)
@@ -2325,21 +2903,26 @@ def report_version_detail(request, report_id):
         ip_address=request.META.get("REMOTE_ADDR"),
         user_agent=request.META.get("HTTP_USER_AGENT", ""),
     )
-    return render(request, "core/report_version_detail.html", {
-        "report": report,
-        "all_versions": all_versions,
-    })
+    return render(
+        request,
+        "core/report_version_detail.html",
+        {
+            "report": report,
+            "all_versions": all_versions,
+        },
+    )
+
 
 @login_required
 @require_GET
+@instrument
 def all_reports_history(request):
     """Show all saved reports grouped by project, with optional full-text search."""
     org_filter = _org_qs_filter(request)
     q = request.GET.get("q", "").strip()
 
     reports = (
-        SavedReport.objects
-        .filter(org_filter)
+        SavedReport.objects.filter(org_filter)
         .select_related("process", "created_by")
         .order_by("process__name", "title", "-version_number")
     )
@@ -2347,8 +2930,7 @@ def all_reports_history(request):
     if q:
         sq = SearchQuery(q, search_type="websearch")
         reports = (
-            reports
-            .annotate(rank=SearchRank("search_tsv", sq))
+            reports.annotate(rank=SearchRank("search_tsv", sq))
             .filter(Q(search_tsv=sq) | Q(title__icontains=q))
             .order_by("-rank", "-created_at")
         )
@@ -2365,15 +2947,20 @@ def all_reports_history(request):
             grouped[project_name]["titles"][report.title] = []
         grouped[project_name]["titles"][report.title].append(report)
 
-    return render(request, "core/all_reports_history.html", {
-        "grouped": grouped,
-        "q": q,
-        "total": total,
-    })
+    return render(
+        request,
+        "core/all_reports_history.html",
+        {
+            "grouped": grouped,
+            "q": q,
+            "total": total,
+        },
+    )
 
 
 @login_required
 @require_POST
+@instrument
 def export_report(request):
     """
     Export the current markdown content as PDF or DOCX.
@@ -2383,32 +2970,61 @@ def export_report(request):
         title      — used as the filename
         report_id  — (optional) UUID of a SavedReport; if provided, a Sources section is appended
     """
-    fmt       = request.POST.get("format", "pdf").lower()
-    md_text   = request.POST.get("content_md", "")
-    title     = request.POST.get("title", "report")
+    fmt = request.POST.get("format", "pdf").lower()
+    md_text = request.POST.get("content_md", "")
+    title = request.POST.get("title", "report")
     report_id = request.POST.get("report_id", "").strip()
-    slug      = re.sub(r"[^\w-]", "_", title)
+    slug = re.sub(r"[^\w-]", "_", title)
 
     # Build sources list if a saved report ID was provided
     source_docs = []
     if report_id:
         try:
-            saved = SavedReport.objects.prefetch_related("source_documents").get(pk=report_id)
+            saved = SavedReport.objects.prefetch_related("source_documents").get(
+                pk=report_id
+            )
             source_docs = list(saved.source_documents.order_by("title"))
         except (SavedReport.DoesNotExist, Exception):
             pass
 
     def _render_pdf(md_text, source_docs):
         buf = io.BytesIO()
-        doc = SimpleDocTemplate(buf, pagesize=A4,
-                                leftMargin=2*cm, rightMargin=2*cm,
-                                topMargin=2*cm, bottomMargin=2*cm)
+        doc = SimpleDocTemplate(
+            buf,
+            pagesize=A4,
+            leftMargin=2 * cm,
+            rightMargin=2 * cm,
+            topMargin=2 * cm,
+            bottomMargin=2 * cm,
+        )
         styles = getSampleStyleSheet()
-        h1     = ParagraphStyle("h1", parent=styles["Heading1"], textColor=colors.HexColor("#0e7490"), spaceAfter=10)
-        h2     = ParagraphStyle("h2", parent=styles["Heading2"], textColor=colors.HexColor("#155e75"), spaceAfter=6)
-        h3     = ParagraphStyle("h3", parent=styles["Heading3"], textColor=colors.HexColor("#1e4d5c"), spaceAfter=4)
-        body   = ParagraphStyle("body", parent=styles["Normal"], spaceAfter=6, leading=16)
-        bullet = ParagraphStyle("bullet", parent=styles["Normal"], leftIndent=20, spaceAfter=4, bulletIndent=10, leading=16)
+        h1 = ParagraphStyle(
+            "h1",
+            parent=styles["Heading1"],
+            textColor=colors.HexColor("#0e7490"),
+            spaceAfter=10,
+        )
+        h2 = ParagraphStyle(
+            "h2",
+            parent=styles["Heading2"],
+            textColor=colors.HexColor("#155e75"),
+            spaceAfter=6,
+        )
+        h3 = ParagraphStyle(
+            "h3",
+            parent=styles["Heading3"],
+            textColor=colors.HexColor("#1e4d5c"),
+            spaceAfter=4,
+        )
+        body = ParagraphStyle("body", parent=styles["Normal"], spaceAfter=6, leading=16)
+        bullet = ParagraphStyle(
+            "bullet",
+            parent=styles["Normal"],
+            leftIndent=20,
+            spaceAfter=4,
+            bulletIndent=10,
+            leading=16,
+        )
 
         story = []
         for line in md_text.splitlines():
@@ -2430,15 +3046,20 @@ def export_report(request):
         if source_docs:
             story.append(Spacer(1, 20))
             story.append(Paragraph("Sources", h2))
-            story.append(Paragraph(
-                "The following documents were used as context for this report:", body
-            ))
+            story.append(
+                Paragraph(
+                    "The following documents were used as context for this report:",
+                    body,
+                )
+            )
             for i, d in enumerate(source_docs, 1):
                 doc_date = d.timestamp.strftime("%Y-%m-%d") if d.timestamp else ""
-                story.append(Paragraph(
-                    f"{i}. {d.title} — {d.doc_type or 'Document'} — {doc_date} — {d.confidentiality or ''}",
-                    bullet
-                ))
+                story.append(
+                    Paragraph(
+                        f"{i}. {d.title} — {d.doc_type or 'Document'} — {doc_date} — {d.confidentiality or ''}",
+                        bullet,
+                    )
+                )
 
         doc.build(story)
         buf.seek(0)
@@ -2469,12 +3090,14 @@ def export_report(request):
         if source_docs:
             doc.add_page_break()
             doc.add_heading("Sources", level=2)
-            doc.add_paragraph("The following documents were used as context for this report:")
+            doc.add_paragraph(
+                "The following documents were used as context for this report:"
+            )
             for i, d in enumerate(source_docs, 1):
                 doc_date = d.timestamp.strftime("%Y-%m-%d") if d.timestamp else ""
                 doc.add_paragraph(
                     f"{i}. {d.title} — {d.doc_type or 'Document'} — {doc_date} — {d.confidentiality or ''}",
-                    style="List Number"
+                    style="List Number",
                 )
 
         buf = io.BytesIO()
@@ -2502,9 +3125,13 @@ def export_report(request):
 
 @login_required
 def report_detail(request, report_id):
-    return render(request, "core/report_detail.html", {
-        "report_id": report_id,
-    })
+    return render(
+        request,
+        "core/report_detail.html",
+        {
+            "report_id": report_id,
+        },
+    )
 
 
 @login_required
@@ -2513,19 +3140,21 @@ def report_detail(request, report_id):
     UserProfile.RoleChoices.DATA_MANAGER,
     UserProfile.RoleChoices.OPERATIONS_MANAGER,
 )
+@instrument
 def audit_log_view(request):
     """Filterable audit trail for ADMIN/DATA_MANAGER/OPS_MANAGER users."""
     import csv
+
     from django.http import StreamingHttpResponse
 
     qs = AuditLog.objects.select_related("user", "content_type").order_by("-timestamp")
     org_filter = _org_qs_filter(request)
 
-    action    = request.GET.get("action", "").strip()
-    username  = request.GET.get("username", "").strip()
+    action = request.GET.get("action", "").strip()
+    username = request.GET.get("username", "").strip()
     date_from = request.GET.get("date_from", "").strip()
-    date_to   = request.GET.get("date_to", "").strip()
-    obj_type  = request.GET.get("obj_type", "").strip()
+    date_to = request.GET.get("date_to", "").strip()
+    obj_type = request.GET.get("obj_type", "").strip()
 
     if action:
         qs = qs.filter(action=action)
@@ -2539,8 +3168,17 @@ def audit_log_view(request):
         qs = qs.filter(content_type__model=obj_type.lower())
 
     if request.GET.get("export") == "csv":
+
         def _rows():
-            yield ["Timestamp", "User", "Action", "Object Type", "Object ID", "Description", "IP Address"]
+            yield [
+                "Timestamp",
+                "User",
+                "Action",
+                "Object Type",
+                "Object ID",
+                "Description",
+                "IP Address",
+            ]
             for entry in qs.iterator(chunk_size=500):
                 yield [
                     entry.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
@@ -2565,15 +3203,19 @@ def audit_log_view(request):
         return response
 
     page_obj = _paginate(qs, request, per_page=50)
-    return render(request, "core/audit_log.html", {
-        "page_obj": page_obj,
-        "action_choices": AuditLog.ActionType.choices,
-        "current_action": action,
-        "current_username": username,
-        "current_date_from": date_from,
-        "current_date_to": date_to,
-        "current_obj_type": obj_type,
-    })
+    return render(
+        request,
+        "core/audit_log.html",
+        {
+            "page_obj": page_obj,
+            "action_choices": AuditLog.ActionType.choices,
+            "current_action": action,
+            "current_username": username,
+            "current_date_from": date_from,
+            "current_date_to": date_to,
+            "current_obj_type": obj_type,
+        },
+    )
 
 
 @login_required
@@ -2582,6 +3224,7 @@ def audit_log_view(request):
     UserProfile.RoleChoices.DATA_MANAGER,
     UserProfile.RoleChoices.OPERATIONS_MANAGER,
 )
+@instrument
 def approval_workflows_list(request):
     """List all ApprovalWorkflow records for ADMIN/approval-capable users."""
     org_filter = _org_qs_filter(request)
@@ -2591,8 +3234,9 @@ def approval_workflows_list(request):
     report_ids = SavedReport.objects.filter(org_filter).values_list("id", flat=True)
 
     qs = (
-        ApprovalWorkflow.objects
-        .filter(content_type=report_ct, object_id__in=report_ids)
+        ApprovalWorkflow.objects.filter(
+            content_type=report_ct, object_id__in=report_ids
+        )
         .select_related("submitted_by", "approved_by")
         .order_by("-submitted_at")
     )
@@ -2605,20 +3249,31 @@ def approval_workflows_list(request):
         qs = qs.filter(workflow_type=wf_type_filter)
 
     page_obj = _paginate(qs, request, per_page=25)
-    return render(request, "core/approval_workflows_list.html", {
-        "page_obj": page_obj,
-        "status_choices": ApprovalWorkflow.Status.choices,
-        "workflow_type_choices": ApprovalWorkflow.WorkflowType.choices,
-        "current_status": status_filter or "",
-        "current_workflow_type": wf_type_filter or "",
-    })
+    return render(
+        request,
+        "core/approval_workflows_list.html",
+        {
+            "page_obj": page_obj,
+            "status_choices": ApprovalWorkflow.Status.choices,
+            "workflow_type_choices": ApprovalWorkflow.WorkflowType.choices,
+            "current_status": status_filter or "",
+            "current_workflow_type": wf_type_filter or "",
+        },
+    )
 
 
 @login_required
+@instrument
 def document_analysis_page(request):
-    return render(request, "core/document_analysis.html", {
-        "recent_docs": Document.objects.filter(_org_qs_filter(request)).select_related("process").order_by("-created_at"),
-    })
+    return render(
+        request,
+        "core/document_analysis.html",
+        {
+            "recent_docs": Document.objects.filter(_org_qs_filter(request))
+            .select_related("process")
+            .order_by("-created_at"),
+        },
+    )
 
 
 @login_required
@@ -2627,7 +3282,7 @@ def analyze_document(request, pk):
 
     if not request.user.is_superuser:
         if (
-            hasattr(request.user, 'profile')
+            hasattr(request.user, "profile")
             and request.user.profile.organisation
             and document.organisation
             and document.organisation != request.user.profile.organisation
@@ -2683,8 +3338,10 @@ Document text:
         messages.error(request, f"Analysis failed: {e}")
         return redirect("document_analysis_page")
 
+
 @login_required
 @require_GET
+@instrument
 def export_document_analysis(request, pk):
     document = get_object_or_404(Document, pk=pk)
 
@@ -2701,17 +3358,39 @@ def export_document_analysis(request, pk):
         doc = SimpleDocTemplate(
             buf,
             pagesize=A4,
-            leftMargin=2*cm,
-            rightMargin=2*cm,
-            topMargin=2*cm,
-            bottomMargin=2*cm,
+            leftMargin=2 * cm,
+            rightMargin=2 * cm,
+            topMargin=2 * cm,
+            bottomMargin=2 * cm,
         )
         styles = getSampleStyleSheet()
-        h1 = ParagraphStyle("h1", parent=styles["Heading1"], textColor=colors.HexColor("#0e7490"), spaceAfter=10)
-        h2 = ParagraphStyle("h2", parent=styles["Heading2"], textColor=colors.HexColor("#155e75"), spaceAfter=6)
-        h3 = ParagraphStyle("h3", parent=styles["Heading3"], textColor=colors.HexColor("#1e4d5c"), spaceAfter=4)
+        h1 = ParagraphStyle(
+            "h1",
+            parent=styles["Heading1"],
+            textColor=colors.HexColor("#0e7490"),
+            spaceAfter=10,
+        )
+        h2 = ParagraphStyle(
+            "h2",
+            parent=styles["Heading2"],
+            textColor=colors.HexColor("#155e75"),
+            spaceAfter=6,
+        )
+        h3 = ParagraphStyle(
+            "h3",
+            parent=styles["Heading3"],
+            textColor=colors.HexColor("#1e4d5c"),
+            spaceAfter=4,
+        )
         body = ParagraphStyle("body", parent=styles["Normal"], spaceAfter=6, leading=16)
-        bullet = ParagraphStyle("bullet", parent=styles["Normal"], leftIndent=20, spaceAfter=4, bulletIndent=10, leading=16)
+        bullet = ParagraphStyle(
+            "bullet",
+            parent=styles["Normal"],
+            leftIndent=20,
+            spaceAfter=4,
+            bulletIndent=10,
+            leading=16,
+        )
 
         story = []
         for line in md_text.splitlines():
@@ -2769,3 +3448,4 @@ def export_document_analysis(request, pk):
         return response
 
     return JsonResponse({"error": "Invalid format. Use 'pdf' or 'docx'."}, status=400)
+

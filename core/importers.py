@@ -4,6 +4,7 @@ import io
 import openpyxl
 from django.contrib.gis.geos import Point
 
+from .instrument import instrument
 from core.geo_utils import parse_grid_epsg, projected_to_wgs84
 from core.models import AssayResult, Drillhole, DrillholeSurvey, LithologyInterval
 
@@ -41,6 +42,7 @@ def _int(val):
         return None
 
 
+@instrument
 def _build_hmap(header_row):
     """
     Build a lowercase header->column-index map from the first row of a sheet.
@@ -62,6 +64,7 @@ def _build_hmap(header_row):
     return hmap
 
 
+@instrument
 def _h(row, hmap, key, default=None):
     """Retrieve a cell value by header name (case-insensitive)."""
     idx = hmap.get(key.lower())
@@ -70,6 +73,7 @@ def _h(row, hmap, key, default=None):
     return default
 
 
+@instrument
 def run_drillhole_import(file_obj, org, process, dry_run=False, update=False, warn=None):
     """
     Import drillhole collar, survey, lithology, and assay data from an xlsx workbook.

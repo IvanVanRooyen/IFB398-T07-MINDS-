@@ -1,7 +1,8 @@
 import re
 from functools import lru_cache
-
 from pyproj import Transformer
+
+from .instrument import instrument
 
 _EPSG_MAP = {
     ("MGA94", 54): 28354,
@@ -15,7 +16,7 @@ _EPSG_MAP = {
 _ZONE_RE = re.compile(r'zone\s*(\d+)', re.IGNORECASE)
 _CRS_RE  = re.compile(r'(MGA94|AMG84)',  re.IGNORECASE)
 
-
+@instrument
 def parse_grid_epsg(grid_str: str) -> int | None:
     """Parse a GRID column string into an EPSG integer code.
 
@@ -34,12 +35,12 @@ def parse_grid_epsg(grid_str: str) -> int | None:
     crs  = crs_match.group(1).upper()
     return _EPSG_MAP.get((crs, zone))
 
-
+@instrument
 @lru_cache(maxsize=16)
 def _get_transformer(source_epsg: int) -> Transformer:
     return Transformer.from_crs(source_epsg, 4326, always_xy=True)
 
-
+@instrument
 def projected_to_wgs84(easting: float, northing: float, source_epsg: int) -> tuple[float, float]:
     """Transform projected coordinates to WGS84 geographic coordinates.
 
