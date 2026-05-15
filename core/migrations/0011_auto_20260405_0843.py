@@ -10,16 +10,25 @@ GF_PG_READER_PASS = env("GF_PG_READER_PASS") or "grafana"
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('core', '0010_document_analysis_text'),
+        ("core", "0010_document_analysis_text"),
     ]
 
     operations = [
         migrations.RunSQL(
             sql=f"""
-            CREATE USER {GF_PG_READER_USER} WITH PASSWORD '{GF_PG_READER_USER}';
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT FROM pg_catalog.pg_roles WHERE rolname = '{GF_PG_READER_USER}'
+                ) THEN
+                    CREATE USER {GF_PG_READER_USER} WITH PASSWORD '{GF_PG_READER_PASS}';
+                END IF;
+            END
+            $$;
+
             GRANT SELECT ON ALL TABLES IN SCHEMA public TO {GF_PG_READER_USER};
 
-            ALTER DEFAULT PRIVILEGES IN SCHEMA public 
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public
             GRANT SELECT ON TABLES TO {GF_PG_READER_USER};
             """,
             reverse_sql=f"""
@@ -29,9 +38,7 @@ class Migration(migrations.Migration):
             ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
             REVOKE ALL ON TABLES FROM {GF_PG_READER_USER};
 
-            DROP USER {GF_PG_READER_USER};
+            DROP USER IF EXISTS {GF_PG_READER_USER};
             """,
         )
     ]
-
-
