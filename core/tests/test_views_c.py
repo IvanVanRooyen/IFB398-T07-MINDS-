@@ -284,8 +284,6 @@ class ProspectDetailViewTests(_ViewTestBase):
         mocks = self._patch_all_relations(prospect)
 
         views.prospect_detail(self._authed_request("get"), pk=1)
-
-        # No PermissionDenied raised — render was reached.
         mocks["render"].assert_called_once()
 
     def test_cross_org_user_blocked(self):
@@ -339,7 +337,7 @@ class ProspectDetailViewTests(_ViewTestBase):
         views.prospect_detail(self._authed_request("get"), pk=1)
 
         ctx = mocks["render"].call_args[0][2]
-        # Round-tripped through json.loads/json.dumps — must still be parseable.
+
         parsed = json.loads(ctx["area_geom_geojson"])
         self.assertEqual(parsed["type"], "Polygon")
 
@@ -369,7 +367,6 @@ class CreateProspectTests(_ViewTestBase):
         self, mock_process, mock_form_cls, mock_render
     ):
         mock_form_cls.return_value = MagicMock()
-        # No ``project`` query param => initial_process stays None.
 
         views.create_prospect(self._authed_request("get"))
 
@@ -431,7 +428,7 @@ class CreateProspectTests(_ViewTestBase):
 
         views.create_prospect(self._authed_request("post"))
 
-        # Note ordering: Point(lng, lat) — easy to get wrong, easy to regress.
+        # Note ordering: Point(lng, lat) - easy to get wrong, easy to regress.
         mock_point_cls.assert_called_once_with(115.86, -31.95, srid=4326)
         self.assertIs(prospect.geom, point)
         self.assertIs(prospect.organisation, self.org)
@@ -547,7 +544,6 @@ class EditProspectTests(_ViewTestBase):
         prospect.organisation = other_org
         mock_get.return_value = prospect
 
-        # No exception — superuser can edit any prospect.
         with patch("core.views.ProspectForm", return_value=MagicMock()):
             views.edit_prospect(self._authed_request("get"), pk=1)
 

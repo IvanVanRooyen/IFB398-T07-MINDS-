@@ -53,7 +53,7 @@ class GetClearanceLevelTests(TestCase):
     def test_defaults_to_public_when_profile_missing(self):
         user = MagicMock(spec=["is_authenticated"])
         user.is_authenticated = True
-        # No ``profile`` attribute on this user.
+
         self.assertEqual(views._get_clearance_level(self._request_with(user)), "PUBLIC")
 
 
@@ -93,7 +93,6 @@ class GetCachedReportBundleTests(TestCase):
     def test_returns_cached_dict_without_regenerating(
         self, mock_document, mock_generate, mock_cache
     ):
-        # Mock the queryset chain that finds the latest doc timestamp.
         ts = datetime(2026, 1, 1)
         chain = MagicMock()
         chain.order_by.return_value = chain
@@ -129,7 +128,7 @@ class GetCachedReportBundleTests(TestCase):
 
         self.assertEqual(result, {"md": "# Report", "doc_ids": ["doc-a", "doc-b"]})
         mock_generate.assert_called_once_with("proc-1", clearance_level="PUBLIC")
-        # 24-hour TTL is the documented contract — pin it.
+
         mock_cache.set.assert_called_once()
         _, args, kwargs = mock_cache.set.mock_calls[0]
         self.assertEqual(args[1], {"md": "# Report", "doc_ids": ["doc-a", "doc-b"]})
@@ -141,7 +140,6 @@ class GetCachedReportBundleTests(TestCase):
     def test_regenerates_when_cached_value_is_legacy_non_dict(
         self, mock_document, mock_generate, mock_cache
     ):
-        # Legacy: cache previously stored a bare markdown string or a tuple.
         chain = MagicMock()
         chain.order_by.return_value = chain
         chain.values_list.return_value = chain
@@ -166,7 +164,6 @@ class GetCachedReportBundleTests(TestCase):
     def test_empty_timestamp_still_produces_valid_cache_key(
         self, mock_document, mock_generate, mock_cache
     ):
-        # No documents yet -> latest_doc_ts is None -> key uses "empty".
         chain = MagicMock()
         chain.order_by.return_value = chain
         chain.values_list.return_value = chain
@@ -210,16 +207,21 @@ class _ViewTestBase(TestCase):
             User, "profile", new_callable=lambda: property(lambda self: None)
         )
 
-    def _authed_request(self, method="get", path="/", files=None, **kwargs):
+    def _authed_request(
+        self, method="get", path="/", files=None, post_data=None, **kwargs
+    ):
         request = getattr(self.factory, method)(path, **kwargs)
         request.user = self.user
         type(request.user).profile = property(lambda s, p=self.profile: p)
-        if files is not None:
+        if files is not None or post_data is not None:
+            qd = QueryDict(mutable=True)
+            for k, v in (post_data or {}).items():
+                qd[k] = v
+            qd._mutable = False
+            request._post = qd
             normalised = {
-                k: (v if isinstance(v, list) else [v]) for k, v in files.items()
+                k: (v if isinstance(v, list) else [v]) for k, v in (files or {}).items()
             }
-
-            request._post = QueryDict()
             request._files = MultiValueDict(normalised)
         return request
 
@@ -283,7 +285,6 @@ class UploadDocGetTests(_ViewTestBase):
 
         views.upload_doc(self._authed_request("get"))
 
-        # The form should be told the user's org so it can scope choices.
         _, kwargs = mock_form_cls.call_args
         self.assertEqual(kwargs.get("organisation"), self.org)
 
@@ -321,7 +322,6 @@ class UploadDocPostTests(_ViewTestBase):
         mock_cache,
         _chunk,
     ):
-
         doc = MagicMock(
             checksum_sha256="abc123",
             title="My Doc",
@@ -338,7 +338,6 @@ class UploadDocPostTests(_ViewTestBase):
         dup_qs.exists.return_value = False
         mock_document.objects.filter.return_value = dup_qs
 
-        # DocumentChunk import inside the function:
         with patch("core.models.DocumentChunk") as mock_chunk_model:
             mock_chunk_model.objects.bulk_create = MagicMock()
             mock_redirect.return_value = MagicMock(status_code=302)
@@ -346,19 +345,14 @@ class UploadDocPostTests(_ViewTestBase):
             request = self._authed_request("post", files={"file": MagicMock()})
             views.upload_doc(request)
 
-        # The doc was saved.
         doc.save.assert_called_once()
-
-        # An audit entry was written.
         mock_log_audit.assert_called_once()
 
-        # The doc list cache was invalidated.
         self.assertTrue(
             any("docs:" in str(c.args[0]) for c in mock_cache.delete.mock_calls),
             "Document list cache should be invalidated after successful upload.",
         )
 
-        # And we redirected to the upload page.
         mock_redirect.assert_called_with("upload")
 
     @patch("core.views.render", return_value=MagicMock())
@@ -386,13 +380,16 @@ class UploadDocPostTests(_ViewTestBase):
         mock_document.objects.filter.side_effect = [dup_qs, recent_qs, recent_qs]
 
         # instead of e.g.:
+        #
         # ```
-        #   request = self._authed_request("post")
-        #   request._files = MagicMock()
-        #   views.upload_doc(request)
+        # request = self._authed_request("post")
+        # request._files = MagicMock()
+        # views.upload_doc(request)
         # ```
-        # which Django's handler processing does not like, we call the 
-        # `_authed_request` method instead.
+        #
+        # We call the `_authed_request` method instead; Django's handler logic means
+        # files we POST like this become RO once the request is instantiated cannot be modified
+        # after the fact...
         request = self._authed_request("post", files={"file": MagicMock()})
         views.upload_doc(request)
 
@@ -441,7 +438,6 @@ class UploadDocPostTests(_ViewTestBase):
         _cache,
         _chunk,
     ):
-        # The warm-cache report call raises — the upload must still succeed.
         mock_generate.side_effect = RuntimeError("Granite down")
 
         doc = MagicMock(
@@ -461,11 +457,8 @@ class UploadDocPostTests(_ViewTestBase):
 
         with patch("core.models.DocumentChunk"):
             request = self._authed_request("post", files={"file": MagicMock()})
-
-            # No exception should escape.
             response = views.upload_doc(request)
 
-        # Save still happened despite the report failure.
         doc.save.assert_called_once()
         self.assertIsNotNone(response)
 
@@ -493,13 +486,12 @@ class DocumentsViewTests(_ViewTestBase):
         mock_render,
         mock_cache,
     ):
-        # No filters in GET; cache holds a serialised page.
+        # no filters in GET; cache holds a serialised page.
         mock_form_cls.return_value = MagicMock(
             is_valid=MagicMock(return_value=False),
         )
-        # The doc_type choices query — return an empty chainable.
-        mock_document.objects.filter.return_value = self._chainable_qs([])
 
+        mock_document.objects.filter.return_value = self._chainable_qs([])
         mock_cache.get.return_value = {
             "docs": ["doc-1", "doc-2"],
             "num_pages": 1,
@@ -510,11 +502,10 @@ class DocumentsViewTests(_ViewTestBase):
         }
 
         views.documents(self._authed_request("get"))
-
-        # We took the cache branch — _paginate was NOT called.
         mock_paginate.assert_not_called()
-        # And the rendered page is the proxy reconstructed from cache.
+
         ctx = mock_render.call_args[0][2]
+
         self.assertEqual(list(ctx["page"].object_list), ["doc-1", "doc-2"])
         self.assertEqual(ctx["filters_active"], False)
 
@@ -736,8 +727,6 @@ class DeleteDocumentTests(_ViewTestBase):
 
         request = self._authed_request("post")
         request.META["HTTP_HX_REQUEST"] = "true"
-        # RequestFactory rolls headers into META, but the view reads via
-        # request.headers — patch that directly.
         request.headers = {"HX-Request": "true"}
 
         response = views.delete_document(request, pk=1)
@@ -807,7 +796,7 @@ class DownloadDocumentTests(_ViewTestBase):
     def test_superuser_bypasses_access_check(self, mock_get, _audit, mock_redirect):
         self.user.is_superuser = True
         self.user.save()
-        # Profile would say "no", but superuser skips the check entirely.
+        # profile would indicate "no" - but superuser entirely skips the check in reality
         self.profile.can_access_document.return_value = False
         doc = MagicMock()
         doc.file.url = "https://x/y"
@@ -903,14 +892,13 @@ class ReplaceDocumentTests(_ViewTestBase):
         request = self._authed_request("post", files={"file": MagicMock()})
         views.replace_document(request, pk=1)
 
-        # The user-facing message carries the exception text.
         args, _ = mock_messages.error.call_args
         self.assertIn("checksum dup", args[1])
-        # And we go back to the detail page (not the new doc, since there isn't one).
+
         mock_redirect.assert_called_with("document_detail", pk=1)
 
     def test_get_request_rejected(self):
-        # @require_POST should 405 a GET.
         request = self._authed_request("get")
         response = views.replace_document(request, pk=1)
+
         self.assertEqual(response.status_code, 405)
