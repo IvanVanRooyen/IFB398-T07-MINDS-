@@ -9,7 +9,9 @@ from .instrument import instrument
 
 @instrument
 def sha256_file(django_file) -> str:
-    pos = django_file.tell()  # remember current position
+    # Save and restore the file pointer so callers can still read or save the
+    # file after hashing — InMemoryUploadedFile does not auto-rewind.
+    pos = django_file.tell()
     django_file.seek(0)
 
     h = hashlib.sha256()

@@ -84,7 +84,7 @@ def _get_model(app_label: str, model_name: str):
 
 
 @instrument
-def _count_model(app_label: str, model_name: str, where_clause: str = None) -> int:
+def _count_model(app_label: str, model_name: str) -> int:
     mdl = _get_model(app_label, model_name)
     if mdl is None:
         return 0
@@ -198,7 +198,6 @@ def stats_partial(request):
 
 # ---------- Cache keys ----------
 
-DOCS_CACHE_KEY = "docs:unfiltered:page1:v1"
 DOCS_CACHE_TTL = 120  # 2 minutes
 
 
@@ -325,23 +324,6 @@ def upload_doc(request):
                 )
 
             doc.extracted_text = doc.extracted_text or ""
-
-            # Debug
-            print("BEFORE SAVE extracted_text:", repr(doc.extracted_text))
-            print("BEFORE SAVE type:", type(doc.extracted_text))
-            print(
-                "BEFORE SAVE dict:",
-                {
-                    "title": doc.title,
-                    "doc_type": doc.doc_type,
-                    "confidentiality": doc.confidentiality,
-                    "organisation_id": doc.organisation_id,
-                    "process_id": doc.process_id,
-                    "created_by_id": doc.created_by_id,
-                    "extracted_text": repr(doc.extracted_text),
-                },
-            )
-
             doc.save()
             log_audit(
                 request.user,

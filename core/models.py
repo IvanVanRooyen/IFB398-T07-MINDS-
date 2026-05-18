@@ -354,12 +354,11 @@ class Document(models.Model):
 
     # filename = models.FileField(upload_to="docs/")
     file = models.FileField(upload_to="docs/")
-    extracted_text = models.TextField(blank=True, default="")
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, null=True, blank=True)
     process = models.ForeignKey(Process, null=True, on_delete=models.SET_NULL, blank=True)
     tags = ArrayField(models.IntegerField(), default=list, blank=True)
     analysis_text = models.TextField(blank=True, default="")
-    
+
     timestamp = models.DateField(null=True)
     doc_type = models.CharField(max_length=64, blank=True)
     confidentiality = models.CharField(max_length=64, default="internal")
@@ -446,12 +445,15 @@ class Document(models.Model):
         """Return all versions in this document's chain, ordered by version_number."""
         root = self
         visited = set()
+        # Walk up to the root, guarding against any accidental circular parent links
         while root.parent_document_id and root.pk not in visited:
             visited.add(root.pk)
             root = root.parent_document
         chain = []
         queue = [root]
         seen = set()
+        # BFS down through child versions. `seen` is separate from `visited` above
+        # because we need a fresh guard for the downward traversal.
         while queue:
             current = queue.pop(0)
             if current.pk in seen:
@@ -464,7 +466,9 @@ class Document(models.Model):
         return sorted(chain, key=lambda d: d.version_number)
 
     def save(self, *args, **kwargs):
-        # Compute SHA-256 checksum if file exists and checksum not already set
+        # Only hash when a checksum isn't already present. create_version() supplies
+        # the checksum before calling save(), so we must not recompute it here 
+        # by that point the file pointer may have moved after the MinIO upload.
         if self.file and not self.checksum_sha256:
             from .utils import sha256_file
             self.checksum_sha256 = sha256_file(self.file)
@@ -733,17 +737,12 @@ class SavedReport(models.Model):
         )
 
 
-# Autocreate profile when user is created
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, raw, **kwargs):
+    # `raw=True` during fixture loading — profiles already exist in the fixture,
+    # so skip creation to avoid IntegrityError on the OneToOneField.
     if created and not raw:
         UserProfile.objects.create(user=instance)
-
-
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    if hasattr(instance, 'profile'):
-        instance.profile.save()
 
 
 # AUDIT TRAIL ---------------------------------
@@ -996,25 +995,3 @@ def log_audit(user, action, obj, description="", ip_address=None, user_agent="")
         user_agent=user_agent,
     )
 
-
-# class ProjectOp(models.Model):
-#     MODE = (("EXP","Exploration"), ("MIN","Mining"))
-#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-#     mode = models.CharField(max_length=3, choices=MODE)
-#     name = models.CharField(max_length=255)
-# geom = models.MultiPolygonField(srid=4326, null=True, blank=True)
-# commodity = models.CharField(max_length=64, blank=True)
-#     def __str__(self): return self.name
-#
-# class Document(models.Model):
-#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-#     file = models.FileField(upload_to="docs/")
-#     title = models.CharField(max_length=255)
-#     year = models.IntegerField(null=True, blank=True)
-#     doc_type = models.CharField(max_length=64, blank=True)
-#     confidentiality = models.CharField(max_length=32, default="internal")
-#     checksum_sha256 = models.CharField(max_length=64, db_index=True, blank=True)
-#     project = models.ForeignKey(ProjectOp, null=True, blank=True, on_delete=models.SET_NULL)
-#     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     def __str__(self): return self.title

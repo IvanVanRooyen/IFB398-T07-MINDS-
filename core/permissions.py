@@ -109,6 +109,8 @@ def log_view_access(model_class):
     def decorator(view_func):
         @wraps(view_func)
         def wrapper(request, *args, **kwargs):
+            # Run the view first — if it raises Http404 or PermissionDenied,
+            # we never reach the audit log, avoiding phantom view records.
             response = view_func(request, *args, **kwargs)
 
             # Try to get object ID from kwargs
