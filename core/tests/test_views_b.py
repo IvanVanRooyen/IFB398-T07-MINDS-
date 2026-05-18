@@ -41,14 +41,10 @@ class GetClearanceLevelTests(TestCase):
         user.is_authenticated = True
         user.profile.clearance_level = "CONFIDENTIAL"
 
-        self.assertEqual(
-            views._get_clearance_level(self._request_with(user)), "CONFIDENTIAL"
-        )
+        self.assertEqual(views._get_clearance_level(self._request_with(user)), "CONFIDENTIAL")
 
     def test_defaults_to_public_for_anonymous_user(self):
-        self.assertEqual(
-            views._get_clearance_level(self._request_with(AnonymousUser())), "PUBLIC"
-        )
+        self.assertEqual(views._get_clearance_level(self._request_with(AnonymousUser())), "PUBLIC")
 
     def test_defaults_to_public_when_profile_missing(self):
         user = MagicMock(spec=["is_authenticated"])
@@ -111,9 +107,7 @@ class GetCachedReportBundleTests(TestCase):
     @patch("core.views.cache")
     @patch("core.views.generate_project_report")
     @patch("core.views.Document")
-    def test_generates_and_caches_when_missing(
-        self, mock_document, mock_generate, mock_cache
-    ):
+    def test_generates_and_caches_when_missing(self, mock_document, mock_generate, mock_cache):
         ts = datetime(2026, 1, 1)
         chain = MagicMock()
         chain.order_by.return_value = chain
@@ -199,17 +193,13 @@ class _ViewTestBase(TestCase):
         )
 
         self.org = MagicMock(name="Org", id=7)
-        self.profile = MagicMock(
-            organisation=self.org, role="ADMIN", clearance_level="PUBLIC"
-        )
+        self.profile = MagicMock(organisation=self.org, role="ADMIN", clearance_level="PUBLIC")
 
         self._profile_patcher = patch.object(
             User, "profile", new_callable=lambda: property(lambda self: None)
         )
 
-    def _authed_request(
-        self, method="get", path="/", files=None, post_data=None, **kwargs
-    ):
+    def _authed_request(self, method="get", path="/", files=None, post_data=None, **kwargs):
         request = getattr(self.factory, method)(path, **kwargs)
         request.user = self.user
         type(request.user).profile = property(lambda s, p=self.profile: p)
@@ -219,9 +209,7 @@ class _ViewTestBase(TestCase):
                 qd[k] = v
             qd._mutable = False
             request._post = qd
-            normalised = {
-                k: (v if isinstance(v, list) else [v]) for k, v in (files or {}).items()
-            }
+            normalised = {k: (v if isinstance(v, list) else [v]) for k, v in (files or {}).items()}
             request._files = MultiValueDict(normalised)
         return request
 
@@ -239,9 +227,7 @@ class _ViewTestBase(TestCase):
         ):
             getattr(qs, method).return_value = qs
         qs.count.return_value = (
-            count
-            if count is not None
-            else (len(result) if hasattr(result, "__len__") else 0)
+            count if count is not None else (len(result) if hasattr(result, "__len__") else 0)
         )
         qs.__iter__.side_effect = lambda: iter(result)
         qs.__getitem__.side_effect = lambda key: result[key]
@@ -278,9 +264,7 @@ class UploadDocGetTests(_ViewTestBase):
     @patch("core.views.Document")
     @patch("core.views.DocumentForm")
     @patch("core.views._org_qs_filter", return_value=Q())
-    def test_form_constructed_with_users_organisation(
-        self, _f, mock_form_cls, mock_document, _r
-    ):
+    def test_form_constructed_with_users_organisation(self, _f, mock_form_cls, mock_document, _r):
         mock_document.objects = self._chainable_qs([])
 
         views.upload_doc(self._authed_request("get"))
@@ -565,9 +549,7 @@ class DocumentsViewTests(_ViewTestBase):
             is_valid=MagicMock(return_value=False),
         )
         mock_document.objects.filter.return_value = self._chainable_qs([])
-        mock_paginate.return_value = MagicMock(
-            object_list=[], paginator=MagicMock(num_pages=1)
-        )
+        mock_paginate.return_value = MagicMock(object_list=[], paginator=MagicMock(num_pages=1))
 
         # Any of the filter params being set must skip the cache entirely.
         request = self._authed_request("get", path="/?q=hello")
@@ -595,9 +577,7 @@ class DocumentsViewTests(_ViewTestBase):
             is_valid=MagicMock(return_value=False),
         )
         mock_document.objects.filter.return_value = self._chainable_qs([])
-        mock_paginate.return_value = MagicMock(
-            object_list=[], paginator=MagicMock(num_pages=1)
-        )
+        mock_paginate.return_value = MagicMock(object_list=[], paginator=MagicMock(num_pages=1))
 
         views.documents(self._authed_request("get", path="/?page=2"))
 
@@ -671,9 +651,7 @@ class DocumentDetailTests(_ViewTestBase):
 
     @patch("core.views.render", return_value=MagicMock())
     @patch("core.views.get_object_or_404")
-    def test_can_upload_version_flag_only_set_for_privileged_roles(
-        self, mock_get, mock_render
-    ):
+    def test_can_upload_version_flag_only_set_for_privileged_roles(self, mock_get, mock_render):
         doc = MagicMock(
             organisation=self.org,
             tags=[],
@@ -704,9 +682,7 @@ class DeleteDocumentTests(_ViewTestBase):
     @patch("core.views.log_audit")
     @patch("core.views.redirect", return_value=MagicMock(status_code=302))
     @patch("core.views.get_object_or_404")
-    def test_post_deletes_and_redirects(
-        self, mock_get, mock_redirect, mock_audit, mock_cache
-    ):
+    def test_post_deletes_and_redirects(self, mock_get, mock_redirect, mock_audit, mock_cache):
         doc = MagicMock(organisation=self.org, title="Bye")
         mock_get.return_value = doc
 
@@ -766,9 +742,7 @@ class DownloadDocumentTests(_ViewTestBase):
     @patch("core.views.redirect", return_value=MagicMock(status_code=302))
     @patch("core.views.log_audit")
     @patch("core.views.get_object_or_404")
-    def test_allowed_user_redirected_to_file_url(
-        self, mock_get, mock_audit, mock_redirect
-    ):
+    def test_allowed_user_redirected_to_file_url(self, mock_get, mock_audit, mock_redirect):
         self.profile.can_access_document.return_value = True
         doc = MagicMock(title="Report.pdf")
         doc.file.url = "https://files.example.com/report.pdf"
@@ -855,9 +829,7 @@ class ReplaceDocumentTests(_ViewTestBase):
         request = self._authed_request("post", files={"file": upload_file})
         views.replace_document(request, pk=1)
 
-        mock_document.create_version.assert_called_once_with(
-            parent, upload_file, request.user
-        )
+        mock_document.create_version.assert_called_once_with(parent, upload_file, request.user)
         mock_audit.assert_called_once()
         mock_cache.delete.assert_called_once()
         mock_messages.success.assert_called_once()

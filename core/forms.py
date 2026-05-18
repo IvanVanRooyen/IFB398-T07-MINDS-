@@ -1,7 +1,9 @@
 from django import forms
 from django.forms import ModelForm
-from .models import Document, Process, Prospect, Tenement, Sample, Survey
+
+from .models import Document, Process, Prospect, Sample, Survey, Tenement
 from .tagging import TAG_CHOICES
+
 
 class DocumentForm(ModelForm):
     timestamp = forms.DateField(
@@ -12,7 +14,7 @@ class DocumentForm(ModelForm):
             "%d-%m-%Y",
         ],
         widget=forms.DateInput(attrs={"type": "date"}),
-        label="Date"
+        label="Date",
     )
 
     tags = forms.TypedMultipleChoiceField(
@@ -26,19 +28,32 @@ class DocumentForm(ModelForm):
     class Meta:
         model = Document
         fields = [
-            "title", "file", "organisation", "process",
-            "timestamp", "doc_type", "confidentiality", "tags",
-            "tenement", "commodity", "reporting_stage", "author_name",
+            "title",
+            "file",
+            "organisation",
+            "process",
+            "timestamp",
+            "doc_type",
+            "confidentiality",
+            "tags",
+            "tenement",
+            "commodity",
+            "reporting_stage",
+            "author_name",
         ]
         widgets = {
-            "commodity": forms.TextInput(attrs={
-                "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
-                "placeholder": "e.g. Gold, Copper",
-            }),
-            "author_name": forms.TextInput(attrs={
-                "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
-                "placeholder": "Author name",
-            }),
+            "commodity": forms.TextInput(
+                attrs={
+                    "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
+                    "placeholder": "e.g. Gold, Copper",
+                }
+            ),
+            "author_name": forms.TextInput(
+                attrs={
+                    "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
+                    "placeholder": "Author name",
+                }
+            ),
         }
 
     def __init__(self, *args, organisation=None, **kwargs):
@@ -71,8 +86,9 @@ class DocumentForm(ModelForm):
             obj.save()
         return obj
 
+
 # ---- Search Form ------
- 
+
 CONFIDENTIALITY_CHOICES = [
     ("", "Any"),
     ("public", "Public"),
@@ -84,13 +100,16 @@ TAG_FILTER_CHOICES = [("", "Any tag")] + TAG_CHOICES
 
 _INPUT = "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm"
 
+
 class DocumentSearchForm(forms.Form):
     q = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={
-            "placeholder": "Search by title, type, project, organisation...",
-            "class": _INPUT,
-        }),
+        widget=forms.TextInput(
+            attrs={
+                "placeholder": "Search by title, type, project, organisation...",
+                "class": _INPUT,
+            }
+        ),
     )
     process = forms.ModelChoiceField(
         queryset=Process.objects.order_by("name"),
@@ -144,9 +163,9 @@ class DocumentSearchForm(forms.Form):
     def __init__(self, *args, doc_type_choices=None, organisation=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["doc_type"].choices = doc_type_choices or [("", "All types")]
-        self.fields["reporting_stage"].choices = (
-            [("", "All stages")] + Document.REPORTING_STAGE_CHOICES
-        )
+        self.fields["reporting_stage"].choices = [
+            ("", "All stages")
+        ] + Document.REPORTING_STAGE_CHOICES
         if organisation:
             self.fields["tenement"].queryset = Tenement.objects.filter(
                 organisation=organisation
@@ -168,10 +187,12 @@ class TenementForm(ModelForm):
         model = Tenement
         fields = ["name", "process"]
         widgets = {
-            "name": forms.TextInput(attrs={
-                "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
-                "placeholder": "e.g. EPM 27431",
-            }),
+            "name": forms.TextInput(
+                attrs={
+                    "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
+                    "placeholder": "e.g. EPM 27431",
+                }
+            ),
         }
 
     def __init__(self, *args, organisation=None, **kwargs):
@@ -188,6 +209,7 @@ class TenementForm(ModelForm):
 
     def _post_clean(self):
         from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Polygon
+
         if self._organisation is not None:
             self.instance.organisation = self._organisation
         geojson = (self.cleaned_data or {}).get("geom_geojson", "").strip()
@@ -204,12 +226,18 @@ class TenementForm(ModelForm):
 
 class ProspectForm(ModelForm):
     latitude = forms.DecimalField(
-        max_digits=10, decimal_places=7, required=True,
+        max_digits=10,
+        decimal_places=7,
+        required=True,
         widget=forms.HiddenInput(),
-        error_messages={"required": "A mapped location is required. Click on the map to place a pin."}
+        error_messages={
+            "required": "A mapped location is required. Click on the map to place a pin."
+        },
     )
     longitude = forms.DecimalField(
-        max_digits=10, decimal_places=7, required=True,
+        max_digits=10,
+        decimal_places=7,
+        required=True,
         widget=forms.HiddenInput(),
     )
     area_geom_geojson = forms.CharField(widget=forms.HiddenInput(), required=False)
@@ -218,20 +246,26 @@ class ProspectForm(ModelForm):
         model = Prospect
         fields = ["name", "process", "hypothesis", "objective"]
         widgets = {
-            "name": forms.TextInput(attrs={
-                "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
-                "placeholder": "e.g. Ridgeline East",
-            }),
-            "hypothesis": forms.Textarea(attrs={
-                "rows": 5,
-                "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
-                "placeholder": "Describe the geological hypothesis. What do you believe is here and why?",
-            }),
-            "objective": forms.Textarea(attrs={
-                "rows": 4,
-                "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
-                "placeholder": "State the exploration objective. What will you do to test the hypothesis?",
-            }),
+            "name": forms.TextInput(
+                attrs={
+                    "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
+                    "placeholder": "e.g. Ridgeline East",
+                }
+            ),
+            "hypothesis": forms.Textarea(
+                attrs={
+                    "rows": 5,
+                    "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
+                    "placeholder": "Describe the geological hypothesis. What do you believe is here and why?",
+                }
+            ),
+            "objective": forms.Textarea(
+                attrs={
+                    "rows": 4,
+                    "class": "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm",
+                    "placeholder": "State the exploration objective. What will you do to test the hypothesis?",
+                }
+            ),
         }
 
     def __init__(self, *args, organisation=None, initial_process=None, **kwargs):
@@ -247,7 +281,8 @@ class ProspectForm(ModelForm):
         self.fields["process"].empty_label = "Select a project..."
 
     def _post_clean(self):
-        from django.contrib.gis.geos import Point, GEOSGeometry
+        from django.contrib.gis.geos import GEOSGeometry, Point
+
         if self._organisation is not None:
             self.instance.organisation = self._organisation
         lat = (self.cleaned_data or {}).get("latitude")
@@ -282,13 +317,24 @@ class SampleForm(ModelForm):
     class Meta:
         model = Sample
         fields = [
-            "name", "process", "prospect", "sample_type", "sample_number",
-            "description", "collected_by", "collected_at", "laboratory", "depth",
+            "name",
+            "process",
+            "prospect",
+            "sample_type",
+            "sample_number",
+            "description",
+            "collected_by",
+            "collected_at",
+            "laboratory",
+            "depth",
         ]
         widgets = {
-            "name": forms.TextInput(attrs={
-                "class": _INPUT, "placeholder": "e.g. RC001-CHIP",
-            }),
+            "name": forms.TextInput(
+                attrs={
+                    "class": _INPUT,
+                    "placeholder": "e.g. RC001-CHIP",
+                }
+            ),
             "sample_number": forms.TextInput(attrs={"class": _INPUT}),
             "collected_by": forms.TextInput(attrs={"class": _INPUT}),
             "laboratory": forms.TextInput(attrs={"class": _INPUT}),
@@ -327,16 +373,24 @@ class SampleForm(ModelForm):
 class SurveyForm(ModelForm):
     geom_geojson = forms.CharField(widget=forms.HiddenInput(), required=False)
     date_from = forms.DateField(required=False, widget=_DATE_INPUT, label="Date From")
-    date_to   = forms.DateField(required=False, widget=_DATE_INPUT, label="Date To")
+    date_to = forms.DateField(required=False, widget=_DATE_INPUT, label="Date To")
 
     class Meta:
         model = Survey
         fields = [
-            "name", "process", "prospect", "survey_type",
-            "contractor", "date_from", "date_to", "description",
+            "name",
+            "process",
+            "prospect",
+            "survey_type",
+            "contractor",
+            "date_from",
+            "date_to",
+            "description",
         ]
         widgets = {
-            "name": forms.TextInput(attrs={"class": _INPUT, "placeholder": "e.g. VTEM Survey 2024"}),
+            "name": forms.TextInput(
+                attrs={"class": _INPUT, "placeholder": "e.g. VTEM Survey 2024"}
+            ),
             "contractor": forms.TextInput(attrs={"class": _INPUT}),
             "description": forms.Textarea(attrs={"class": _INPUT, "rows": 4}),
             "survey_type": forms.Select(attrs={"class": _INPUT}),
@@ -365,6 +419,7 @@ class SurveyForm(ModelForm):
 
     def _post_clean(self):
         from django.contrib.gis.geos import GEOSGeometry
+
         if self._organisation is not None:
             self.instance.organisation = self._organisation
         geojson = (self.cleaned_data or {}).get("geom_geojson", "").strip()

@@ -5,15 +5,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0017_drillhole_prospect'),
+        ("core", "0017_drillhole_prospect"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='savedreport',
-            name='prospect',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='reports', to='core.prospect'),
+            model_name="savedreport",
+            name="prospect",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="reports",
+                to="core.prospect",
+            ),
         ),
     ]

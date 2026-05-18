@@ -6,24 +6,28 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0004_approvalworkflow_auditlog_documentview_userprofile_and_more'),
+        ("core", "0004_approvalworkflow_auditlog_documentview_userprofile_and_more"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='document',
-            name='approved_by',
+            model_name="document",
+            name="approved_by",
         ),
         migrations.RemoveField(
-            model_name='document',
-            name='last_edited_by',
+            model_name="document",
+            name="last_edited_by",
         ),
         migrations.AlterField(
-            model_name='document',
-            name='created_by',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.PROTECT, related_name='+', to=settings.AUTH_USER_MODEL),
+            model_name="document",
+            name="created_by",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="+",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

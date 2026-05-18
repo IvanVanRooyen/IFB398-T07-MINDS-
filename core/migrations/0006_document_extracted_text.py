@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0005_remove_document_approved_by_and_more'),
+        ("core", "0005_remove_document_approved_by_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='document',
-            name='extracted_text',
-            field=models.TextField(blank=True, default=''),
+            model_name="document",
+            name="extracted_text",
+            field=models.TextField(blank=True, default=""),
         ),
     ]

@@ -5,75 +5,76 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0001_initial'),
+        ("core", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='document',
-            name='created_at',
+            model_name="document",
+            name="created_at",
             field=models.DateTimeField(auto_now_add=True),
         ),
         migrations.AlterField(
-            model_name='document',
-            name='tags',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.IntegerField(), blank=True, default=list, size=None),
+            model_name="document",
+            name="tags",
+            field=django.contrib.postgres.fields.ArrayField(
+                base_field=models.IntegerField(), blank=True, default=list, size=None
+            ),
         ),
         migrations.AlterField(
-            model_name='document',
-            name='updated_at',
+            model_name="document",
+            name="updated_at",
             field=models.DateTimeField(auto_now=True),
         ),
         migrations.AlterField(
-            model_name='drillhole',
-            name='created_at',
+            model_name="drillhole",
+            name="created_at",
             field=models.DateTimeField(auto_now_add=True),
         ),
         migrations.AlterField(
-            model_name='drillhole',
-            name='updated_at',
+            model_name="drillhole",
+            name="updated_at",
             field=models.DateTimeField(auto_now=True),
         ),
         migrations.AlterField(
-            model_name='organisation',
-            name='created_at',
+            model_name="organisation",
+            name="created_at",
             field=models.DateTimeField(auto_now_add=True),
         ),
         migrations.AlterField(
-            model_name='organisation',
-            name='updated_at',
+            model_name="organisation",
+            name="updated_at",
             field=models.DateTimeField(auto_now=True),
         ),
         migrations.AlterField(
-            model_name='process',
-            name='created_at',
+            model_name="process",
+            name="created_at",
             field=models.DateTimeField(auto_now_add=True),
         ),
         migrations.AlterField(
-            model_name='process',
-            name='updated_at',
+            model_name="process",
+            name="updated_at",
             field=models.DateTimeField(auto_now=True),
         ),
         migrations.AlterField(
-            model_name='prospect',
-            name='created_at',
+            model_name="prospect",
+            name="created_at",
             field=models.DateTimeField(auto_now_add=True),
         ),
         migrations.AlterField(
-            model_name='prospect',
-            name='updated_at',
+            model_name="prospect",
+            name="updated_at",
             field=models.DateTimeField(auto_now=True),
         ),
         migrations.AlterField(
-            model_name='tenement',
-            name='created_at',
+            model_name="tenement",
+            name="created_at",
             field=models.DateTimeField(auto_now_add=True),
         ),
         migrations.AlterField(
-            model_name='tenement',
-            name='updated_at',
+            model_name="tenement",
+            name="updated_at",
             field=models.DateTimeField(auto_now=True),
         ),
     ]

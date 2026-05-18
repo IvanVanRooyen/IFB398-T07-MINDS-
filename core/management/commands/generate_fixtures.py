@@ -50,9 +50,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--flush", action="store_true", dest="flush", default=False)
-        parser.add_argument(
-            "--no-pdfs", action="store_false", dest="gen_pdf", default=True
-        )
+        parser.add_argument("--no-pdfs", action="store_false", dest="gen_pdf", default=True)
 
     def _log(self, msg):
         self.stdout.write(self.style.SUCCESS(f"{msg}"))
@@ -81,15 +79,11 @@ class Command(BaseCommand):
                 )
 
             else:
-                self.stdout.write(
-                    f"    deleted {deleted} objects: s3://{bucket}/{prefix}"
-                )
+                self.stdout.write(f"    deleted {deleted} objects: s3://{bucket}/{prefix}")
 
         except ClientError as err:
             self.stderr.write(
-                self.style.WARNING(
-                    f"    failed to flush bucket 's3://{bucket}/{prefix}': {err}"
-                )
+                self.style.WARNING(f"    failed to flush bucket 's3://{bucket}/{prefix}': {err}")
             )
 
     def _flush(self):
@@ -109,9 +103,7 @@ class Command(BaseCommand):
             self._flush_bucket(s3, bucket, prefix="docs/")
         except Exception as err:
             self.stderr.write(
-                self.style.WARNING(
-                    f"      failed to connect to minio during flush: {err}\n"
-                )
+                self.style.WARNING(f"      failed to connect to minio during flush: {err}\n")
             )
 
         fixture_docs = Path(settings.BASE_DIR) / "fixtures" / "media" / "documents"
@@ -122,9 +114,7 @@ class Command(BaseCommand):
                 pdf_count += 1
 
             if pdf_count:
-                self._log(
-                    f"    delete {pdf_count} PDFs from local path: {fixture_docs}"
-                )
+                self._log(f"    delete {pdf_count} PDFs from local path: {fixture_docs}")
 
         self.stdout.write(self.style.SUCCESS("\ndata flush complete\n"))
 
@@ -149,9 +139,7 @@ class Command(BaseCommand):
                 )
 
             except Exception as exc:
-                self.stderr.write(
-                    self.style.ERROR(f"    FAILED on {group_name}: {exc}")
-                )
+                self.stderr.write(self.style.ERROR(f"    FAILED on {group_name}: {exc}"))
         self._log(f"created: {len(groups)} groups")
         return groups
 
@@ -177,9 +165,7 @@ class Command(BaseCommand):
         for org in orgs:
             for i in range(NUM_USERS_PER_ORG):
                 users.append(
-                    handlers.create_single_user(
-                        fake, random, groups=groups, org=org, index=i
-                    )
+                    handlers.create_single_user(fake, random, groups=groups, org=org, index=i)
                 )
 
             users.append(handlers.create_competent_person(org, "testpass123", fake))
@@ -191,9 +177,7 @@ class Command(BaseCommand):
         processes = []
         for org in orgs:
             for _ in range(NUM_PROCESSES_PER_ORG):
-                p = handlers.create_process(
-                    uuid, fake, random, org, PROCESS_MODES, COMMODITIES
-                )
+                p = handlers.create_process(uuid, fake, random, org, PROCESS_MODES, COMMODITIES)
                 processes.append(p)
         self._log(f"created: {len(processes)} processes")
         return processes
@@ -272,9 +256,7 @@ class Command(BaseCommand):
                 workflow_type=random.choice(WORKFLOW_TYPES),
                 status=status,
                 submission_notes=fake.paragraph(nb_sentences=2),
-                approval_notes=fake.paragraph(nb_sentences=1)
-                if status != "PENDING"
-                else "",
+                approval_notes=fake.paragraph(nb_sentences=1) if status != "PENDING" else "",
                 submitted_at=submitted,
                 submitted_by=random.choice(users),
                 reviewed_at=submitted + timedelta(days=random.randint(1, 14))

@@ -29,17 +29,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         fixture_json = options["filename"] or "generated_with_docs.json"
-        fixture_dir = Path(
-            options["directory"] or (Path(settings.BASE_DIR) / "fixtures")
-        )
+        fixture_dir = Path(options["directory"] or (Path(settings.BASE_DIR) / "fixtures"))
 
         fixture_filepath = fixture_dir / fixture_json
         fixture_media = fixture_dir / "media"
 
         if not fixture_media.exists():
-            self.stdout.write(
-                self.style.ERROR(f"   no directory found at '{fixture_dir}'")
-            )
+            self.stdout.write(self.style.ERROR(f"   no directory found at '{fixture_dir}'"))
 
             exit(1)
 
@@ -71,9 +67,7 @@ class Command(BaseCommand):
                 res = s3.head_object(Bucket=bucket, Key=object_key)
                 if res["ContentLength"] == src_file.stat().st_size:
                     self.stdout.write(
-                        self.style.WARNING(
-                            f"skipping upload for file '{object_key}': exists"
-                        )
+                        self.style.WARNING(f"skipping upload for file '{object_key}': exists")
                     )
 
                     skipped += 1
@@ -85,13 +79,9 @@ class Command(BaseCommand):
                 # is called
                 pass
 
-            handlers.upload_minio(
-                s3=s3, filepath=src_file, bucket=bucket, key=object_key
-            )
+            handlers.upload_minio(s3=s3, filepath=src_file, bucket=bucket, key=object_key)
             uploaded += 1
 
         self.stdout.write(
-            self.style.SUCCESS(
-                f"  s3://{bucket}/ -> uploaded: {uploaded}; skipped: {skipped}"
-            )
+            self.style.SUCCESS(f"  s3://{bucket}/ -> uploaded: {uploaded}; skipped: {skipped}")
         )

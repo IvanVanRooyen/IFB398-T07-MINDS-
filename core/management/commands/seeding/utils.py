@@ -72,11 +72,7 @@ def generate_pdf(doc_type, org, process, commodity, output_path):
     story.append(Spacer(1, 10 * mm))
     story.append(Paragraph(f"Prepared for: {org.name}", styles["Normal"]))
     story.append(Paragraph(f"Project: {process.name}", styles["Normal"]))
-    story.append(
-        Paragraph(
-            f"Date: {fake.date_this_year().strftime('%d %B %Y')}", styles["Normal"]
-        )
-    )
+    story.append(Paragraph(f"Date: {fake.date_this_year().strftime('%d %B %Y')}", styles["Normal"]))
     story.append(
         Paragraph(
             f"Classification: {random.choice(constants.CONFIDENTIALITY_LEVELS)}",

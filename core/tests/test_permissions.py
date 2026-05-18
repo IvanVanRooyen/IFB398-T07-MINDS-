@@ -60,7 +60,7 @@ class PermissionsTestBase(TestCase):
             clearance_level=UserProfile.ClearanceLevel.PUBLIC,
         )
 
-        # clean out any profiles that get automatically created by signals 
+        # clean out any profiles that get automatically created by signals
         cls.profileless_user = User.objects.create_user("noprofile", password="x")
         UserProfile.objects.filter(user=cls.profileless_user).delete()
 
@@ -77,9 +77,7 @@ class RoleRequiredTests(PermissionsTestBase):
     def setUp(self):
         super().setUp()
 
-        @role_required(
-            UserProfile.RoleChoices.ADMIN, UserProfile.RoleChoices.FIELD_LEAD
-        )
+        @role_required(UserProfile.RoleChoices.ADMIN, UserProfile.RoleChoices.FIELD_LEAD)
         def dummy_view(request):
             return "ok"
 
@@ -195,9 +193,7 @@ class LogViewAccessTests(PermissionsTestBase):
         view(request, pk=self.document.pk)
 
         self.assertTrue(
-            DocumentView.objects.filter(
-                user=self.field_lead, document=self.document
-            ).exists()
+            DocumentView.objects.filter(user=self.field_lead, document=self.document).exists()
         )
 
     @patch("core.permissions.log_audit")
@@ -230,16 +226,12 @@ class CanApproveWorkflowTests(PermissionsTestBase):
     def test_jorc_approver_returns_true(self):
         from core.models import ApprovalWorkflow
 
-        self.assertTrue(
-            can_approve_workflow(self.admin_user, ApprovalWorkflow.WorkflowType.JORC)
-        )
+        self.assertTrue(can_approve_workflow(self.admin_user, ApprovalWorkflow.WorkflowType.JORC))
 
     def test_non_jorc_approver_returns_false(self):
         from core.models import ApprovalWorkflow
 
-        self.assertFalse(
-            can_approve_workflow(self.field_lead, ApprovalWorkflow.WorkflowType.JORC)
-        )
+        self.assertFalse(can_approve_workflow(self.field_lead, ApprovalWorkflow.WorkflowType.JORC))
 
     def test_general_workflow_uses_role(self):
         from core.models import ApprovalWorkflow
@@ -256,9 +248,7 @@ class CanApproveWorkflowTests(PermissionsTestBase):
         from core.models import ApprovalWorkflow
 
         self.assertFalse(
-            can_approve_workflow(
-                self.profileless_user, ApprovalWorkflow.WorkflowType.JORC
-            )
+            can_approve_workflow(self.profileless_user, ApprovalWorkflow.WorkflowType.JORC)
         )
 
 

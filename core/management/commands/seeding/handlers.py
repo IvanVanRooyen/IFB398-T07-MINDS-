@@ -268,9 +268,7 @@ def create_org_users(users, proc):
     return org_users
 
 
-def create_doc_for_process(
-    uuid, random, fake, s3, bucket, fixture_docs_dir, proc, org_users
-):
+def create_doc_for_process(uuid, random, fake, s3, bucket, fixture_docs_dir, proc, org_users):
     doc_id = uuid.uuid4()
     doc_type = random.choice(DOC_TYPES)
 

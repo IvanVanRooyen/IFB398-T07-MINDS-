@@ -5,35 +5,48 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0010_document_analysis_text'),
+        ("core", "0010_document_analysis_text"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='savedreport',
-            name='change_reason',
-            field=models.CharField(choices=[('GENERATED', 'AI Generated'), ('MANUAL_EDIT', 'Manual Edit'), ('REGENERATED', 'Regenerated')], default='GENERATED', max_length=16),
+            model_name="savedreport",
+            name="change_reason",
+            field=models.CharField(
+                choices=[
+                    ("GENERATED", "AI Generated"),
+                    ("MANUAL_EDIT", "Manual Edit"),
+                    ("REGENERATED", "Regenerated"),
+                ],
+                default="GENERATED",
+                max_length=16,
+            ),
         ),
         migrations.AddField(
-            model_name='savedreport',
-            name='change_summary',
+            model_name="savedreport",
+            name="change_summary",
             field=models.TextField(blank=True),
         ),
         migrations.AddField(
-            model_name='savedreport',
-            name='content_hash',
+            model_name="savedreport",
+            name="content_hash",
             field=models.CharField(blank=True, max_length=64),
         ),
         migrations.AddField(
-            model_name='savedreport',
-            name='parent_version',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='child_versions', to='core.savedreport'),
+            model_name="savedreport",
+            name="parent_version",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="child_versions",
+                to="core.savedreport",
+            ),
         ),
         migrations.AddField(
-            model_name='savedreport',
-            name='version_number',
+            model_name="savedreport",
+            name="version_number",
             field=models.PositiveIntegerField(default=1),
         ),
     ]

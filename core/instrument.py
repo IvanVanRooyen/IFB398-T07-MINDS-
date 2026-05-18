@@ -5,9 +5,8 @@ from opentelemetry import trace
 
 tracer = trace.get_tracer(__name__)
 
-def instrument(
-    func=None, *, span_name=None, attributes=None, skip_args=None, record_args=True
-):
+
+def instrument(func=None, *, span_name=None, attributes=None, skip_args=None, record_args=True):
     def decorator(fn):
         name = span_name or f"{fn.__module__}.{fn.__qualname__}"
         static_attrs = attributes or {}

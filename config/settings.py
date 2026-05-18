@@ -1,6 +1,7 @@
 import os
-import environ
 from pathlib import Path
+
+import environ
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env()
@@ -40,8 +41,8 @@ MIDDLEWARE = [
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates"],   # optional extra dir
-        "APP_DIRS": True,                   # auto-detects app templates (core/templates/…)
+        "DIRS": [BASE_DIR / "templates"],  # optional extra dir
+        "APP_DIRS": True,  # auto-detects app templates (core/templates/…)
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.debug",
@@ -76,7 +77,9 @@ CACHES = {
     }
 }
 
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB - we might need to make this larger after testing 
+DATA_UPLOAD_MAX_MEMORY_SIZE = (
+    10 * 1024 * 1024
+)  # 10 MB - we might need to make this larger after testing
 LOGIN_URL = "/auth/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/auth/login/"
@@ -88,7 +91,7 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 # directory for generated PDFs
 TEST_MEDIA_ROOT = Path(BASE_DIR) / "media" / ".tests"
 
-TIME_ZONE = 'Australia/Brisbane'
+TIME_ZONE = "Australia/Brisbane"
 USE_TZ = True
 
 # Apply timezone globally

@@ -7,10 +7,12 @@ Run with:
 docker compose exec web python manage.py test core.tests.test_search --verbosity=2
 
 """
+
 import datetime
+
 from django.contrib.auth.models import User
 from django.core.cache import cache
-from django.test import TestCase, Client
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from core.models import Document, Organisation, Process
@@ -59,7 +61,7 @@ class KeywordSearchTests(TestCase):
         self.client = Client()
         self.url = reverse("documents")
         # documents view requires authentication; superuser bypasses org filter
-        self.user = User.objects.create_superuser('testsuper', password='testpass')
+        self.user = User.objects.create_superuser("testsuper", password="testpass")
         self.client.force_login(self.user)
         cache.clear()
 
@@ -143,11 +145,10 @@ class KeywordSearchTests(TestCase):
 
 
 class ProjectFilterTests(TestCase):
-
     def setUp(self):
         self.client = Client()
         self.url = reverse("documents")
-        self.user = User.objects.create_superuser('testsuper', password='testpass')
+        self.user = User.objects.create_superuser("testsuper", password="testpass")
         self.client.force_login(self.user)
         cache.clear()
 
@@ -156,7 +157,7 @@ class ProjectFilterTests(TestCase):
         self.proj_b = make_process(self.org, name="Project Beta")
 
         self.doc_a = make_doc("Doc in Alpha", process=self.proj_a, organisation=self.org)
-        self.doc_b = make_doc("Doc in Beta",  process=self.proj_b, organisation=self.org)
+        self.doc_b = make_doc("Doc in Beta", process=self.proj_b, organisation=self.org)
         self.doc_none = make_doc("No Project Doc", organisation=self.org)
 
     def _get(self, process_id):
@@ -177,16 +178,15 @@ class ProjectFilterTests(TestCase):
 
 
 class DateRangeFilterTests(TestCase):
-
     def setUp(self):
         self.client = Client()
         self.url = reverse("documents")
-        self.user = User.objects.create_superuser('testsuper', password='testpass')
+        self.user = User.objects.create_superuser("testsuper", password="testpass")
         self.client.force_login(self.user)
         cache.clear()
 
         self.doc_jan = make_doc("January Report", timestamp=datetime.date(2024, 1, 15))
-        self.doc_jun = make_doc("June Report",    timestamp=datetime.date(2024, 6, 10))
+        self.doc_jun = make_doc("June Report", timestamp=datetime.date(2024, 6, 10))
         self.doc_dec = make_doc("December Report", timestamp=datetime.date(2024, 12, 20))
         self.doc_no_date = make_doc("Undated Report")
 
@@ -228,11 +228,10 @@ class DateRangeFilterTests(TestCase):
 
 
 class DocTypeFilterTests(TestCase):
-
     def setUp(self):
         self.client = Client()
         self.url = reverse("documents")
-        self.user = User.objects.create_superuser('testsuper', password='testpass')
+        self.user = User.objects.create_superuser("testsuper", password="testpass")
         self.client.force_login(self.user)
         cache.clear()
 
@@ -262,17 +261,16 @@ class DocTypeFilterTests(TestCase):
 
 
 class ConfidentialityFilterTests(TestCase):
-
     def setUp(self):
         self.client = Client()
         self.url = reverse("documents")
-        self.user = User.objects.create_superuser('testsuper', password='testpass')
+        self.user = User.objects.create_superuser("testsuper", password="testpass")
         self.client.force_login(self.user)
         cache.clear()
 
-        self.doc_pub  = make_doc("Public Report",        confidentiality="public")
-        self.doc_int  = make_doc("Internal Report",      confidentiality="internal")
-        self.doc_conf = make_doc("Confidential Report",  confidentiality="confidential")
+        self.doc_pub = make_doc("Public Report", confidentiality="public")
+        self.doc_int = make_doc("Internal Report", confidentiality="internal")
+        self.doc_conf = make_doc("Confidential Report", confidentiality="confidential")
 
     def _get(self, confidentiality):
         response = self.client.get(self.url, {"confidentiality": confidentiality})
@@ -309,15 +307,15 @@ class TagFilterTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.url = reverse("documents")
-        self.user = User.objects.create_superuser('testsuper', password='testpass')
+        self.user = User.objects.create_superuser("testsuper", password="testpass")
         self.client.force_login(self.user)
         cache.clear()
 
         # Tag IDs from core/tagging.py
-        self.doc_exploration = make_doc("Exploration Doc", tags=[10])          # Exploration Report
-        self.doc_drill       = make_doc("Drill Doc",       tags=[11])          # Drill Logs
-        self.doc_multi       = make_doc("Multi-tag Doc",   tags=[10, 12])      # Exploration + Assay
-        self.doc_no_tags     = make_doc("Untagged Doc",    tags=[])
+        self.doc_exploration = make_doc("Exploration Doc", tags=[10])  # Exploration Report
+        self.doc_drill = make_doc("Drill Doc", tags=[11])  # Drill Logs
+        self.doc_multi = make_doc("Multi-tag Doc", tags=[10, 12])  # Exploration + Assay
+        self.doc_no_tags = make_doc("Untagged Doc", tags=[])
 
     def _get(self, tag):
         response = self.client.get(self.url, {"tag": str(tag)})
@@ -327,7 +325,7 @@ class TagFilterTests(TestCase):
     def test_filter_by_single_tag(self):
         results = self._get(10)
         self.assertIn("Exploration Doc", results)
-        self.assertIn("Multi-tag Doc", results)      # has tag 10 among others
+        self.assertIn("Multi-tag Doc", results)  # has tag 10 among others
         self.assertNotIn("Drill Doc", results)
         self.assertNotIn("Untagged Doc", results)
 
@@ -358,7 +356,7 @@ class FullTextSearchTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.url = reverse("documents")
-        self.user = User.objects.create_superuser('testsuper', password='testpass')
+        self.user = User.objects.create_superuser("testsuper", password="testpass")
         self.client.force_login(self.user)
         cache.clear()
 
@@ -377,12 +375,16 @@ class FullTextSearchTests(TestCase):
         # Manually populate search_tsv since the trigger runs in PostgreSQL
         # (TestCase wraps each test in a transaction that bypasses triggers)
         from django.contrib.postgres.search import SearchVector
+
         from core.models import Document
+
         Document.objects.filter(pk=self.doc_drill.pk).update(
-            search_tsv=SearchVector('title', weight='A') + SearchVector('extracted_text', weight='B')
+            search_tsv=SearchVector("title", weight="A")
+            + SearchVector("extracted_text", weight="B")
         )
         Document.objects.filter(pk=self.doc_geo.pk).update(
-            search_tsv=SearchVector('title', weight='A') + SearchVector('extracted_text', weight='B')
+            search_tsv=SearchVector("title", weight="A")
+            + SearchVector("extracted_text", weight="B")
         )
 
     def _get(self, q):

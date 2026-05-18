@@ -5,20 +5,27 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0020_document_author_name_document_commodity_and_more'),
+        ("core", "0020_document_author_name_document_commodity_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='savedreport',
-            name='approval_workflow',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='report', to='core.approvalworkflow'),
+            model_name="savedreport",
+            name="approval_workflow",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="report",
+                to="core.approvalworkflow",
+            ),
         ),
         migrations.AddField(
-            model_name='savedreport',
-            name='source_documents',
-            field=models.ManyToManyField(blank=True, related_name='cited_in_reports', to='core.document'),
+            model_name="savedreport",
+            name="source_documents",
+            field=models.ManyToManyField(
+                blank=True, related_name="cited_in_reports", to="core.document"
+            ),
         ),
     ]

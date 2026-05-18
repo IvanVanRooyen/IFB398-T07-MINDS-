@@ -1,7 +1,10 @@
-import os
-import requests
 import logging
+import os
+
+import requests
+
 log = logging.getLogger(__name__)
+
 
 class GraniteClient:
     """
@@ -11,6 +14,7 @@ class GraniteClient:
       - HF:      HF_INFERENCE_URL=https://api-inference.huggingface.co/models/ibm-granite/...
                  HF_TOKEN=...
     """
+
     def __init__(self, backend=None):
         self.backend = backend or os.getenv("GRANITE_BACKEND", "ollama").lower()
         self.model = os.getenv("GRANITE_MODEL", "granite3.2:8b-instruct-fp16")
@@ -43,7 +47,9 @@ class GraniteClient:
             result = data.get("response", "")
             return data.get("response", "")
 
-        headers = {"Authorization": f"Bearer {self.hf_token}"} if getattr(self, "hf_token", None) else {}
+        headers = (
+            {"Authorization": f"Bearer {self.hf_token}"} if getattr(self, "hf_token", None) else {}
+        )
         r = requests.post(
             self.url,
             headers=headers,

@@ -41,6 +41,7 @@ from .forms import (
     TenementForm,
 )
 from .importers import run_drillhole_import
+from .instrument import instrument
 from .models import (
     ApprovalWorkflow,
     AssayResult,
@@ -63,8 +64,6 @@ from .models import (
 from .permissions import log_view_access, role_required
 from .tagging import TAG_LABEL
 from .utils import chunk_text, extract_text, sha256_file
-
-from .instrument import instrument
 
 log = logging.getLogger(__name__)
 
@@ -127,9 +126,7 @@ def home(request):
     """
     org_filter = _org_qs_filter(request)
     projects = Process.objects.filter(org_filter).order_by("-created_at")[:10]
-    docs = Document.objects.filter(org_filter, is_latest=True).order_by("-created_at")[
-        :10
-    ]
+    docs = Document.objects.filter(org_filter, is_latest=True).order_by("-created_at")[:10]
     return render(
         request,
         "core/home.html",
@@ -151,19 +148,11 @@ def dashboard(request):
     metrics = {
         "project_count": Process.objects.filter(org_filter).count(),
         "document_count": Document.objects.filter(org_filter, is_latest=True).count(),
-        "prospect_count": Prospect.objects.filter(org_filter).count()
-        if Prospect
-        else 0,
-        "drillhole_count": Drillhole.objects.filter(org_filter).count()
-        if Drillhole
-        else 0,
-        "tenement_count": Tenement.objects.filter(org_filter).count()
-        if Tenement
-        else 0,
+        "prospect_count": Prospect.objects.filter(org_filter).count() if Prospect else 0,
+        "drillhole_count": Drillhole.objects.filter(org_filter).count() if Drillhole else 0,
+        "tenement_count": Tenement.objects.filter(org_filter).count() if Tenement else 0,
     }
-    recent_docs = Document.objects.filter(org_filter, is_latest=True).order_by(
-        "-created_at"
-    )[:8]
+    recent_docs = Document.objects.filter(org_filter, is_latest=True).order_by("-created_at")[:8]
     return render(
         request,
         "core/dashboard.html",
@@ -183,15 +172,9 @@ def stats_partial(request):
     ctx = {
         "project_count": Process.objects.filter(org_filter).count(),
         "document_count": Document.objects.filter(org_filter, is_latest=True).count(),
-        "prospect_count": Prospect.objects.filter(org_filter).count()
-        if Prospect
-        else 0,
-        "drillhole_count": Drillhole.objects.filter(org_filter).count()
-        if Drillhole
-        else 0,
-        "tenement_count": Tenement.objects.filter(org_filter).count()
-        if Tenement
-        else 0,
+        "prospect_count": Prospect.objects.filter(org_filter).count() if Prospect else 0,
+        "drillhole_count": Drillhole.objects.filter(org_filter).count() if Drillhole else 0,
+        "tenement_count": Tenement.objects.filter(org_filter).count() if Tenement else 0,
     }
     return render(request, "core/partials/stats.html", ctx)
 
@@ -226,9 +209,7 @@ def _get_clearance_level(request) -> str:
 
 @instrument
 def _report_cache_key(process_id: str, clearance_level: str, latest_doc_ts) -> str:
-    doc_fingerprint = (
-        latest_doc_ts.strftime("%Y%m%d%H%M%S%f") if latest_doc_ts else "empty"
-    )
+    doc_fingerprint = latest_doc_ts.strftime("%Y%m%d%H%M%S%f") if latest_doc_ts else "empty"
     return f"report:v1:{process_id}:{clearance_level}:{doc_fingerprint}"
 
 
@@ -252,9 +233,7 @@ def _get_cached_report_bundle(process_id: str, clearance_level: str) -> dict:
     cached = cache.get(cache_key)
     # Regenerate for any non-dict cached value (None, legacy str, or tuple from old code)
     if not isinstance(cached, dict):
-        md, doc_ids = generate_project_report(
-            process_id, clearance_level=clearance_level
-        )
+        md, doc_ids = generate_project_report(process_id, clearance_level=clearance_level)
         cached = {"md": md, "doc_ids": doc_ids}
         cache.set(cache_key, cached, 86400)  # 24 hours
     return cached
@@ -282,13 +261,9 @@ def upload_doc(request):
     Upload with SHA-256 de-duplication (your original logic, with tiny polish).
     """
     if request.method == "POST":
-        _upload_org = getattr(
-            getattr(request.user, "profile", None), "organisation", None
-        )
+        _upload_org = getattr(getattr(request.user, "profile", None), "organisation", None)
         form = DocumentForm(request.POST, request.FILES, organisation=_upload_org)
-        log.debug(
-            "FILES keys: %s", list(request.FILES.keys())
-        )  # debug: ensure 'file' is present
+        log.debug("FILES keys: %s", list(request.FILES.keys()))  # debug: ensure 'file' is present
         if form.is_valid():
             doc = form.save(commit=False)
             # Only set if user is authenticated (created_by is nullable)
@@ -305,14 +280,12 @@ def upload_doc(request):
 
             if (
                 doc.checksum_sha256
-                and Document.objects.filter(
-                    checksum_sha256=doc.checksum_sha256
-                ).exists()
+                and Document.objects.filter(checksum_sha256=doc.checksum_sha256).exists()
             ):
                 # Duplicate detected — re-render with error + keep their form state
-                docs = Document.objects.filter(
-                    _org_qs_filter(request), is_latest=True
-                ).order_by("-created_at")[:20]
+                docs = Document.objects.filter(_org_qs_filter(request), is_latest=True).order_by(
+                    "-created_at"
+                )[:20]
                 return render(
                     request,
                     "core/upload.html",
@@ -364,9 +337,7 @@ def upload_doc(request):
                     warm_md, warm_doc_ids = generate_project_report(
                         str(doc.process_id), clearance_level=uploader_clearance
                     )
-                    cache.set(
-                        warm_cache_key, {"md": warm_md, "doc_ids": warm_doc_ids}, 86400
-                    )
+                    cache.set(warm_cache_key, {"md": warm_md, "doc_ids": warm_doc_ids}, 86400)
                 except Exception:
                     # Granite unavailable — report will be generated on first view request
                     pass
@@ -376,9 +347,9 @@ def upload_doc(request):
             # Show validation errors + keep the recent docs list
             # Show *why* it failed
             log.warning("Upload invalid: %s", form.errors)
-            docs = Document.objects.filter(
-                _org_qs_filter(request), is_latest=True
-            ).order_by("-created_at")[:20]
+            docs = Document.objects.filter(_org_qs_filter(request), is_latest=True).order_by(
+                "-created_at"
+            )[:20]
             return render(
                 request,
                 "core/upload.html",
@@ -392,9 +363,9 @@ def upload_doc(request):
     # GET
     _upload_org = getattr(getattr(request.user, "profile", None), "organisation", None)
     form = DocumentForm(organisation=_upload_org)
-    docs = Document.objects.filter(_org_qs_filter(request), is_latest=True).order_by(
-        "-created_at"
-    )[:20]
+    docs = Document.objects.filter(_org_qs_filter(request), is_latest=True).order_by("-created_at")[
+        :20
+    ]
     return render(request, "core/upload.html", {"form": form, "docs": docs})
 
 
@@ -418,9 +389,7 @@ def documents(request):
     type_choices = [("", "All types")] + [(t, t) for t in existing_types]
 
     org = getattr(getattr(request.user, "profile", None), "organisation", None)
-    form = DocumentSearchForm(
-        request.GET or None, doc_type_choices=type_choices, organisation=org
-    )
+    form = DocumentSearchForm(request.GET or None, doc_type_choices=type_choices, organisation=org)
     qs = (
         Document.objects.filter(_org_qs_filter(request), is_latest=True)
         .select_related("process", "organisation")
@@ -542,12 +511,8 @@ def documents(request):
                 "num_pages": page.paginator.num_pages,
                 "has_next": page.has_next(),
                 "has_previous": page.has_previous(),
-                "next_page_number": page.next_page_number()
-                if page.has_next()
-                else None,
-                "prev_page_number": page.previous_page_number()
-                if page.has_previous()
-                else None,
+                "next_page_number": page.next_page_number() if page.has_next() else None,
+                "prev_page_number": page.previous_page_number() if page.has_previous() else None,
             },
             DOCS_CACHE_TTL,
         )
@@ -751,9 +716,7 @@ def project_detail(request, pk):
     prospects_qs = Prospect.objects.filter(process=process).order_by("-created_at")
     drillholes_qs = Drillhole.objects.filter(process=process).order_by("name")
     tenements_qs = Tenement.objects.filter(process=process).order_by("name")
-    documents_qs = Document.objects.filter(process=process, is_latest=True).order_by(
-        "-created_at"
-    )
+    documents_qs = Document.objects.filter(process=process, is_latest=True).order_by("-created_at")
     reports_qs = SavedReport.objects.filter(process=process).order_by("-created_at")
 
     return render(
@@ -816,9 +779,7 @@ def prospect_detail(request, pk):
 
     drillholes = Drillhole.objects.filter(prospect=prospect).order_by("name")
     tenements = Tenement.objects.filter(process=prospect.process).order_by("name")
-    prospect_reports = SavedReport.objects.filter(prospect=prospect).order_by(
-        "-created_at"
-    )
+    prospect_reports = SavedReport.objects.filter(prospect=prospect).order_by("-created_at")
     samples = Sample.objects.filter(prospect=prospect).order_by("-created_at")
     surveys = Survey.objects.filter(prospect=prospect).order_by("-created_at")
 
@@ -835,9 +796,7 @@ def prospect_detail(request, pk):
         fields=["name"],
     )
     area_geom_geojson = (
-        json.dumps(json.loads(prospect.area_geom.geojson))
-        if prospect.area_geom
-        else "null"
+        json.dumps(json.loads(prospect.area_geom.geojson)) if prospect.area_geom else "null"
     )
 
     return render(
@@ -882,16 +841,12 @@ def create_prospect(request):
     initial_process = None
     if initial_process_id:
         try:
-            initial_process = Process.objects.get(
-                pk=initial_process_id, organisation=org
-            )
+            initial_process = Process.objects.get(pk=initial_process_id, organisation=org)
         except Process.DoesNotExist:
             pass
 
     if request.method == "POST":
-        form = ProspectForm(
-            request.POST, organisation=org, initial_process=initial_process
-        )
+        form = ProspectForm(request.POST, organisation=org, initial_process=initial_process)
         if form.is_valid():
             prospect = form.save(commit=False)
             prospect.organisation = org
@@ -908,9 +863,7 @@ def create_prospect(request):
             )
             return redirect("prospect_detail", pk=prospect.pk)
         if request.headers.get("HX-Request"):
-            return render(
-                request, "core/partials/prospect_form_partial.html", {"form": form}
-            )
+            return render(request, "core/partials/prospect_form_partial.html", {"form": form})
         return render(
             request,
             "core/prospect_form.html",
@@ -976,9 +929,7 @@ def edit_prospect(request, pk):
         err_lat = prospect.geom.y if prospect.geom else -25.0
         err_lng = prospect.geom.x if prospect.geom else 133.0
         err_area = (
-            _json.dumps(_json.loads(prospect.area_geom.geojson))
-            if prospect.area_geom
-            else "null"
+            _json.dumps(_json.loads(prospect.area_geom.geojson)) if prospect.area_geom else "null"
         )
         return render(
             request,
@@ -999,9 +950,7 @@ def edit_prospect(request, pk):
     initial_lat = prospect.geom.y if prospect.geom else -25.0
     initial_lng = prospect.geom.x if prospect.geom else 133.0
     initial_area = (
-        _json.dumps(_json.loads(prospect.area_geom.geojson))
-        if prospect.area_geom
-        else "null"
+        _json.dumps(_json.loads(prospect.area_geom.geojson)) if prospect.area_geom else "null"
     )
     form = ProspectForm(instance=prospect, organisation=org)
     return render(
@@ -1038,8 +987,7 @@ def generate_prospect_report(request, pk):
 
     clearance_level = _get_clearance_level(request)
     report_title = (
-        request.POST.get("report_title", "").strip()
-        or f"{prospect.name} — Prospect Report"
+        request.POST.get("report_title", "").strip() or f"{prospect.name} — Prospect Report"
     )
 
     try:
@@ -1102,9 +1050,7 @@ def assign_report_prospect(request, report_id):
             raise PermissionDenied
     prospect_id = request.POST.get("prospect_id") or None
     if prospect_id:
-        report.prospect = Prospect.objects.filter(
-            pk=prospect_id, process=report.process
-        ).first()
+        report.prospect = Prospect.objects.filter(pk=prospect_id, process=report.process).first()
     else:
         report.prospect = None
     report.save(update_fields=["prospect"])
@@ -1152,9 +1098,7 @@ def create_sample(request):
     initial_prospect = None
     prospect_id = request.GET.get("prospect")
     if prospect_id:
-        initial_prospect = Prospect.objects.filter(
-            pk=prospect_id, organisation=org
-        ).first()
+        initial_prospect = Prospect.objects.filter(pk=prospect_id, organisation=org).first()
 
     if request.method == "POST":
         form = SampleForm(request.POST, organisation=org)
@@ -1235,9 +1179,7 @@ def create_survey(request):
     initial_prospect = None
     prospect_id = request.GET.get("prospect")
     if prospect_id:
-        initial_prospect = Prospect.objects.filter(
-            pk=prospect_id, organisation=org
-        ).first()
+        initial_prospect = Prospect.objects.filter(pk=prospect_id, organisation=org).first()
 
     if request.method == "POST":
         form = SurveyForm(request.POST, organisation=org)
@@ -1313,9 +1255,7 @@ def doc_link_picker(request):
     if content_type_label not in _LINKABLE_MODELS:
         return HttpResponseBadRequest("Invalid content type.")
 
-    documents = Document.objects.filter(_org_qs_filter(request)).order_by(
-        "-created_at"
-    )[:100]
+    documents = Document.objects.filter(_org_qs_filter(request)).order_by("-created_at")[:100]
     return render(
         request,
         "core/partials/doc_link_picker.html",
@@ -1584,9 +1524,7 @@ def drillhole_detail(request, pk):
         ):
             raise PermissionDenied
     surveys = DrillholeSurvey.objects.filter(drillhole=drillhole).order_by("depth")
-    lithology = LithologyInterval.objects.filter(drillhole=drillhole).order_by(
-        "from_depth"
-    )
+    lithology = LithologyInterval.objects.filter(drillhole=drillhole).order_by("from_depth")
     assays = AssayResult.objects.filter(drillhole=drillhole).order_by("from_depth")
     return render(
         request,
@@ -1612,11 +1550,7 @@ def drillhole_import(request):
 
     org_filter = _org_qs_filter(request)
     organisations = Organisation.objects.filter(org_filter).order_by("name")
-    processes = (
-        Process.objects.filter(org_filter)
-        .select_related("organisation")
-        .order_by("name")
-    )
+    processes = Process.objects.filter(org_filter).select_related("organisation").order_by("name")
 
     context = {"organisations": organisations, "processes": processes}
 
@@ -1718,12 +1652,10 @@ def create_tenement(request):
 @require_GET
 @instrument
 def tenement_detail(request, pk):
-    tenement = get_object_or_404(
-        Tenement.objects.filter(_org_qs_filter(request)), pk=pk
-    )
-    documents = Document.objects.filter(tenement=tenement, is_latest=True).order_by(
-        "-created_at"
-    )[:10]
+    tenement = get_object_or_404(Tenement.objects.filter(_org_qs_filter(request)), pk=pk)
+    documents = Document.objects.filter(tenement=tenement, is_latest=True).order_by("-created_at")[
+        :10
+    ]
     return render(
         request,
         "core/tenement_detail.html",
@@ -1738,9 +1670,7 @@ def tenement_detail(request, pk):
 @require_http_methods(["GET", "POST"])
 @instrument
 def edit_tenement(request, pk):
-    tenement = get_object_or_404(
-        Tenement.objects.filter(_org_qs_filter(request)), pk=pk
-    )
+    tenement = get_object_or_404(Tenement.objects.filter(_org_qs_filter(request)), pk=pk)
     org = getattr(getattr(request.user, "profile", None), "organisation", None)
     if request.method == "POST":
         form = TenementForm(request.POST, instance=tenement, organisation=org)
@@ -1794,13 +1724,9 @@ def edit_process_geometry(request, pk):
                 messages.success(request, "Project boundary updated.")
                 return redirect("project_detail", pk=process.pk)
             except Exception:
-                messages.error(
-                    request, "Invalid geometry — please redraw the boundary."
-                )
+                messages.error(request, "Invalid geometry — please redraw the boundary.")
         else:
-            messages.error(
-                request, "No geometry provided — please draw a boundary on the map."
-            )
+            messages.error(request, "No geometry provided — please draw a boundary on the map.")
 
     initial_geojson = process.geom.json if process.geom else ""
     return render(
@@ -1829,12 +1755,8 @@ def ai_insights(request):
         request,
         "core/ai_insights.html",
         {
-            "recent_docs": Document.objects.filter(org_filter).order_by("-created_at")[
-                :12
-            ],
-            "recent_projects": Process.objects.filter(org_filter).order_by(
-                "-created_at"
-            )[:8],
+            "recent_docs": Document.objects.filter(org_filter).order_by("-created_at")[:12],
+            "recent_projects": Process.objects.filter(org_filter).order_by("-created_at")[:8],
             "recent_reports": SavedReport.objects.filter(org_filter)
             .select_related("process")
             .order_by("-created_at")[:10],
@@ -2012,9 +1934,7 @@ def document_analysis_detail(request, pk):
         ):
             raise PermissionDenied
 
-    analysis_text = (
-        getattr(document, "analysis_text", "") or "No insights available yet."
-    )
+    analysis_text = getattr(document, "analysis_text", "") or "No insights available yet."
 
     return render(
         request,
@@ -2049,9 +1969,9 @@ def geojson_projects(request):
     from .models import Process
 
     # Only include processes with geometry
-    processes = Process.objects.filter(
-        _org_qs_filter(request), geom__isnull=False
-    ).select_related("organisation")
+    processes = Process.objects.filter(_org_qs_filter(request), geom__isnull=False).select_related(
+        "organisation"
+    )
 
     if not processes.exists():
         return JsonResponse({"type": "FeatureCollection", "features": []})
@@ -2082,9 +2002,9 @@ def geojson_tenements(request):
 
     from .models import Tenement
 
-    tenements = Tenement.objects.filter(
-        _org_qs_filter(request), geom__isnull=False
-    ).select_related("organisation", "process")
+    tenements = Tenement.objects.filter(_org_qs_filter(request), geom__isnull=False).select_related(
+        "organisation", "process"
+    )
 
     if not tenements.exists():
         return JsonResponse({"type": "FeatureCollection", "features": []})
@@ -2111,9 +2031,9 @@ def geojson_prospects(request):
     """
     import json
 
-    prospects = Prospect.objects.filter(
-        _org_qs_filter(request), geom__isnull=False
-    ).select_related("organisation", "process")
+    prospects = Prospect.objects.filter(_org_qs_filter(request), geom__isnull=False).select_related(
+        "organisation", "process"
+    )
 
     features = []
     for p in prospects:
@@ -2229,9 +2149,7 @@ def spatial_search(request):
         else []
     )
     drillholes = (
-        DrillholeModel.objects.filter(
-            org_filter, collar_location__intersects=search_geom
-        )
+        DrillholeModel.objects.filter(org_filter, collar_location__intersects=search_geom)
         .order_by("name")
         .values("id", "name", "depth")
         if DrillholeModel
@@ -2250,27 +2168,27 @@ def spatial_search(request):
             ct = ContentType.objects.get_for_model(ProspectModel)
             ids = [str(r["id"]) for r in prospects]
             linked_doc_ids.update(
-                DocLinkModel.objects.filter(
-                    content_type=ct, object_id__in=ids
-                ).values_list("document_id", flat=True)
+                DocLinkModel.objects.filter(content_type=ct, object_id__in=ids).values_list(
+                    "document_id", flat=True
+                )
             )
 
         if DrillholeModel and drillholes:
             ct = ContentType.objects.get_for_model(DrillholeModel)
             ids = [str(r["id"]) for r in drillholes]
             linked_doc_ids.update(
-                DocLinkModel.objects.filter(
-                    content_type=ct, object_id__in=ids
-                ).values_list("document_id", flat=True)
+                DocLinkModel.objects.filter(content_type=ct, object_id__in=ids).values_list(
+                    "document_id", flat=True
+                )
             )
 
         if processes:
             ct = ContentType.objects.get_for_model(Process)
             ids = [str(r["id"]) for r in processes]
             linked_doc_ids.update(
-                DocLinkModel.objects.filter(
-                    content_type=ct, object_id__in=ids
-                ).values_list("document_id", flat=True)
+                DocLinkModel.objects.filter(content_type=ct, object_id__in=ids).values_list(
+                    "document_id", flat=True
+                )
             )
 
         if linked_doc_ids:
@@ -2316,9 +2234,7 @@ def report_list_page(request):
     user_clearance = _get_clearance_level(request)
     user_rank = clearance_rank.get(user_clearance, 0)
 
-    accessible_levels = [
-        lvl for lvl, rank in clearance_rank.items() if rank <= user_rank
-    ]
+    accessible_levels = [lvl for lvl, rank in clearance_rank.items() if rank <= user_rank]
     org_filter = _org_qs_filter(request)
     q = request.GET.get("q", "").strip()
 
@@ -2400,9 +2316,7 @@ def generate_report(request):
 
     title = report_title or f"{process.name or 'Project'} Report"
     existing = (
-        SavedReport.objects.filter(process=process, title=title)
-        .order_by("-version_number")
-        .first()
+        SavedReport.objects.filter(process=process, title=title).order_by("-version_number").first()
     )
 
     if existing:
@@ -2440,9 +2354,7 @@ def report_editor(request, process_id):
     org_filter = _org_qs_filter(request)
     try:
         process = (
-            Process.objects.filter(org_filter)
-            .select_related("organisation")
-            .get(pk=process_id)
+            Process.objects.filter(org_filter).select_related("organisation").get(pk=process_id)
         )
     except Process.DoesNotExist:
         raise Http404("Project not found")
@@ -2491,15 +2403,11 @@ def saved_report_editor(request, report_id):
 
     user_clearance = _get_clearance_level(request)
     clearance_rank = {"PUBLIC": 0, "INTERNAL": 1, "CONFIDENTIAL": 2, "JORC_APPROVED": 3}
-    if clearance_rank.get(user_clearance, 0) < clearance_rank.get(
-        report.clearance_level, 1
-    ):
+    if clearance_rank.get(user_clearance, 0) < clearance_rank.get(report.clearance_level, 1):
         raise PermissionDenied
 
     process_prospects = (
-        Prospect.objects.filter(process=report.process).order_by("name")
-        if report.process
-        else []
+        Prospect.objects.filter(process=report.process).order_by("name") if report.process else []
     )
 
     return render(
@@ -2530,13 +2438,9 @@ def save_report(request):
     content_md = request.POST.get("content_md", "").strip()
 
     if not title:
-        return JsonResponse(
-            {"success": False, "error": "Title is required."}, status=400
-        )
+        return JsonResponse({"success": False, "error": "Title is required."}, status=400)
     if not content_md:
-        return JsonResponse(
-            {"success": False, "error": "Report content is empty."}, status=400
-        )
+        return JsonResponse({"success": False, "error": "Report content is empty."}, status=400)
 
     process = None
     organisation = None
@@ -2551,9 +2455,7 @@ def save_report(request):
     created_by = request.user if request.user.is_authenticated else None
 
     existing = (
-        SavedReport.objects.filter(process=process, title=title)
-        .order_by("-version_number")
-        .first()
+        SavedReport.objects.filter(process=process, title=title).order_by("-version_number").first()
     )
 
     if existing:
@@ -2603,9 +2505,7 @@ def save_report(request):
             "success": True,
             "report_id": str(report.id),
             "version_number": report.version_number,
-            "redirect_url": reverse(
-                "saved_report_editor", kwargs={"report_id": report.id}
-            ),
+            "redirect_url": reverse("saved_report_editor", kwargs={"report_id": report.id}),
         }
     )
 
@@ -2628,21 +2528,15 @@ def update_saved_report(request, report_id):
 
     is_admin = hasattr(request.user, "profile") and request.user.profile.role == "ADMIN"
     if report.created_by != request.user and not is_admin:
-        return JsonResponse(
-            {"success": False, "error": "Permission denied."}, status=403
-        )
+        return JsonResponse({"success": False, "error": "Permission denied."}, status=403)
 
     title = request.POST.get("title", "").strip()
     content_md = request.POST.get("content_md", "").strip()
 
     if not title:
-        return JsonResponse(
-            {"success": False, "error": "Title is required."}, status=400
-        )
+        return JsonResponse({"success": False, "error": "Title is required."}, status=400)
     if not content_md:
-        return JsonResponse(
-            {"success": False, "error": "Report content is empty."}, status=400
-        )
+        return JsonResponse({"success": False, "error": "Report content is empty."}, status=400)
 
     new_version = SavedReport.create_version(
         parent=report,
@@ -2730,8 +2624,7 @@ def approve_report(request, report_id):
         can_approve = profile and profile.can_approve_valmin
     else:
         can_approve = profile and (
-            profile.can_approve_jorc
-            or profile.role == UserProfile.RoleChoices.COMPETENT_PERSON
+            profile.can_approve_jorc or profile.role == UserProfile.RoleChoices.COMPETENT_PERSON
         )
     if not can_approve:
         raise PermissionDenied
@@ -2749,9 +2642,7 @@ def approve_report(request, report_id):
         workflow.approved_by = request.user
         workflow.approval_notes = approval_notes
         workflow.reviewed_at = timezone.now()
-        workflow.save(
-            update_fields=["status", "approved_by", "approval_notes", "reviewed_at"]
-        )
+        workflow.save(update_fields=["status", "approved_by", "approval_notes", "reviewed_at"])
 
     log_audit(
         request.user,
@@ -2779,8 +2670,7 @@ def reject_report(request, report_id):
         can_approve = profile and profile.can_approve_valmin
     else:
         can_approve = profile and (
-            profile.can_approve_jorc
-            or profile.role == UserProfile.RoleChoices.COMPETENT_PERSON
+            profile.can_approve_jorc or profile.role == UserProfile.RoleChoices.COMPETENT_PERSON
         )
     if not can_approve:
         raise PermissionDenied
@@ -2799,9 +2689,7 @@ def reject_report(request, report_id):
         workflow.approved_by = request.user
         workflow.approval_notes = approval_notes
         workflow.reviewed_at = timezone.now()
-        workflow.save(
-            update_fields=["status", "approved_by", "approval_notes", "reviewed_at"]
-        )
+        workflow.save(update_fields=["status", "approved_by", "approval_notes", "reviewed_at"])
 
     log_audit(
         request.user,
@@ -2857,10 +2745,7 @@ def report_history(request, process_id):
     # Group by title to show each report with its version chain
     from itertools import groupby
 
-    grouped = {
-        title: list(versions)
-        for title, versions in groupby(reports, key=lambda r: r.title)
-    }
+    grouped = {title: list(versions) for title, versions in groupby(reports, key=lambda r: r.title)}
     return render(
         request,
         "core/report_history.html",
@@ -2873,9 +2758,9 @@ def report_history(request, process_id):
 def report_version_detail(request, report_id):
     """View a specific report version."""
     report = get_object_or_404(SavedReport, pk=report_id)
-    all_versions = SavedReport.objects.filter(
-        process=report.process, title=report.title
-    ).order_by("-version_number")
+    all_versions = SavedReport.objects.filter(process=report.process, title=report.title).order_by(
+        "-version_number"
+    )
 
     log_audit(
         user=request.user,
@@ -2962,9 +2847,7 @@ def export_report(request):
     source_docs = []
     if report_id:
         try:
-            saved = SavedReport.objects.prefetch_related("source_documents").get(
-                pk=report_id
-            )
+            saved = SavedReport.objects.prefetch_related("source_documents").get(pk=report_id)
             source_docs = list(saved.source_documents.order_by("title"))
         except (SavedReport.DoesNotExist, Exception):
             pass
@@ -3072,9 +2955,7 @@ def export_report(request):
         if source_docs:
             doc.add_page_break()
             doc.add_heading("Sources", level=2)
-            doc.add_paragraph(
-                "The following documents were used as context for this report:"
-            )
+            doc.add_paragraph("The following documents were used as context for this report:")
             for i, d in enumerate(source_docs, 1):
                 doc_date = d.timestamp.strftime("%Y-%m-%d") if d.timestamp else ""
                 doc.add_paragraph(
@@ -3205,7 +3086,7 @@ def audit_log_view(request):
 def approval_workflows_list(request):
     """List all ApprovalWorkflow records for ADMIN/approval-capable users."""
     if not request.user.is_superuser:
-        profile = getattr(request.user, 'profile', None)
+        profile = getattr(request.user, "profile", None)
         allowed_roles = {
             UserProfile.RoleChoices.ADMIN,
             UserProfile.RoleChoices.DATA_MANAGER,
@@ -3222,9 +3103,7 @@ def approval_workflows_list(request):
     report_ids = SavedReport.objects.filter(org_filter).values_list("id", flat=True)
 
     qs = (
-        ApprovalWorkflow.objects.filter(
-            content_type=report_ct, object_id__in=report_ids
-        )
+        ApprovalWorkflow.objects.filter(content_type=report_ct, object_id__in=report_ids)
         .select_related("submitted_by", "approved_by")
         .order_by("-submitted_at")
     )
@@ -3436,4 +3315,3 @@ def export_document_analysis(request, pk):
         return response
 
     return JsonResponse({"error": "Invalid format. Use 'pdf' or 'docx'."}, status=400)
-

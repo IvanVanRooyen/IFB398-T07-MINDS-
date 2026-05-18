@@ -5,13 +5,13 @@ from django.test import TestCase
 
 from core.models import (
     ApprovalWorkflow,
+    AuditLog,
     Document,
     Drillhole,
     Organisation,
     Process,
     UserProfile,
-    AuditLog,
-    log_audit
+    log_audit,
 )
 
 
@@ -86,9 +86,7 @@ class DrillholeModelTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.org = Organisation.objects.create(name="Drillhole Org", mode="MINING")
-        cls.process = Process.objects.create(
-            name="Phase 1", organisation=cls.org, mode="OPERATION"
-        )
+        cls.process = Process.objects.create(name="Phase 1", organisation=cls.org, mode="OPERATION")
 
     def test_drillhole_creation_with_survey_data(self):
         dh = Drillhole.objects.create(
@@ -116,9 +114,7 @@ class DrillholeModelTests(TestCase):
         self.assertIsNone(dh.collar_location)
 
     def test_cascade_from_organisation(self):
-        Drillhole.objects.create(
-            name="DH-003", organisation=self.org, process=self.process
-        )
+        Drillhole.objects.create(name="DH-003", organisation=self.org, process=self.process)
 
         self.org.delete()
         self.assertEqual(Drillhole.objects.count(), 0)
@@ -263,5 +259,3 @@ class AuditLogTests(TestCase):
 
         logs = AuditLog.objects.all()
         self.assertTrue(logs[0].timestamp >= logs[1].timestamp)
-
-
