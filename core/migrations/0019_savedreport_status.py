@@ -4,15 +4,23 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0018_savedreport_prospect_fk'),
+        ("core", "0018_savedreport_prospect_fk"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='savedreport',
-            name='status',
-            field=models.CharField(choices=[('DRAFT', 'Draft'), ('UNDER_REVIEW', 'Under Review'), ('APPROVED', 'Approved'), ('PUBLISHED', 'Published')], default='DRAFT', max_length=16),
+            model_name="savedreport",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("DRAFT", "Draft"),
+                    ("UNDER_REVIEW", "Under Review"),
+                    ("APPROVED", "Approved"),
+                    ("PUBLISHED", "Published"),
+                ],
+                default="DRAFT",
+                max_length=16,
+            ),
         ),
     ]

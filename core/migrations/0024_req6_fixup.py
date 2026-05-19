@@ -4,15 +4,28 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0023_req6_prospect_area_geom_sample_survey'),
+        ("core", "0023_req6_prospect_area_geom_sample_survey"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='userprofile',
-            name='role',
-            field=models.CharField(choices=[('GEOLOGIST_EXPL', 'Geologist (Exploration)'), ('FIELD_LEAD', 'Field Lead'), ('DATA_MANAGER', 'Data Manager'), ('GEOLOGIST_MINE', 'Mine Geologist'), ('METALLURGIST', 'Metallurgist'), ('OPS_MANAGER', 'Operations Manager'), ('ADMIN', 'Administrator'), ('VIEWER', 'Viewer Only'), ('COMPETENT_PERSON', 'Competent Person')], default='VIEWER', max_length=32),
+            model_name="userprofile",
+            name="role",
+            field=models.CharField(
+                choices=[
+                    ("GEOLOGIST_EXPL", "Geologist (Exploration)"),
+                    ("FIELD_LEAD", "Field Lead"),
+                    ("DATA_MANAGER", "Data Manager"),
+                    ("GEOLOGIST_MINE", "Mine Geologist"),
+                    ("METALLURGIST", "Metallurgist"),
+                    ("OPS_MANAGER", "Operations Manager"),
+                    ("ADMIN", "Administrator"),
+                    ("VIEWER", "Viewer Only"),
+                    ("COMPETENT_PERSON", "Competent Person"),
+                ],
+                default="VIEWER",
+                max_length=32,
+            ),
         ),
     ]

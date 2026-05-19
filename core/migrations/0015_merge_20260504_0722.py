@@ -4,11 +4,9 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0011_auto_20260405_0843'),
-        ('core', '0014_document_search_tsv'),
+        ("core", "0011_auto_20260405_0843"),
+        ("core", "0014_document_search_tsv"),
     ]
 
-    operations = [
-    ]
+    operations = []

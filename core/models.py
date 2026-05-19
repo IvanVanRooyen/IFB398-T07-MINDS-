@@ -1,4 +1,3 @@
-# from django.utils import timezone
 import uuid
 
 from django.conf import settings
@@ -81,9 +80,6 @@ class Organisation(ValidatedChoiceModel):
         return f"Organisation(id={self.id},name={self.name},mode={self.mode})"
 
 
-# TODO:
-#  I feel like this is better named something like 'Campaign' or 'Activity' for
-#  the sake of clarity
 class Process(ValidatedChoiceModel):
     class ProcessType(models.TextChoices):
         PROJECT = "PROJECT", _("Project")
@@ -131,8 +127,7 @@ class Prospect(models.Model):
     # Geospatial field — prospect location (point) or area (polygon)
     geom = models.PointField(srid=4326, null=True, blank=True)
     area_geom = models.PolygonField(
-        srid=4326, null=True, blank=True,
-        help_text="Optional area boundary for the prospect"
+        srid=4326, null=True, blank=True, help_text="Optional area boundary for the prospect"
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -186,50 +181,55 @@ class Tenement(models.Model):
 
 
 class Drillhole(models.Model):
-
     class DrillType(models.TextChoices):
-        RC  = "RC",  _("Reverse Circulation")
+        RC = "RC", _("Reverse Circulation")
         DDH = "DDH", _("Diamond Drill Hole")
         RAB = "RAB", _("Rotary Air Blast")
-        AC  = "AC",  _("Air Core")
+        AC = "AC", _("Air Core")
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True, null=False)
     name = models.CharField(max_length=64, null=False)
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     process = models.ForeignKey(Process, on_delete=models.CASCADE)
     prospect = models.ForeignKey(
-        'Prospect',
+        "Prospect",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='drillholes',
+        related_name="drillholes",
     )
 
     # Geospatial — collar point in WGS84
     collar_location = models.PointField(srid=4326, null=True, blank=True)
 
     # Original drillhole survey data (collar reading)
-    depth   = models.FloatField(null=True, blank=True, help_text="Total depth in meters")
-    azimuth = models.FloatField(null=True, blank=True, help_text="Bearing true north (0-360 degrees)")
-    dip     = models.FloatField(null=True, blank=True, help_text="Dip angle (-90 to 90 degrees, negative = downward)")
+    depth = models.FloatField(null=True, blank=True, help_text="Total depth in meters")
+    azimuth = models.FloatField(
+        null=True, blank=True, help_text="Bearing true north (0-360 degrees)"
+    )
+    dip = models.FloatField(
+        null=True, blank=True, help_text="Dip angle (-90 to 90 degrees, negative = downward)"
+    )
 
     # Extended collar metadata (populated by import command)
-    drill_type     = models.CharField(max_length=8, choices=DrillType.choices, blank=True)
-    company        = models.CharField(max_length=128, blank=True)
-    drill_company  = models.CharField(max_length=128, blank=True)
-    current_epm    = models.CharField(max_length=64, blank=True)
-    original_epm   = models.CharField(max_length=64, blank=True)
-    year_report    = models.PositiveSmallIntegerField(null=True, blank=True)
+    drill_type = models.CharField(max_length=8, choices=DrillType.choices, blank=True)
+    company = models.CharField(max_length=128, blank=True)
+    drill_company = models.CharField(max_length=128, blank=True)
+    current_epm = models.CharField(max_length=64, blank=True)
+    original_epm = models.CharField(max_length=64, blank=True)
+    year_report = models.PositiveSmallIntegerField(null=True, blank=True)
     company_report = models.CharField(max_length=64, blank=True)
-    elevation      = models.FloatField(null=True, blank=True, help_text="Collar elevation (RL) in metres")
+    elevation = models.FloatField(
+        null=True, blank=True, help_text="Collar elevation (RL) in metres"
+    )
     date_commenced = models.DateField(null=True, blank=True)
     date_completed = models.DateField(null=True, blank=True)
     hole_id_original = models.CharField(max_length=64, blank=True)
-    comments       = models.TextField(blank=True)
+    comments = models.TextField(blank=True)
 
     # Coordinate provenance — raw source values before WGS84 transformation
-    source_crs      = models.CharField(max_length=32, blank=True, help_text="e.g. EPSG:28356")
-    source_easting  = models.FloatField(null=True, blank=True)
+    source_crs = models.CharField(max_length=32, blank=True, help_text="e.g. EPSG:28356")
+    source_easting = models.FloatField(null=True, blank=True)
     source_northing = models.FloatField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -246,13 +246,13 @@ class Drillhole(models.Model):
 
 
 class DrillholeSurvey(models.Model):
-    id        = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
     drillhole = models.ForeignKey(Drillhole, on_delete=models.CASCADE, related_name="surveys")
-    depth     = models.FloatField(help_text="Metres down hole")
-    dip       = models.FloatField(null=True, blank=True, help_text="Dip angle in degrees")
-    azimuth_tn  = models.FloatField(null=True, blank=True, help_text="Azimuth true north (0-360)")
+    depth = models.FloatField(help_text="Metres down hole")
+    dip = models.FloatField(null=True, blank=True, help_text="Dip angle in degrees")
+    azimuth_tn = models.FloatField(null=True, blank=True, help_text="Azimuth true north (0-360)")
     azimuth_mag = models.FloatField(null=True, blank=True, help_text="Azimuth magnetic (0-360)")
-    comment   = models.CharField(max_length=128, blank=True)
+    comment = models.CharField(max_length=128, blank=True)
 
     class Meta:
         ordering = ["drillhole", "depth"]
@@ -262,26 +262,27 @@ class DrillholeSurvey(models.Model):
 
 
 class LithologyInterval(models.Model):
-    id        = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
     drillhole = models.ForeignKey(Drillhole, on_delete=models.CASCADE, related_name="lithology")
     from_depth = models.FloatField()
-    to_depth   = models.FloatField()
-    lithology  = models.CharField(max_length=128, blank=True)
+    to_depth = models.FloatField()
+    lithology = models.CharField(max_length=128, blank=True)
     description = models.TextField(blank=True)
-    mineralisation   = models.CharField(max_length=128, blank=True)
-    hardness         = models.CharField(max_length=64, blank=True)
-    weathering       = models.CharField(max_length=64, blank=True)
-    acid_reaction    = models.CharField(max_length=64, blank=True)
-    colour           = models.CharField(max_length=64, blank=True)
-    oxidation        = models.CharField(max_length=64, blank=True)
-    mineralisation_b = models.CharField(max_length=128, blank=True,
-                           help_text="Second mineralisation column from source (col L)")
+    mineralisation = models.CharField(max_length=128, blank=True)
+    hardness = models.CharField(max_length=64, blank=True)
+    weathering = models.CharField(max_length=64, blank=True)
+    acid_reaction = models.CharField(max_length=64, blank=True)
+    colour = models.CharField(max_length=64, blank=True)
+    oxidation = models.CharField(max_length=64, blank=True)
+    mineralisation_b = models.CharField(
+        max_length=128, blank=True, help_text="Second mineralisation column from source (col L)"
+    )
     mineralisation_2 = models.CharField(max_length=128, blank=True)
-    alteration       = models.CharField(max_length=128, blank=True)
-    alteration_2     = models.CharField(max_length=128, blank=True)
-    veins            = models.CharField(max_length=128, blank=True)
-    recovery_pct     = models.CharField(max_length=32, blank=True)
-    core_size        = models.CharField(max_length=32, blank=True)
+    alteration = models.CharField(max_length=128, blank=True)
+    alteration_2 = models.CharField(max_length=128, blank=True)
+    veins = models.CharField(max_length=128, blank=True)
+    recovery_pct = models.CharField(max_length=32, blank=True)
+    core_size = models.CharField(max_length=32, blank=True)
 
     class Meta:
         ordering = ["drillhole", "from_depth"]
@@ -291,47 +292,47 @@ class LithologyInterval(models.Model):
 
 
 class AssayResult(models.Model):
-    id        = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
     drillhole = models.ForeignKey(Drillhole, on_delete=models.CASCADE, related_name="assays")
     from_depth = models.FloatField()
-    to_depth   = models.FloatField()
+    to_depth = models.FloatField()
     lab_batch_number = models.CharField(max_length=64, blank=True)
-    sample_number    = models.CharField(max_length=64, blank=True)
-    comment          = models.CharField(max_length=256, blank=True)
+    sample_number = models.CharField(max_length=64, blank=True)
+    comment = models.CharField(max_length=256, blank=True)
 
     # Assay values — nullable floats; negative values denote below-detection-limit
-    au_ppm       = models.FloatField(null=True, blank=True)
+    au_ppm = models.FloatField(null=True, blank=True)
     au_ppm_check1 = models.FloatField(null=True, blank=True)
     au_ppm_check2 = models.FloatField(null=True, blank=True)
-    cu_ppm  = models.FloatField(null=True, blank=True)
-    pb_ppm  = models.FloatField(null=True, blank=True)
-    zn_ppm  = models.FloatField(null=True, blank=True)
-    ag_ppm  = models.FloatField(null=True, blank=True)
-    as_ppm  = models.FloatField(null=True, blank=True)
-    bi_ppm  = models.FloatField(null=True, blank=True)
-    cd_ppm  = models.FloatField(null=True, blank=True)
-    sb_ppm  = models.FloatField(null=True, blank=True)
-    mn_ppm  = models.FloatField(null=True, blank=True)
-    mo_ppm  = models.FloatField(null=True, blank=True)
-    pt_ppb  = models.FloatField(null=True, blank=True)
-    pd_ppb  = models.FloatField(null=True, blank=True)
+    cu_ppm = models.FloatField(null=True, blank=True)
+    pb_ppm = models.FloatField(null=True, blank=True)
+    zn_ppm = models.FloatField(null=True, blank=True)
+    ag_ppm = models.FloatField(null=True, blank=True)
+    as_ppm = models.FloatField(null=True, blank=True)
+    bi_ppm = models.FloatField(null=True, blank=True)
+    cd_ppm = models.FloatField(null=True, blank=True)
+    sb_ppm = models.FloatField(null=True, blank=True)
+    mn_ppm = models.FloatField(null=True, blank=True)
+    mo_ppm = models.FloatField(null=True, blank=True)
+    pt_ppb = models.FloatField(null=True, blank=True)
+    pd_ppb = models.FloatField(null=True, blank=True)
 
     # Analysis metadata
-    laboratory  = models.CharField(max_length=64, blank=True)
-    au_method   = models.CharField(max_length=32, blank=True)
-    cu_method   = models.CharField(max_length=32, blank=True)
+    laboratory = models.CharField(max_length=64, blank=True)
+    au_method = models.CharField(max_length=32, blank=True)
+    cu_method = models.CharField(max_length=32, blank=True)
     cu_method_2 = models.CharField(max_length=32, blank=True)
-    pb_method   = models.CharField(max_length=32, blank=True)
-    zn_method   = models.CharField(max_length=32, blank=True)
-    ag_method   = models.CharField(max_length=32, blank=True)
-    as_method   = models.CharField(max_length=32, blank=True)
-    bi_method   = models.CharField(max_length=32, blank=True)
-    cd_method   = models.CharField(max_length=32, blank=True)
-    sb_method   = models.CharField(max_length=32, blank=True)
-    mn_method   = models.CharField(max_length=32, blank=True)
-    mo_method   = models.CharField(max_length=32, blank=True)
-    pt_method   = models.CharField(max_length=32, blank=True)
-    pd_method   = models.CharField(max_length=32, blank=True)
+    pb_method = models.CharField(max_length=32, blank=True)
+    zn_method = models.CharField(max_length=32, blank=True)
+    ag_method = models.CharField(max_length=32, blank=True)
+    as_method = models.CharField(max_length=32, blank=True)
+    bi_method = models.CharField(max_length=32, blank=True)
+    cd_method = models.CharField(max_length=32, blank=True)
+    sb_method = models.CharField(max_length=32, blank=True)
+    mn_method = models.CharField(max_length=32, blank=True)
+    mo_method = models.CharField(max_length=32, blank=True)
+    pt_method = models.CharField(max_length=32, blank=True)
+    pd_method = models.CharField(max_length=32, blank=True)
 
     class Meta:
         ordering = ["drillhole", "from_depth"]
@@ -354,12 +355,11 @@ class Document(models.Model):
 
     # filename = models.FileField(upload_to="docs/")
     file = models.FileField(upload_to="docs/")
-    extracted_text = models.TextField(blank=True, default="")
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, null=True, blank=True)
     process = models.ForeignKey(Process, null=True, on_delete=models.SET_NULL, blank=True)
     tags = ArrayField(models.IntegerField(), default=list, blank=True)
     analysis_text = models.TextField(blank=True, default="")
-    
+
     timestamp = models.DateField(null=True)
     doc_type = models.CharField(max_length=64, blank=True)
     confidentiality = models.CharField(max_length=64, default="internal")
@@ -368,38 +368,39 @@ class Document(models.Model):
     )
 
     checksum_sha256 = models.CharField(max_length=64, db_index=True, blank=True)
-    search_tsv = SearchVectorField(null=True, blank=True)   # populated by DB trigger
+    search_tsv = SearchVectorField(null=True, blank=True)  # populated by DB trigger
     extracted_text = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     # Versioning
-    version_number  = models.PositiveIntegerField(default=1)
+    version_number = models.PositiveIntegerField(default=1)
     parent_document = models.ForeignKey(
-        'self', null=True, blank=True, on_delete=models.SET_NULL,
-        related_name='versions'
+        "self", null=True, blank=True, on_delete=models.SET_NULL, related_name="versions"
     )
     is_latest = models.BooleanField(default=True, db_index=True)
 
     # Extended metadata
     tenement = models.ForeignKey(
-        'Tenement', null=True, blank=True, on_delete=models.SET_NULL,
-        related_name='documents'
+        "Tenement", null=True, blank=True, on_delete=models.SET_NULL, related_name="documents"
     )
-    commodity      = models.CharField(max_length=64, blank=True)
+    commodity = models.CharField(max_length=64, blank=True)
     reporting_stage = models.CharField(
-        max_length=32, blank=True,
+        max_length=32,
+        blank=True,
         choices=REPORTING_STAGE_CHOICES,
     )
     author_name = models.CharField(
-        max_length=128, blank=True,
+        max_length=128,
+        blank=True,
         help_text="Free-text author name for imported or legacy documents",
     )
 
     @classmethod
-    def create_version(cls, parent: 'Document', new_file, user) -> 'Document':
+    def create_version(cls, parent: "Document", new_file, user) -> "Document":
         """Upload a new file version; marks parent as non-latest."""
-        from .utils import sha256_file, extract_text, chunk_text
+        from .utils import chunk_text, extract_text, sha256_file
+
         checksum = sha256_file(new_file)
         if cls.objects.filter(checksum_sha256=checksum).exists():
             raise ValueError("Identical file already exists.")
@@ -429,29 +430,34 @@ class Document(models.Model):
         doc.save(update_fields=["extracted_text"])
         if text:
             chunks = chunk_text(text)
-            DocumentChunk.objects.bulk_create([
-                DocumentChunk(
-                    document=doc,
-                    chunk_index=i,
-                    text=chunk,
-                    process=doc.process,
-                    doc_type=doc.doc_type,
-                    timestamp=doc.timestamp,
-                )
-                for i, chunk in enumerate(chunks)
-            ])
+            DocumentChunk.objects.bulk_create(
+                [
+                    DocumentChunk(
+                        document=doc,
+                        chunk_index=i,
+                        text=chunk,
+                        process=doc.process,
+                        doc_type=doc.doc_type,
+                        timestamp=doc.timestamp,
+                    )
+                    for i, chunk in enumerate(chunks)
+                ]
+            )
         return doc
 
     def get_version_family(self):
         """Return all versions in this document's chain, ordered by version_number."""
         root = self
         visited = set()
+        # Walk up to the root, guarding against any accidental circular parent links
         while root.parent_document_id and root.pk not in visited:
             visited.add(root.pk)
             root = root.parent_document
         chain = []
         queue = [root]
         seen = set()
+        # BFS down through child versions. `seen` is separate from `visited` above
+        # because we need a fresh guard for the downward traversal.
         while queue:
             current = queue.pop(0)
             if current.pk in seen:
@@ -464,9 +470,12 @@ class Document(models.Model):
         return sorted(chain, key=lambda d: d.version_number)
 
     def save(self, *args, **kwargs):
-        # Compute SHA-256 checksum if file exists and checksum not already set
+        # Only hash when a checksum isn't already present. create_version() supplies
+        # the checksum before calling save(), so we must not recompute it here
+        # by that point the file pointer may have moved after the MinIO upload.
         if self.file and not self.checksum_sha256:
             from .utils import sha256_file
+
             self.checksum_sha256 = sha256_file(self.file)
         # Ensure extracted_text is never NULL
         if self.extracted_text is None:
@@ -481,6 +490,7 @@ class Document(models.Model):
             except Exception as e:
                 # Log the error but continue with deletion
                 import logging
+
                 logger = logging.getLogger(__name__)
                 logger.warning(f"Failed to delete file {self.file.name} from storage: {e}")
         super().delete(*args, **kwargs)
@@ -496,6 +506,7 @@ class Document(models.Model):
             f"checksum_sha256={self.checksum_sha256},created_by={self.created_by},"
             f"created_at={self.created_at},"
         )
+
 
 class DocumentChunk(models.Model):
     """
@@ -515,7 +526,8 @@ class DocumentChunk(models.Model):
     process = models.ForeignKey(
         Process,
         on_delete=models.SET_NULL,
-        null=True, blank=True,
+        null=True,
+        blank=True,
     )
     doc_type = models.CharField(max_length=64, blank=True)
     timestamp = models.DateField(null=True, blank=True)
@@ -523,16 +535,17 @@ class DocumentChunk(models.Model):
     class Meta:
         ordering = ["document", "chunk_index"]
         indexes = [
-            models.Index(fields=["process"], name='core_docume_process_f5b3f3_idx'),
-            models.Index(fields=["doc_type"], name='core_docume_doc_typ_499972_idx'),
-            models.Index(fields=["timestamp"], name='core_docume_timesta_294cd6_idx'),
+            models.Index(fields=["process"], name="core_docume_process_f5b3f3_idx"),
+            models.Index(fields=["doc_type"], name="core_docume_doc_typ_499972_idx"),
+            models.Index(fields=["timestamp"], name="core_docume_timesta_294cd6_idx"),
         ]
-    
+
     def __str__(self):
         return f"{self.document.title} - chunk {self.chunk_index}"
 
 
 # USER PROFILE & PERMISSIONS ---------------------------------
+
 
 class UserProfile(models.Model):
     """Extended user attributes for mining/exploration governance"""
@@ -562,13 +575,11 @@ class UserProfile(models.Model):
         JORC_APPROVED = "JORC_APPROVED", _("JORC Approved Personnel")
 
     # Core fields
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, null=True, blank=True)
     role = models.CharField(max_length=32, choices=RoleChoices.choices, default=RoleChoices.VIEWER)
     clearance_level = models.CharField(
-        max_length=32,
-        choices=ClearanceLevel.choices,
-        default=ClearanceLevel.INTERNAL
+        max_length=32, choices=ClearanceLevel.choices, default=ClearanceLevel.INTERNAL
     )
 
     # Optional metadata - We need to decide if this is needed*********
@@ -577,17 +588,21 @@ class UserProfile(models.Model):
     employee_id = models.CharField(max_length=32, blank=True, unique=True, null=True)
 
     # Workflow permissions
-    can_approve_jorc = models.BooleanField(default=False, help_text="Can approve JORC compliance workflows")
-    can_approve_valmin = models.BooleanField(default=False, help_text="Can approve VALMIN compliance workflows")
+    can_approve_jorc = models.BooleanField(
+        default=False, help_text="Can approve JORC compliance workflows"
+    )
+    can_approve_valmin = models.BooleanField(
+        default=False, help_text="Can approve VALMIN compliance workflows"
+    )
 
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'user_profiles'
-        verbose_name = 'User Profile'
-        verbose_name_plural = 'User Profiles'
+        db_table = "user_profiles"
+        verbose_name = "User Profile"
+        verbose_name_plural = "User Profiles"
 
     def __str__(self):
         return f"{self.user.username} - {self.get_role_display()}"
@@ -616,10 +631,10 @@ class UserProfile(models.Model):
 
         # Clearance level check
         doc_clearance_hierarchy = {
-            'public': 0,
-            'internal': 1,
-            'confidential': 2,
-            'jorc_restricted': 3,
+            "public": 0,
+            "internal": 1,
+            "confidential": 2,
+            "jorc_restricted": 3,
         }
         user_clearance_hierarchy = {
             self.ClearanceLevel.PUBLIC: 0,
@@ -628,7 +643,9 @@ class UserProfile(models.Model):
             self.ClearanceLevel.JORC_APPROVED: 3,
         }
 
-        doc_level = doc_clearance_hierarchy.get(document.confidentiality.lower() if document.confidentiality else 'internal', 0)
+        doc_level = doc_clearance_hierarchy.get(
+            document.confidentiality.lower() if document.confidentiality else "internal", 0
+        )
         user_level = user_clearance_hierarchy.get(self.clearance_level, 0)
 
         return user_level >= doc_level
@@ -638,30 +655,28 @@ class SavedReport(models.Model):
     """An AI generated report, editable and savable into the database."""
 
     class ChangeReason(models.TextChoices):
-        GENERATED   = "GENERATED",   _("AI Generated")
+        GENERATED = "GENERATED", _("AI Generated")
         MANUAL_EDIT = "MANUAL_EDIT", _("Manual Edit")
         REGENERATED = "REGENERATED", _("Regenerated")
 
     class Status(models.TextChoices):
-        DRAFT        = "DRAFT",        _("Draft")
+        DRAFT = "DRAFT", _("Draft")
         UNDER_REVIEW = "UNDER_REVIEW", _("Under Review")
-        APPROVED     = "APPROVED",     _("Approved")
-        PUBLISHED    = "PUBLISHED",    _("Published")
+        APPROVED = "APPROVED", _("Approved")
+        PUBLISHED = "PUBLISHED", _("Published")
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     process = models.ForeignKey(
         Process, on_delete=models.SET_NULL, null=True, blank=True, related_name="saved_reports"
     )
     prospect = models.ForeignKey(
-        'Prospect',
+        "Prospect",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='reports',
+        related_name="reports",
     )
-    organisation = models.ForeignKey(
-        Organisation, on_delete=models.SET_NULL, null=True, blank=True
-    )
+    organisation = models.ForeignKey(Organisation, on_delete=models.SET_NULL, null=True, blank=True)
     title = models.CharField(max_length=256)
     content_md = models.TextField()
     search_tsv = SearchVectorField(null=True, blank=True)  # populated by DB trigger
@@ -680,13 +695,13 @@ class SavedReport(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     version_number = models.PositiveIntegerField(default=1)
-    content_hash   = models.CharField(max_length=64, blank=True)
-    change_reason  = models.CharField(
+    content_hash = models.CharField(max_length=64, blank=True)
+    change_reason = models.CharField(
         max_length=16, choices=ChangeReason.choices, default=ChangeReason.GENERATED
     )
     change_summary = models.TextField(blank=True)
     parent_version = models.ForeignKey(
-        'self', null=True, blank=True, on_delete=models.SET_NULL, related_name='child_versions'
+        "self", null=True, blank=True, on_delete=models.SET_NULL, related_name="child_versions"
     )
     status = models.CharField(
         max_length=16,
@@ -694,11 +709,10 @@ class SavedReport(models.Model):
         default=Status.DRAFT,
     )
     source_documents = models.ManyToManyField(
-        'Document', blank=True, related_name='cited_in_reports'
+        "Document", blank=True, related_name="cited_in_reports"
     )
     approval_workflow = models.OneToOneField(
-        'ApprovalWorkflow', null=True, blank=True,
-        on_delete=models.SET_NULL, related_name='report'
+        "ApprovalWorkflow", null=True, blank=True, on_delete=models.SET_NULL, related_name="report"
     )
 
     class Meta:
@@ -707,10 +721,11 @@ class SavedReport(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.created_at:%Y-%m-%d})"
-    
+
     @classmethod
-    def create_version(cls, parent: 'SavedReport', content_md: str, user, reason: str, summary=""):
+    def create_version(cls, parent: "SavedReport", content_md: str, user, reason: str, summary=""):
         import hashlib
+
         content_hash = hashlib.sha256(content_md.encode()).hexdigest()
 
         # Don't save if content hasn't changed
@@ -733,20 +748,16 @@ class SavedReport(models.Model):
         )
 
 
-# Autocreate profile when user is created
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, raw, **kwargs):
+    # `raw=True` during fixture loading — profiles already exist in the fixture,
+    # so skip creation to avoid IntegrityError on the OneToOneField.
     if created and not raw:
         UserProfile.objects.create(user=instance)
 
 
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    if hasattr(instance, 'profile'):
-        instance.profile.save()
-
-
 # AUDIT TRAIL ---------------------------------
+
 
 class AuditLog(models.Model):
     """Track all user actions for compliance (JORC/VALMIN requirements)"""
@@ -767,23 +778,25 @@ class AuditLog(models.Model):
     action = models.CharField(max_length=16, choices=ActionType.choices)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.UUIDField()
-    content_object = GenericForeignKey('content_type', 'object_id')
+    content_object = GenericForeignKey("content_type", "object_id")
 
     # Context
     description = models.TextField(blank=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.TextField(blank=True)
 
-    # When changes were made 
+    # When changes were made
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'audit_logs'
-        ordering = ['-timestamp']
+        db_table = "audit_logs"
+        ordering = ["-timestamp"]
         indexes = [
-            models.Index(fields=['content_type', 'object_id'], name='audit_logs_content_b0ef47_idx'),
-            models.Index(fields=['user', 'action'], name='audit_logs_user_id_d685f3_idx'),
-            models.Index(fields=['timestamp'], name='audit_logs_timesta_423be6_idx'),
+            models.Index(
+                fields=["content_type", "object_id"], name="audit_logs_content_b0ef47_idx"
+            ),
+            models.Index(fields=["user", "action"], name="audit_logs_user_id_d685f3_idx"),
+            models.Index(fields=["timestamp"], name="audit_logs_timesta_423be6_idx"),
         ]
 
     def __str__(self):
@@ -809,15 +822,19 @@ class ApprovalWorkflow(models.Model):
     # WHich items needs approval
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.UUIDField()
-    content_object = GenericForeignKey('content_type', 'object_id')
+    content_object = GenericForeignKey("content_type", "object_id")
 
     # Workflow details
     workflow_type = models.CharField(max_length=16, choices=WorkflowType.choices)
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
 
-    # Which users are associated 
-    submitted_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='workflow_submissions')
-    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='workflow_approvals')
+    # Which users are associated
+    submitted_by = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="workflow_submissions"
+    )
+    approved_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="workflow_approvals"
+    )
 
     # Context
     submission_notes = models.TextField(blank=True)
@@ -828,17 +845,17 @@ class ApprovalWorkflow(models.Model):
     reviewed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        db_table = 'approval_workflows'
-        ordering = ['-submitted_at']
-        verbose_name = 'Approval Workflow'
-        verbose_name_plural = 'Approval Workflows'
+        db_table = "approval_workflows"
+        ordering = ["-submitted_at"]
+        verbose_name = "Approval Workflow"
+        verbose_name_plural = "Approval Workflows"
 
     def __str__(self):
         return f"{self.workflow_type} - {self.status} - {self.content_object}"
 
     def can_approve(self, user):
         """Check if user can approve this workflow"""
-        if not hasattr(user, 'profile'):
+        if not hasattr(user, "profile"):
             return False
 
         profile = user.profile
@@ -859,28 +876,33 @@ class ApprovalWorkflow(models.Model):
 
 # DOCUMENT VIEW TRACKING (Phase 2) ---------------------------------
 
+
 class DocumentView(models.Model):
     """Track when users view documents for audit trail"""
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    document = models.ForeignKey('Document', on_delete=models.CASCADE)
+    document = models.ForeignKey("Document", on_delete=models.CASCADE)
     viewed_at = models.DateTimeField(auto_now_add=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
 
     class Meta:
-        db_table = 'document_views'
-        ordering = ['-viewed_at']
+        db_table = "document_views"
+        ordering = ["-viewed_at"]
         indexes = [
-            models.Index(fields=['document', 'user'], name='document_vi_documen_dcb332_idx'),
-            models.Index(fields=['viewed_at'], name='document_vi_viewed__659188_idx'),
+            models.Index(fields=["document", "user"], name="document_vi_documen_dcb332_idx"),
+            models.Index(fields=["viewed_at"], name="document_vi_viewed__659188_idx"),
         ]
 
     def __str__(self):
         return f"{self.user.username} viewed {self.document.title} at {self.viewed_at}"
 
+
 # DOCUMENT–ENTITY LINKING ---------------------------------
+
 
 class DocLink(models.Model):
     """Generic document-to-entity attachment for Confluence-style traceability."""
+
     document = models.ForeignKey(
         Document,
         on_delete=models.CASCADE,
@@ -916,32 +938,33 @@ class DocLink(models.Model):
 
 # SAMPLES & SURVEYS ---------------------------------
 
+
 class Sample(models.Model):
     class SampleType(models.TextChoices):
-        ROCK_CHIP  = "ROCK_CHIP",  _("Rock Chip")
-        SOIL       = "SOIL",       _("Soil")
+        ROCK_CHIP = "ROCK_CHIP", _("Rock Chip")
+        SOIL = "SOIL", _("Soil")
         STREAM_SED = "STREAM_SED", _("Stream Sediment")
-        TRENCH     = "TRENCH",     _("Trench")
-        CORE       = "CORE",       _("Drill Core")
-        CHANNEL    = "CHANNEL",    _("Channel")
+        TRENCH = "TRENCH", _("Trench")
+        CORE = "CORE", _("Drill Core")
+        CHANNEL = "CHANNEL", _("Channel")
 
-    id           = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    name         = models.CharField(max_length=64)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    name = models.CharField(max_length=64)
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
-    process      = models.ForeignKey(Process, on_delete=models.CASCADE)
-    prospect     = models.ForeignKey(
+    process = models.ForeignKey(Process, on_delete=models.CASCADE)
+    prospect = models.ForeignKey(
         Prospect, null=True, blank=True, on_delete=models.SET_NULL, related_name="samples"
     )
-    sample_type   = models.CharField(max_length=16, choices=SampleType.choices, blank=True)
+    sample_type = models.CharField(max_length=16, choices=SampleType.choices, blank=True)
     sample_number = models.CharField(max_length=64, blank=True)
-    location      = models.PointField(srid=4326, null=True, blank=True)
-    depth         = models.FloatField(null=True, blank=True)
-    description   = models.TextField(blank=True)
-    collected_by  = models.CharField(max_length=128, blank=True)
-    collected_at  = models.DateField(null=True, blank=True)
-    laboratory    = models.CharField(max_length=128, blank=True)
-    created_at    = models.DateTimeField(auto_now_add=True)
-    updated_at    = models.DateTimeField(auto_now=True)
+    location = models.PointField(srid=4326, null=True, blank=True)
+    depth = models.FloatField(null=True, blank=True)
+    description = models.TextField(blank=True)
+    collected_by = models.CharField(max_length=128, blank=True)
+    collected_at = models.DateField(null=True, blank=True)
+    laboratory = models.CharField(max_length=128, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["-created_at"]
@@ -952,28 +975,27 @@ class Sample(models.Model):
 
 class Survey(models.Model):
     class SurveyType(models.TextChoices):
-        GEOPHYSICS     = "GEOPHYSICS", _("Geophysics")
-        SOIL_GRID      = "SOIL_GRID",  _("Soil Grid")
-        MAPPING        = "MAPPING",    _("Geological Mapping")
-        REMOTE_SENSING = "REMOTE",     _("Remote Sensing")
+        GEOPHYSICS = "GEOPHYSICS", _("Geophysics")
+        SOIL_GRID = "SOIL_GRID", _("Soil Grid")
+        MAPPING = "MAPPING", _("Geological Mapping")
+        REMOTE_SENSING = "REMOTE", _("Remote Sensing")
 
-    id           = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    name         = models.CharField(max_length=128)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    name = models.CharField(max_length=128)
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
-    process      = models.ForeignKey(Process, on_delete=models.CASCADE)
-    prospect     = models.ForeignKey(
+    process = models.ForeignKey(Process, on_delete=models.CASCADE)
+    prospect = models.ForeignKey(
         Prospect, null=True, blank=True, on_delete=models.SET_NULL, related_name="surveys"
     )
-    survey_type  = models.CharField(max_length=16, choices=SurveyType.choices, blank=True)
-    contractor   = models.CharField(max_length=128, blank=True)
-    date_from    = models.DateField(null=True, blank=True)
-    date_to      = models.DateField(null=True, blank=True)
-    description  = models.TextField(blank=True)
-    geom         = models.PolygonField(
-        srid=4326, null=True, blank=True,
-        help_text="Coverage area of the survey"
+    survey_type = models.CharField(max_length=16, choices=SurveyType.choices, blank=True)
+    contractor = models.CharField(max_length=128, blank=True)
+    date_from = models.DateField(null=True, blank=True)
+    date_to = models.DateField(null=True, blank=True)
+    description = models.TextField(blank=True)
+    geom = models.PolygonField(
+        srid=4326, null=True, blank=True, help_text="Coverage area of the survey"
     )
-    created_at   = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-created_at"]
@@ -983,6 +1005,7 @@ class Survey(models.Model):
 
 
 # HELPER FUNCTIONS ---------------------------------
+
 
 def log_audit(user, action, obj, description="", ip_address=None, user_agent=""):
     """Create audit trail entry"""
@@ -995,26 +1018,3 @@ def log_audit(user, action, obj, description="", ip_address=None, user_agent="")
         ip_address=ip_address,
         user_agent=user_agent,
     )
-
-
-# class ProjectOp(models.Model):
-#     MODE = (("EXP","Exploration"), ("MIN","Mining"))
-#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-#     mode = models.CharField(max_length=3, choices=MODE)
-#     name = models.CharField(max_length=255)
-# geom = models.MultiPolygonField(srid=4326, null=True, blank=True)
-# commodity = models.CharField(max_length=64, blank=True)
-#     def __str__(self): return self.name
-#
-# class Document(models.Model):
-#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-#     file = models.FileField(upload_to="docs/")
-#     title = models.CharField(max_length=255)
-#     year = models.IntegerField(null=True, blank=True)
-#     doc_type = models.CharField(max_length=64, blank=True)
-#     confidentiality = models.CharField(max_length=32, default="internal")
-#     checksum_sha256 = models.CharField(max_length=64, db_index=True, blank=True)
-#     project = models.ForeignKey(ProjectOp, null=True, blank=True, on_delete=models.SET_NULL)
-#     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     def __str__(self): return self.title

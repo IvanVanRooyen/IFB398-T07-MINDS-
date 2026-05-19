@@ -1,5 +1,6 @@
 import re
 from functools import lru_cache
+
 from pyproj import Transformer
 
 from .instrument import instrument
@@ -13,8 +14,9 @@ _EPSG_MAP = {
     ("AMG84", 56): 20356,
 }
 
-_ZONE_RE = re.compile(r'zone\s*(\d+)', re.IGNORECASE)
-_CRS_RE  = re.compile(r'(MGA94|AMG84)',  re.IGNORECASE)
+_ZONE_RE = re.compile(r"zone\s*(\d+)", re.IGNORECASE)
+_CRS_RE = re.compile(r"(MGA94|AMG84)", re.IGNORECASE)
+
 
 @instrument
 def parse_grid_epsg(grid_str: str) -> int | None:
@@ -28,17 +30,19 @@ def parse_grid_epsg(grid_str: str) -> int | None:
     if not grid_str:
         return None
     zone_match = _ZONE_RE.search(grid_str)
-    crs_match  = _CRS_RE.search(grid_str)
+    crs_match = _CRS_RE.search(grid_str)
     if not zone_match or not crs_match:
         return None
     zone = int(zone_match.group(1))
-    crs  = crs_match.group(1).upper()
+    crs = crs_match.group(1).upper()
     return _EPSG_MAP.get((crs, zone))
+
 
 @instrument
 @lru_cache(maxsize=16)
 def _get_transformer(source_epsg: int) -> Transformer:
     return Transformer.from_crs(source_epsg, 4326, always_xy=True)
+
 
 @instrument
 def projected_to_wgs84(easting: float, northing: float, source_epsg: int) -> tuple[float, float]:

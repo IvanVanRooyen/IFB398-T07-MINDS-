@@ -6,17 +6,16 @@ class Migration(migrations.Migration):
     atomic = False  # required for CREATE INDEX CONCURRENTLY
 
     dependencies = [
-        ('core', '0012_document_search_tsv'),
+        ("core", "0012_document_search_tsv"),
     ]
 
     operations = [
         # 1. Add the column (initially NULL for all existing rows)
         migrations.AddField(
-            model_name='document',
-            name='search_tsv',
+            model_name="document",
+            name="search_tsv",
             field=SearchVectorField(blank=True, null=True),
         ),
-
         # 2. Create the PL/pgSQL trigger function
         migrations.RunSQL(
             sql="""
@@ -41,7 +40,6 @@ class Migration(migrations.Migration):
                 DROP FUNCTION IF EXISTS core_document_tsv_update();
             """,
         ),
-
         # 3. Create GIN index on the new column for fast full-text lookups
         migrations.RunSQL(
             sql="""
@@ -50,7 +48,6 @@ class Migration(migrations.Migration):
             """,
             reverse_sql="DROP INDEX IF EXISTS core_document_search_tsv_gin;",
         ),
-
         # 4. Backfill existing rows so the column is not NULL after migration
         migrations.RunSQL(
             sql="""

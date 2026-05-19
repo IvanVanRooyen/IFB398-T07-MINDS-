@@ -6,17 +6,16 @@ class Migration(migrations.Migration):
     atomic = False  # required for CREATE INDEX CONCURRENTLY
 
     dependencies = [
-        ('core', '0021_req3_report_composer'),
+        ("core", "0021_req3_report_composer"),
     ]
 
     operations = [
         # 1. Add search_tsv column to saved_reports
         migrations.AddField(
-            model_name='savedreport',
-            name='search_tsv',
+            model_name="savedreport",
+            name="search_tsv",
             field=SearchVectorField(blank=True, null=True),
         ),
-
         # 2. Create the PL/pgSQL trigger function
         migrations.RunSQL(
             sql="""
@@ -41,7 +40,6 @@ class Migration(migrations.Migration):
                 DROP FUNCTION IF EXISTS saved_reports_tsv_update();
             """,
         ),
-
         # 3. Create GIN index for fast FTS lookups
         migrations.RunSQL(
             sql="""
@@ -50,7 +48,6 @@ class Migration(migrations.Migration):
             """,
             reverse_sql="DROP INDEX IF EXISTS saved_reports_search_tsv_gin;",
         ),
-
         # 4. Backfill existing rows
         migrations.RunSQL(
             sql="""

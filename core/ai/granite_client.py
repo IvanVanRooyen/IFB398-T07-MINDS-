@@ -51,9 +51,7 @@ class GraniteClient:
             return data.get("response", "")
 
         headers = (
-            {"Authorization": f"Bearer {self.hf_token}"}
-            if getattr(self, "hf_token", None)
-            else {}
+            {"Authorization": f"Bearer {self.hf_token}"} if getattr(self, "hf_token", None) else {}
         )
         r = requests.post(
             self.url,

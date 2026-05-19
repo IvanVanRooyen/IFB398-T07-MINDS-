@@ -45,9 +45,7 @@ class ProjectsViewTests(_ViewTestBase):
     @patch("core.views._paginate")
     @patch("core.views.Process")
     @patch("core.views._org_qs_filter")
-    def test_org_filter_applied_to_queryset(
-        self, mock_filter, mock_process, _paginate, _render
-    ):
+    def test_org_filter_applied_to_queryset(self, mock_filter, mock_process, _paginate, _render):
         org_q = Q(organisation=42)
         mock_filter.return_value = org_q
         mock_process.objects = self._chainable_qs([])
@@ -194,9 +192,7 @@ class ProspectsListViewTests(_ViewTestBase):
     @patch("core.views._paginate")
     @patch("core.views._get_model", return_value=None)
     @patch("core.views._org_qs_filter", return_value=Q())
-    def test_renders_with_empty_page_when_model_missing(
-        self, _f, _g, mock_paginate, mock_render
-    ):
+    def test_renders_with_empty_page_when_model_missing(self, _f, _g, mock_paginate, mock_render):
         views.prospects(self._authed_request("get"))
 
         ctx = mock_render.call_args[0][2]
@@ -350,9 +346,7 @@ class ProspectDetailViewTests(_ViewTestBase):
 class CreateProspectTests(_ViewTestBase):
     @patch("core.views.messages")
     @patch("core.views.redirect", return_value=MagicMock())
-    def test_user_without_organisation_redirected_with_error(
-        self, mock_redirect, mock_messages
-    ):
+    def test_user_without_organisation_redirected_with_error(self, mock_redirect, mock_messages):
         self.profile.organisation = None
 
         views.create_prospect(self._authed_request("get"))
@@ -438,9 +432,7 @@ class CreateProspectTests(_ViewTestBase):
 
     @patch("core.views.render", return_value=MagicMock())
     @patch("core.views.ProspectForm")
-    def test_invalid_post_renders_full_form_for_non_htmx(
-        self, mock_form_cls, mock_render
-    ):
+    def test_invalid_post_renders_full_form_for_non_htmx(self, mock_form_cls, mock_render):
         form = MagicMock()
         form.is_valid.return_value = False
         mock_form_cls.return_value = form
@@ -491,9 +483,7 @@ class EditProspectTests(_ViewTestBase):
     @patch("core.views.render", return_value=MagicMock())
     @patch("core.views.ProspectForm")
     @patch("core.views.get_object_or_404")
-    def test_get_uses_existing_geom_for_map_centre(
-        self, mock_get, mock_form_cls, mock_render
-    ):
+    def test_get_uses_existing_geom_for_map_centre(self, mock_get, mock_form_cls, mock_render):
         prospect = self._build_prospect(geom=True)
         mock_get.return_value = prospect
         mock_form_cls.return_value = MagicMock()
@@ -722,9 +712,7 @@ class GenerateProspectReportTests(_ViewTestBase):
     @patch("core.views.Prospect")
     @patch("core.views.get_object_or_404")
     @patch("core.views._org_qs_filter", return_value=Q())
-    def test_user_without_org_visibility_blocked(
-        self, _f, mock_get, mock_prospect_model, _gen
-    ):
+    def test_user_without_org_visibility_blocked(self, _f, mock_get, mock_prospect_model, _gen):
         prospect = self._prospect()
         mock_get.return_value = prospect
         # The org-scoped filter returns no rows for this user.

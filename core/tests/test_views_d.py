@@ -88,17 +88,13 @@ class AssignReportProspectTests(_ViewTestBase):
         mock_get.return_value = report
         mock_prospect.objects.filter.return_value = self._chainable_qs([])
 
-        response = views.assign_report_prospect(
-            self._authed_request("post"), report_id=1
-        )
+        response = views.assign_report_prospect(self._authed_request("post"), report_id=1)
         self.assertEqual(response.status_code, 200)
 
     def test_get_request_rejected(self):
         # @require_POST
         request = self._authed_request("get")
-        self.assertEqual(
-            views.assign_report_prospect(request, report_id=1).status_code, 405
-        )
+        self.assertEqual(views.assign_report_prospect(request, report_id=1).status_code, 405)
 
 
 # ---------------------------------------------------------------------------
@@ -142,9 +138,7 @@ class SamplesListTests(_ViewTestBase):
     @patch("core.views._paginate")
     @patch("core.views.Sample")
     @patch("core.views._org_qs_filter", return_value=Q())
-    def test_no_prospect_filter_when_query_param_absent(
-        self, _f, mock_sample, _paginate, _render
-    ):
+    def test_no_prospect_filter_when_query_param_absent(self, _f, mock_sample, _paginate, _render):
         qs = self._chainable_qs([])
         mock_sample.objects = qs
 
@@ -356,9 +350,7 @@ class DocLinkPickerTests(_ViewTestBase):
     def test_valid_content_type_renders_picker(self, _f, mock_document, mock_render):
         mock_document.objects = self._chainable_qs([MagicMock() for _ in range(3)])
 
-        request = self._authed_request(
-            "get", path="/?content_type=prospect&object_id=5"
-        )
+        request = self._authed_request("get", path="/?content_type=prospect&object_id=5")
         views.doc_link_picker(request)
 
         ctx = mock_render.call_args[0][2]
@@ -371,9 +363,7 @@ class DocLinkPickerTests(_ViewTestBase):
     def test_each_linkable_content_type_accepted(self, _f, mock_document, _render):
         mock_document.objects = self._chainable_qs([])
         for label in ("prospect", "tenement", "drillhole", "process"):
-            request = self._authed_request(
-                "get", path=f"/?content_type={label}&object_id=1"
-            )
+            request = self._authed_request("get", path=f"/?content_type={label}&object_id=1")
             response = views.doc_link_picker(request)
             self.assertNotEqual(
                 getattr(response, "status_code", 200),
@@ -454,17 +444,13 @@ class CreateDocLinkTests(_ViewTestBase):
         )
         views.create_doc_link(request)
 
-        self.assertEqual(
-            mock_render.call_args[0][1], "core/partials/linked_documents.html"
-        )
+        self.assertEqual(mock_render.call_args[0][1], "core/partials/linked_documents.html")
 
     @patch("core.views.log_audit")
     @patch("core.views.DocLink")
     @patch("core.views.get_object_or_404")
     @patch("core.views.ContentType")
-    def test_returns_204_for_non_prospect_entities(
-        self, mock_ct, mock_get, mock_doclink, _audit
-    ):
+    def test_returns_204_for_non_prospect_entities(self, mock_ct, mock_get, mock_doclink, _audit):
         mock_ct.objects.get.return_value = MagicMock()
         mock_get.return_value = MagicMock(title="x")
         mock_doclink.objects.get_or_create.return_value = (MagicMock(), True)
@@ -535,9 +521,7 @@ class DeleteDocLinkTests(_ViewTestBase):
         views.delete_doc_link(self._authed_request("post"), pk=1)
 
         link.delete.assert_called_once()
-        self.assertEqual(
-            mock_render.call_args[0][1], "core/partials/linked_documents.html"
-        )
+        self.assertEqual(mock_render.call_args[0][1], "core/partials/linked_documents.html")
 
     @patch("core.views.log_audit")
     @patch("core.views.get_object_or_404")
@@ -584,9 +568,7 @@ class LinkDrillholeTests(_ViewTestBase):
     @patch("core.views.render", return_value=MagicMock())
     @patch("core.views.Drillhole")
     @patch("core.views.get_object_or_404")
-    def test_assigns_prospect_and_renders_partial(
-        self, mock_get, mock_drillhole, mock_render
-    ):
+    def test_assigns_prospect_and_renders_partial(self, mock_get, mock_drillhole, mock_render):
         prospect = MagicMock(pk=1)
         drillhole = MagicMock()
         mock_get.side_effect = [prospect, drillhole]
@@ -603,9 +585,7 @@ class LinkDrillholeTests(_ViewTestBase):
 
         self.assertIs(drillhole.prospect, prospect)
         drillhole.save.assert_called_once_with(update_fields=["prospect"])
-        self.assertEqual(
-            mock_render.call_args[0][1], "core/partials/linked_drillholes.html"
-        )
+        self.assertEqual(mock_render.call_args[0][1], "core/partials/linked_drillholes.html")
 
 
 class UnlinkDrillholeTests(_ViewTestBase):
@@ -636,9 +616,7 @@ class BulkLinkDrillholesTests(_ViewTestBase):
     @patch("core.views.render", return_value=MagicMock())
     @patch("core.views.Drillhole")
     @patch("core.views.get_object_or_404")
-    def test_no_ids_renders_partial_without_updating(
-        self, mock_get, mock_drillhole, mock_render
-    ):
+    def test_no_ids_renders_partial_without_updating(self, mock_get, mock_drillhole, mock_render):
         prospect = MagicMock()
         mock_get.return_value = prospect
 
@@ -649,9 +627,7 @@ class BulkLinkDrillholesTests(_ViewTestBase):
         views.bulk_link_drillholes(request)
 
         final_qs.update.assert_not_called()
-        self.assertEqual(
-            mock_render.call_args[0][1], "core/partials/linked_drillholes.html"
-        )
+        self.assertEqual(mock_render.call_args[0][1], "core/partials/linked_drillholes.html")
 
     @patch("core.views.render", return_value=MagicMock())
     @patch("core.views.Drillhole")
@@ -677,9 +653,7 @@ class BulkLinkDrillholesTests(_ViewTestBase):
 class BulkAssignDrillholesTests(_ViewTestBase):
     @patch("core.views.messages")
     @patch("core.views.redirect", return_value=MagicMock())
-    def test_missing_inputs_flash_error_and_redirect(
-        self, mock_redirect, mock_messages
-    ):
+    def test_missing_inputs_flash_error_and_redirect(self, mock_redirect, mock_messages):
         request = self._authed_request("post", data={})
         views.bulk_assign_drillholes(request)
 
@@ -689,9 +663,7 @@ class BulkAssignDrillholesTests(_ViewTestBase):
     @patch("core.views.Prospect")
     @patch("core.views.get_object_or_404")
     @patch("core.views._org_qs_filter", return_value=Q())
-    def test_user_without_org_visibility_blocked(
-        self, _f, mock_get, mock_prospect_model
-    ):
+    def test_user_without_org_visibility_blocked(self, _f, mock_get, mock_prospect_model):
         prospect = MagicMock()
         mock_get.return_value = prospect
 
@@ -972,9 +944,7 @@ class TenementsTests(_ViewTestBase):
     @patch("core.views._paginate")
     @patch("core.views._get_model", return_value=None)
     @patch("core.views._org_qs_filter", return_value=Q())
-    def test_list_renders_safely_when_model_missing(
-        self, _f, _g, mock_paginate, mock_render
-    ):
+    def test_list_renders_safely_when_model_missing(self, _f, _g, mock_paginate, mock_render):
         views.tenements(self._authed_request("get"))
 
         ctx = mock_render.call_args[0][2]
@@ -1056,9 +1026,7 @@ class EditTenementTests(_ViewTestBase):
     @patch("core.views.get_object_or_404")
     @patch("core.views.Tenement")
     @patch("core.views._org_qs_filter", return_value=Q())
-    def test_get_passes_initial_geojson(
-        self, _f, mock_ten, mock_get, mock_form_cls, mock_render
-    ):
+    def test_get_passes_initial_geojson(self, _f, mock_ten, mock_get, mock_form_cls, mock_render):
         tenement = MagicMock()
         tenement.geom = MagicMock()
         tenement.geom.json = '{"type":"Polygon"}'
@@ -1149,9 +1117,7 @@ class EditProcessGeometryTests(_ViewTestBase):
         mock_process.objects = self._chainable_qs([process])
         mock_get.return_value = process
 
-        views.edit_process_geometry(
-            self._authed_request("post", data={"geom_geojson": "  "}), pk=1
-        )
+        views.edit_process_geometry(self._authed_request("post", data={"geom_geojson": "  "}), pk=1)
 
         mock_messages.error.assert_called_once()
         process.save.assert_not_called()

@@ -255,9 +255,7 @@ class HomeViewTests(_ViewTestBase):
     @patch("core.views.Document")
     @patch("core.views.Process")
     @patch("core.views._org_qs_filter", return_value=Q())
-    def test_limits_results_to_ten(
-        self, _mock_filter, mock_process, mock_document, _mock_render
-    ):
+    def test_limits_results_to_ten(self, _mock_filter, mock_process, mock_document, _mock_render):
         proc_qs = self._chainable_qs(list(range(50)))
         doc_qs = self._chainable_qs(list(range(50)))
         mock_process.objects = proc_qs

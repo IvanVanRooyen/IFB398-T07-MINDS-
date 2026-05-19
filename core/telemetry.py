@@ -42,9 +42,7 @@ class Telemetry:
 
         tracer_provider = TracerProvider(resource=self.resource)
         tracer_provider.add_span_processor(
-            BatchSpanProcessor(
-                OTLPSpanExporter(endpoint=traces_endpoint, insecure=True)
-            )
+            BatchSpanProcessor(OTLPSpanExporter(endpoint=traces_endpoint, insecure=True))
         )
 
         trace.set_tracer_provider(tracer_provider)
@@ -55,9 +53,7 @@ class Telemetry:
             OTLPMetricExporter(endpoint=meter_endpoint, insecure=True),
             export_interval_millis=10000,
         )
-        meter_provider = MeterProvider(
-            resource=self.resource, metric_readers=[metric_reader]
-        )
+        meter_provider = MeterProvider(resource=self.resource, metric_readers=[metric_reader])
 
         metrics.set_meter_provider(meter_provider)
 
@@ -65,9 +61,7 @@ class Telemetry:
         logs_endpoint = get_endpoint_api(self.collector_endpoint, "logs")
         logger_provider = LoggerProvider(resource=self.resource)
         logger_provider.add_log_record_processor(
-            BatchLogRecordProcessor(
-                OTLPLogExporter(endpoint=logs_endpoint, insecure=True)
-            )
+            BatchLogRecordProcessor(OTLPLogExporter(endpoint=logs_endpoint, insecure=True))
         )
 
         handler = LoggingHandler(level=0, logger_provider=logger_provider)

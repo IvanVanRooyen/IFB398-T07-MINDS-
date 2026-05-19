@@ -5,40 +5,45 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0006_document_extracted_text'),
+        ("core", "0006_document_extracted_text"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='drillhole',
-            name='azimuth',
-            field=models.FloatField(blank=True, help_text='Bearing (0-360 degrees)', null=True),
+            model_name="drillhole",
+            name="azimuth",
+            field=models.FloatField(blank=True, help_text="Bearing (0-360 degrees)", null=True),
         ),
         migrations.AddField(
-            model_name='drillhole',
-            name='collar_location',
+            model_name="drillhole",
+            name="collar_location",
             field=django.contrib.gis.db.models.fields.PointField(blank=True, null=True, srid=4326),
         ),
         migrations.AddField(
-            model_name='drillhole',
-            name='depth',
-            field=models.FloatField(blank=True, help_text='Total depth in meters', null=True),
+            model_name="drillhole",
+            name="depth",
+            field=models.FloatField(blank=True, help_text="Total depth in meters", null=True),
         ),
         migrations.AddField(
-            model_name='drillhole',
-            name='dip',
-            field=models.FloatField(blank=True, help_text='Dip angle (-90 to 90 degrees, negative = downward)', null=True),
+            model_name="drillhole",
+            name="dip",
+            field=models.FloatField(
+                blank=True,
+                help_text="Dip angle (-90 to 90 degrees, negative = downward)",
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='prospect',
-            name='geom',
+            model_name="prospect",
+            name="geom",
             field=django.contrib.gis.db.models.fields.PointField(blank=True, null=True, srid=4326),
         ),
         migrations.AddField(
-            model_name='tenement',
-            name='geom',
-            field=django.contrib.gis.db.models.fields.MultiPolygonField(blank=True, null=True, srid=4326),
+            model_name="tenement",
+            name="geom",
+            field=django.contrib.gis.db.models.fields.MultiPolygonField(
+                blank=True, null=True, srid=4326
+            ),
         ),
     ]

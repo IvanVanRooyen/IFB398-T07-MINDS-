@@ -8,10 +8,10 @@ User = get_user_model()
 
 
 def jorc_content(org, process, commodity):
-    title = f"Public Report: {commodity.capitalize()} Resource Estimate - {org.name} ({process.name})"
-    drill_type = (
-        "Diamond Core" if "Exploration" in process.name else "Reverse Circulation"
+    title = (
+        f"Public Report: {commodity.capitalize()} Resource Estimate - {org.name} ({process.name})"
     )
+    drill_type = "Diamond Core" if "Exploration" in process.name else "Reverse Circulation"
 
     sections = [
         (
@@ -47,12 +47,8 @@ def jorc_content(org, process, commodity):
 
 
 def valmin_content(org, process, commodity):
-    valuation_method = random.choice(
-        ["Income Approach (DCF)", "Market Approach", "Cost Approach"]
-    )
-    title = (
-        f"Independent Technical Assessment and Valuation - {process.name} ({commodity})"
-    )
+    valuation_method = random.choice(["Income Approach (DCF)", "Market Approach", "Cost Approach"])
+    title = f"Independent Technical Assessment and Valuation - {process.name} ({commodity})"
 
     sections = [
         (

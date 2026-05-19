@@ -1,30 +1,31 @@
 from django.urls import path
+
 from . import views
 
 urlpatterns = [
     path("", views.dashboard, name="dashboard"),
     path("home/", views.home, name="home"),
-
     # Projects
     path("projects/", views.projects, name="projects"),
     path("projects/<uuid:pk>/", views.project_detail, name="project_detail"),
-
-    path("prospects/new/",                              views.create_prospect,          name="create_prospect"),
+    path("prospects/new/", views.create_prospect, name="create_prospect"),
     path("prospects/", views.prospects, name="prospects"),
-    path("prospects/<uuid:pk>/",                        views.prospect_detail,          name="prospect_detail"),
-    path("prospects/<uuid:pk>/edit/",                   views.edit_prospect,            name="edit_prospect"),
-    path("prospects/<uuid:pk>/generate-report/",        views.generate_prospect_report, name="generate_prospect_report"),
-
+    path("prospects/<uuid:pk>/", views.prospect_detail, name="prospect_detail"),
+    path("prospects/<uuid:pk>/edit/", views.edit_prospect, name="edit_prospect"),
+    path(
+        "prospects/<uuid:pk>/generate-report/",
+        views.generate_prospect_report,
+        name="generate_prospect_report",
+    ),
     # DocLink routes
     path("doclinks/picker/", views.doc_link_picker, name="doc_link_picker"),
     path("doclinks/create/", views.create_doc_link, name="create_doc_link"),
     path("doclinks/<int:pk>/delete/", views.delete_doc_link, name="delete_doc_link"),
-
-    path("drillholes/link-picker/",      views.drillhole_link_picker, name="drillhole_link_picker"),
-    path("drillholes/link/",             views.link_drillhole,        name="link_drillhole"),
-    path("drillholes/bulk-link/",        views.bulk_link_drillholes,  name="bulk_link_drillholes"),
-    path("drillholes/bulk-assign/",      views.bulk_assign_drillholes, name="bulk_assign_drillholes"),
-    path("drillholes/<uuid:pk>/unlink/", views.unlink_drillhole,      name="unlink_drillhole"),
+    path("drillholes/link-picker/", views.drillhole_link_picker, name="drillhole_link_picker"),
+    path("drillholes/link/", views.link_drillhole, name="link_drillhole"),
+    path("drillholes/bulk-link/", views.bulk_link_drillholes, name="bulk_link_drillholes"),
+    path("drillholes/bulk-assign/", views.bulk_assign_drillholes, name="bulk_assign_drillholes"),
+    path("drillholes/<uuid:pk>/unlink/", views.unlink_drillhole, name="unlink_drillhole"),
     path("drillholes/", views.drillholes, name="drillholes"),
     path("drillholes/import/", views.drillhole_import, name="drillhole_import"),
     path("drillholes/<uuid:pk>/", views.drillhole_detail, name="drillhole_detail"),
@@ -32,7 +33,11 @@ urlpatterns = [
     path("tenements/new/", views.create_tenement, name="create_tenement"),
     path("tenements/<uuid:pk>/", views.tenement_detail, name="tenement_detail"),
     path("tenements/<uuid:pk>/edit/", views.edit_tenement, name="edit_tenement"),
-    path("projects/<uuid:pk>/edit-boundary/", views.edit_process_geometry, name="edit_process_geometry"),
+    path(
+        "projects/<uuid:pk>/edit-boundary/",
+        views.edit_process_geometry,
+        name="edit_process_geometry",
+    ),
     path("documents/", views.documents, name="documents"),
     path("documents/<uuid:pk>/", views.document_detail, name="document_detail"),
     path("documents/<uuid:pk>/delete/", views.delete_document, name="delete_document"),
@@ -41,63 +46,79 @@ urlpatterns = [
     path("map/", views.map_view, name="map_view"),
     path("ai-insights/", views.ai_insights, name="ai_insights"),
     path("upload/", views.upload_doc, name="upload"),
-
     # PDF / DOCX direct download by process
-    path("ai/report/<uuid:process_id>/pdf/", views.project_report_pdf,  name="project_report_pdf"),
-    path("ai/report/<uuid:process_id>/docx/", views.project_report_docx, name="project_report_docx"),
-
+    path("ai/report/<uuid:process_id>/pdf/", views.project_report_pdf, name="project_report_pdf"),
+    path(
+        "ai/report/<uuid:process_id>/docx/", views.project_report_docx, name="project_report_docx"
+    ),
     # Report History
     path("process/<uuid:process_id>/reports/history/", views.report_history, name="report_history"),
-    path("reports/<uuid:report_id>/version/", views.report_version_detail, name="report_version_detail"),
-
+    path(
+        "reports/<uuid:report_id>/version/",
+        views.report_version_detail,
+        name="report_version_detail",
+    ),
     # AI Routes
     path("ai/reports/", views.report_list_page, name="report_list"),
     path("ai/reports/generate/", views.generate_report, name="generate_report"),
     path("ai/reports/<uuid:report_id>/", views.report_detail, name="report_detail"),
     path("ai/reports/history/", views.all_reports_history, name="all_reports_history"),
-
-    # Report Editor 
+    # Report Editor
     path("ai/reports/editor/<uuid:process_id>/", views.report_editor, name="report_editor"),
-    path("ai/reports/<uuid:report_id>/view/", views.saved_report_editor, name="saved_report_editor"),
-
+    path(
+        "ai/reports/<uuid:report_id>/view/", views.saved_report_editor, name="saved_report_editor"
+    ),
     # Save / Update
     path("ai/reports/save/", views.save_report, name="save_report"),
-    path("ai/reports/<uuid:report_id>/update/",  views.update_saved_report,       name="update_saved_report"),
-
+    path(
+        "ai/reports/<uuid:report_id>/update/", views.update_saved_report, name="update_saved_report"
+    ),
     # Prospect–Report assignment
-    path("ai/reports/<uuid:report_id>/assign-prospect/", views.assign_report_prospect, name="assign_report_prospect"),
-
+    path(
+        "ai/reports/<uuid:report_id>/assign-prospect/",
+        views.assign_report_prospect,
+        name="assign_report_prospect",
+    ),
     # Samples
-    path("samples/",             views.samples,        name="samples"),
-    path("samples/new/",         views.create_sample,  name="create_sample"),
-    path("samples/<uuid:pk>/",   views.sample_detail,  name="sample_detail"),
-
+    path("samples/", views.samples, name="samples"),
+    path("samples/new/", views.create_sample, name="create_sample"),
+    path("samples/<uuid:pk>/", views.sample_detail, name="sample_detail"),
     # Surveys
-    path("surveys/",             views.surveys,        name="surveys"),
-    path("surveys/new/",         views.create_survey,  name="create_survey"),
-    path("surveys/<uuid:pk>/",   views.survey_detail,  name="survey_detail"),
-
+    path("surveys/", views.surveys, name="surveys"),
+    path("surveys/new/", views.create_survey, name="create_survey"),
+    path("surveys/<uuid:pk>/", views.survey_detail, name="survey_detail"),
     # JORC Approval Workflow
-    path("ai/reports/<uuid:report_id>/submit/",  views.submit_report_for_review,  name="submit_report_for_review"),
-    path("ai/reports/<uuid:report_id>/approve/", views.approve_report,             name="approve_report"),
-    path("ai/reports/<uuid:report_id>/reject/",  views.reject_report,              name="reject_report"),
-    path("ai/reports/<uuid:report_id>/publish/", views.publish_report,             name="publish_report"),
-
+    path(
+        "ai/reports/<uuid:report_id>/submit/",
+        views.submit_report_for_review,
+        name="submit_report_for_review",
+    ),
+    path("ai/reports/<uuid:report_id>/approve/", views.approve_report, name="approve_report"),
+    path("ai/reports/<uuid:report_id>/reject/", views.reject_report, name="reject_report"),
+    path("ai/reports/<uuid:report_id>/publish/", views.publish_report, name="publish_report"),
     # Export from editor content via POST
     path("ai/reports/export/", views.export_report, name="export_report"),
-
     # Approval workflows list
     path("ai/approvals/", views.approval_workflows_list, name="approval_workflows_list"),
-
     # Audit trail (admin/compliance)
     path("admin/audit-log/", views.audit_log_view, name="audit_log"),
     path("ai/documents/analysis/", views.document_analysis_page, name="document_analysis_page"),
     path("ai/documents/<uuid:pk>/analyze/", views.analyze_document, name="analyze_document"),
-    path("ai/documents/<uuid:pk>/analysis/", views.document_analysis_detail, name="document_analysis_detail"),
-    path("ai/documents/<uuid:pk>/analysis/save/", views.save_document_analysis, name="save_document_analysis"),
-    path("ai/documents/<uuid:pk>/analysis/export/", views.export_document_analysis, name="export_document_analysis"),
-
-
+    path(
+        "ai/documents/<uuid:pk>/analysis/",
+        views.document_analysis_detail,
+        name="document_analysis_detail",
+    ),
+    path(
+        "ai/documents/<uuid:pk>/analysis/save/",
+        views.save_document_analysis,
+        name="save_document_analysis",
+    ),
+    path(
+        "ai/documents/<uuid:pk>/analysis/export/",
+        views.export_document_analysis,
+        name="export_document_analysis",
+    ),
     # GeoJSON API endpoints for the map viewer
     path("api/geojson/projects/", views.geojson_projects, name="geojson_projects"),
     path("api/geojson/tenements/", views.geojson_tenements, name="geojson_tenements"),

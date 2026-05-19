@@ -5,45 +5,70 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0019_savedreport_status'),
+        ("core", "0019_savedreport_status"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='document',
-            name='author_name',
-            field=models.CharField(blank=True, help_text='Free-text author name for imported or legacy documents', max_length=128),
+            model_name="document",
+            name="author_name",
+            field=models.CharField(
+                blank=True,
+                help_text="Free-text author name for imported or legacy documents",
+                max_length=128,
+            ),
         ),
         migrations.AddField(
-            model_name='document',
-            name='commodity',
+            model_name="document",
+            name="commodity",
             field=models.CharField(blank=True, max_length=64),
         ),
         migrations.AddField(
-            model_name='document',
-            name='is_latest',
+            model_name="document",
+            name="is_latest",
             field=models.BooleanField(db_index=True, default=True),
         ),
         migrations.AddField(
-            model_name='document',
-            name='parent_document',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='versions', to='core.document'),
+            model_name="document",
+            name="parent_document",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="versions",
+                to="core.document",
+            ),
         ),
         migrations.AddField(
-            model_name='document',
-            name='reporting_stage',
-            field=models.CharField(blank=True, choices=[('EARLY_EXPLORATION', 'Early Exploration'), ('RESOURCE_DEFINITION', 'Resource Definition'), ('FEASIBILITY', 'Feasibility'), ('DEVELOPMENT', 'Development / Mining'), ('REHABILITATION', 'Rehabilitation / Closure')], max_length=32),
+            model_name="document",
+            name="reporting_stage",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("EARLY_EXPLORATION", "Early Exploration"),
+                    ("RESOURCE_DEFINITION", "Resource Definition"),
+                    ("FEASIBILITY", "Feasibility"),
+                    ("DEVELOPMENT", "Development / Mining"),
+                    ("REHABILITATION", "Rehabilitation / Closure"),
+                ],
+                max_length=32,
+            ),
         ),
         migrations.AddField(
-            model_name='document',
-            name='tenement',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='documents', to='core.tenement'),
+            model_name="document",
+            name="tenement",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="documents",
+                to="core.tenement",
+            ),
         ),
         migrations.AddField(
-            model_name='document',
-            name='version_number',
+            model_name="document",
+            name="version_number",
             field=models.PositiveIntegerField(default=1),
         ),
     ]
