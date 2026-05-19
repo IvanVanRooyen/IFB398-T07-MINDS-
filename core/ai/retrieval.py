@@ -1,6 +1,7 @@
 from __future__ import annotations
 from django.db.models import Q
 from ..models import DocumentChunk, Process
+from ..instrument import instrument
 
 # mirrrors the hierarchy used in UserProfile.can_access_document and report_service.py
 _CLEARANCE_LEVELS = {
@@ -18,6 +19,7 @@ _CONFIDENTIALITY_MAP = {
 }
 
 
+@instrument
 def query_chunks(
     query: str,
     process: Process | None = None,

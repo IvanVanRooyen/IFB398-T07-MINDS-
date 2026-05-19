@@ -22,11 +22,19 @@
 
         rm-docker-imgs = pkgs.writeShellScriptBin "rm-docker-imgs" ''
           for img in $(docker image ls --all --format "{{ .ID }}"); do 
+            echo "deleting: $img"
             docker rmi "$img"
           done
-        
-          echo "------------------------------"
-          echo "all docker containers removed."
+        '';
+
+        rm-docker-vols = pkgs.writeShellScriptBin "rm-docker-vols" ''
+          COMPOSE_PREFIX="ifb398-t07-minds"
+          for vol in $(docker volume ls --format "{{ .Name }}"); do
+            if [[ "$vol" == "$COMPOSE_PREFIX"* ]]; then 
+              echo "deleting: $vol"
+              docker volume rm "$vol"
+            fi
+          done
         '';
 
         postGISPatch = pkgs.postgresql17Packages.postgis.overrideAttrs (prev: {
@@ -60,6 +68,7 @@
             bun
             redis
             rm-docker-imgs
+            rm-docker-vols
 
             go
 

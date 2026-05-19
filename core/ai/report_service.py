@@ -7,6 +7,7 @@ from django.db.models import QuerySet
 from django.utils.timezone import localtime
 
 from ..models import Process, Document, SavedReport, AuditLog, log_audit
+from ..instrument import instrument
 from .granite_client import GraniteClient
 from .retrieval import retrieve_context
 
@@ -41,6 +42,8 @@ def _fmt_user(user):
         return ""
     return getattr(user, "username", str(user))
 
+
+@instrument
 def fetch_process_bundle(process_id: str, clearance_level: str = "INTERNAL") -> dict:
     """
     Fetch the project (Process) and a clearance-filtered slice of related documents.
@@ -83,6 +86,8 @@ def fetch_process_bundle(process_id: str, clearance_level: str = "INTERNAL") -> 
         "docs": list(docs),
     }
 
+
+@instrument
 def build_structured_context(bundle: dict) -> str:
     """
     Convert DB records into a compact, LLM-friendly context block.
@@ -123,6 +128,8 @@ Write clearly and factually, using only the provided context. If data is missing
 Output Markdown. Keep it structured with headings.
 Audience: internal stakeholders (technical + managerial)."""
 
+
+@instrument
 def build_prompt(context: str, as_of: str | None = None, sections: Iterable[str] | None = None) -> str:
     sections = sections or [
         "1. Project Summary",
@@ -151,6 +158,8 @@ Style:
 - Keep to ~400–700 words.
 """
 
+
+@instrument
 def generate_project_report(process_id: str, clearance_level: str = "INTERNAL") -> tuple[str, list[str]]:
     """
     Orchestrates: fetch → structure → call Granite → return (Markdown, doc_ids).
@@ -181,6 +190,8 @@ def generate_project_report(process_id: str, clearance_level: str = "INTERNAL") 
     text = client.complete(prompt)
     return text, doc_ids
 
+
+@instrument
 def save_report(process, organisation, title, content_md, user, reason="GENERATED", summary=""):
     import hashlib
     content_hash = hashlib.sha256(content_md.encode()).hexdigest()
