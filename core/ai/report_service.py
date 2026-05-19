@@ -7,12 +7,8 @@ from typing import Iterable
 from django.db.models import QuerySet
 from django.utils.timezone import localtime
 
-<<<<<<< HEAD
-from ..models import Process, Document, SavedReport, AuditLog, log_audit
 from ..instrument import instrument
-=======
 from ..models import AuditLog, Document, Process, SavedReport, log_audit
->>>>>>> 606b01a1806df5f18fea4d61bdad026e1c74f42f
 from .granite_client import GraniteClient
 from .retrieval import retrieve_context
 
@@ -50,10 +46,7 @@ def _fmt_user(user):
     return getattr(user, "username", str(user))
 
 
-<<<<<<< HEAD
 @instrument
-=======
->>>>>>> 606b01a1806df5f18fea4d61bdad026e1c74f42f
 def fetch_process_bundle(process_id: str, clearance_level: str = "INTERNAL") -> dict:
     """
     Fetch the project (Process) and a clearance-filtered slice of related documents.
@@ -95,10 +88,7 @@ def fetch_process_bundle(process_id: str, clearance_level: str = "INTERNAL") -> 
     }
 
 
-<<<<<<< HEAD
 @instrument
-=======
->>>>>>> 606b01a1806df5f18fea4d61bdad026e1c74f42f
 def build_structured_context(bundle: dict) -> str:
     """
     Convert DB records into a compact, LLM-friendly context block.
@@ -141,14 +131,9 @@ Output Markdown. Keep it structured with headings.
 Audience: internal stakeholders (technical + managerial)."""
 
 
-<<<<<<< HEAD
-@instrument
-def build_prompt(context: str, as_of: str | None = None, sections: Iterable[str] | None = None) -> str:
-=======
 def build_prompt(
     context: str, as_of: str | None = None, sections: Iterable[str] | None = None
 ) -> str:
->>>>>>> 606b01a1806df5f18fea4d61bdad026e1c74f42f
     sections = sections or [
         "1. Project Summary",
         "2. Key Documents & Evidence",
