@@ -10,8 +10,9 @@ ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 
 SECRET_KEY = env("SECRET_KEY")
-DEBUG = env.bool("DJANGO_DEBUG", default=True)
-ALLOWED_HOSTS = ["*"]
+DEBUG = env.bool("DJANGO_DEBUG", default=False)
+ALLOWED_HOSTS = ["orefox.ivanvanrooyen.com", "localhost", "127.0.0.1"]
+CSRF_TRUSTED_ORIGINS = ["https://orefox.ivanvanrooyen.com"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -81,7 +82,7 @@ LOGIN_URL = "/auth/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/auth/login/"
 
-STATIC_URL = "static/"
+STATIC_URL = "static/img/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
