@@ -8,7 +8,7 @@ A web-based Knowledge Management System built for the mining and exploration ind
 
 ## Features
 
-| Feature | Description |
+| Feature | Description | -
 |---|---|
 | Document Management | Upload, search, version, and delete PDFs/DOCX files with SHA-256 deduplication |
 | Full-Text Search | PostgreSQL `tsvector` search across documents and saved reports |
