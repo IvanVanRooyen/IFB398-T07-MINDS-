@@ -147,6 +147,7 @@
     <h2 class="text-lg font-semibold">Reports</h2>
     <form method="post" action="{% url 'generate_prospect_report' prospect.pk %}" class="inline">
       {% csrf_token %}
+      <input type="hidden" name="request_id" value="{{ request.generation_request_id }}">
       <input type="hidden" name="report_title" value="{{ prospect.name }} — Prospect Report">
       <button type="submit" class="px-4 py-2 bg-cyan-600 text-white text-sm rounded-lg hover:bg-cyan-700">
         + Generate Report
@@ -319,6 +320,9 @@
   {% endif %}
 </div>
 
+{{ tenements_geojson|json_script:"prospect_detail-data-0" }}
+{{ drillholes_geojson|json_script:"prospect_detail-data-1" }}
+{{ area_geom_geojson|json_script:"prospect_detail-data-2" }}
 <script>
 const prospectMap = new maplibregl.Map({
     container: 'prospect-detail-map',
@@ -357,7 +361,7 @@ prospectMap.on('load', () => {
     // Tenements layer
     prospectMap.addSource('tenements', {
         type: 'geojson',
-        data: {{ tenements_geojson|safe }}
+        data: readMapData("prospect_detail-data-0")
     });
     prospectMap.addLayer({
         id: 'tenements-fill',
@@ -375,7 +379,7 @@ prospectMap.on('load', () => {
     // Drillholes layer
     prospectMap.addSource('drillholes', {
         type: 'geojson',
-        data: {{ drillholes_geojson|safe }}
+        data: readMapData("prospect_detail-data-1")
     });
     prospectMap.addLayer({
         id: 'drillholes-layer',
@@ -390,7 +394,7 @@ prospectMap.on('load', () => {
     });
 
     // Prospect area boundary (optional polygon)
-    const AREA_GEOJSON = {{ area_geom_geojson|safe }};
+    const AREA_GEOJSON = readMapData("prospect_detail-data-2");
     if (AREA_GEOJSON) {
         prospectMap.addSource('area-boundary', {
             type: 'geojson',
@@ -404,9 +408,8 @@ prospectMap.on('load', () => {
     {% if prospect.geom %}
     new maplibregl.Marker({ color: '#dc2626' })
         .setLngLat([{{ prospect.geom.x }}, {{ prospect.geom.y }}])
-        .setPopup(new maplibregl.Popup({ offset: 25 }).setHTML(
-            '<strong>{{ prospect.name|escapejs }}</strong><br>' +
-            '{{ prospect.geom.y|floatformat:5 }}°, {{ prospect.geom.x|floatformat:5 }}°'
+        .setPopup(new maplibregl.Popup({ offset: 25 }).setDOMContent(
+            mapPopupContent('{{ prospect.name|escapejs }}', [['Location', '{{ prospect.geom.y|floatformat:5 }}°, {{ prospect.geom.x|floatformat:5 }}°']])
         ))
         .addTo(prospectMap);
     {% endif %}
@@ -416,12 +419,7 @@ prospectMap.on('load', () => {
         const p = e.features[0].properties;
         new maplibregl.Popup()
             .setLngLat(e.lngLat)
-            .setHTML(
-                '<div style="font-family:sans-serif">' +
-                '<strong>' + (p.name || 'Drillhole') + '</strong><br>' +
-                'Depth: ' + (p.depth ? p.depth + 'm' : 'N/A') +
-                '</div>'
-            )
+            .setDOMContent(mapPopupContent(p.name || 'Drillhole', [['Depth', p.depth == null ? null : p.depth + 'm']]))
             .addTo(prospectMap);
     });
 
@@ -430,7 +428,7 @@ prospectMap.on('load', () => {
         const p = e.features[0].properties;
         new maplibregl.Popup()
             .setLngLat(e.lngLat)
-            .setHTML('<div style="font-family:sans-serif"><strong>Tenement: ' + (p.name || 'Unnamed') + '</strong></div>')
+            .setDOMContent(mapPopupContent('Tenement: ' + (p.name || 'Unnamed')))
             .addTo(prospectMap);
     });
 

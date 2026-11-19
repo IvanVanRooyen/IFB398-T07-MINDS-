@@ -60,6 +60,8 @@ urlpatterns = [
     ),
     # AI Routes
     path("ai/reports/", views.report_list_page, name="report_list"),
+    path("ai/reports/jobs/<uuid:job_id>/cancel/", views.cancel_report_job, name="cancel_report_job"),
+    path("ai/reports/jobs/<uuid:job_id>/retry/", views.retry_report_job, name="retry_report_job"),
     path("ai/reports/generate/", views.generate_report, name="generate_report"),
     path("ai/reports/<uuid:report_id>/", views.report_detail, name="report_detail"),
     path("ai/reports/history/", views.all_reports_history, name="all_reports_history"),

@@ -56,8 +56,25 @@ class DocumentForm(ModelForm):
             ),
         }
 
-    def __init__(self, *args, organisation=None, **kwargs):
+    def __init__(self, *args, organisation=None, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        unrestricted = bool(user and user.is_superuser)
+        self.fields["organisation"].queryset = (
+            self.fields["organisation"].queryset if unrestricted else
+            self.fields["organisation"].queryset.filter(pk=getattr(organisation, "pk", None))
+        )
+        self.fields["organisation"].required = True
+        if organisation:
+            self.fields["organisation"].initial = organisation
+        from .access import CLEARANCE_LEVELS, DOCUMENT_LEVELS, clearance_level
+
+        rank = CLEARANCE_LEVELS.get(clearance_level(user), -1) if user else 3
+        self.fields["confidentiality"] = forms.ChoiceField(
+            choices=[(name, name.replace("_", " ").title()) for name, level in DOCUMENT_LEVELS.items() if level <= rank],
+            initial="internal" if rank >= 1 else "public",
+        )
+        if not unrestricted:
+            self.fields["process"].queryset = Process.objects.filter(organisation=organisation) if organisation else Process.objects.none()
         _ic = (
             "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 "
             "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 "
@@ -78,6 +95,19 @@ class DocumentForm(ModelForm):
         self.fields["tenement"].required = False
         self.fields["tenement"].empty_label = "— None —"
         self.fields["reporting_stage"].required = False
+
+    def clean(self):
+        cleaned = super().clean()
+        org = cleaned.get("organisation")
+        process = cleaned.get("process")
+        tenement = cleaned.get("tenement")
+        if org and process and process.organisation_id != org.pk:
+            self.add_error("process", "Project must belong to the selected organisation.")
+        if org and tenement and tenement.organisation_id != org.pk:
+            self.add_error("tenement", "Tenement must belong to the selected organisation.")
+        if process and tenement and tenement.process_id != process.pk:
+            self.add_error("tenement", "Tenement must belong to the selected project.")
+        return cleaned
 
     def save(self, commit=True):
         obj = super().save(commit=False)
@@ -160,8 +190,9 @@ class DocumentSearchForm(forms.Form):
         widget=forms.Select(attrs={"class": _INPUT}),
     )
 
-    def __init__(self, *args, doc_type_choices=None, organisation=None, **kwargs):
+    def __init__(self, *args, doc_type_choices=None, organisation=None, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["process"].queryset = Process.objects.all() if user and user.is_superuser else Process.objects.filter(organisation=organisation) if organisation else Process.objects.none()
         self.fields["doc_type"].choices = doc_type_choices or [("", "All types")]
         self.fields["reporting_stage"].choices = [
             ("", "All stages")

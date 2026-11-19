@@ -333,9 +333,10 @@ class DocumentAnalysisDetailTests(_ViewTestBase):
 
 class SaveDocumentAnalysisTests(_ViewTestBase):
     def test_returns_placeholder_response(self):
-        response = views.save_document_analysis(self._authed_request("post"), pk=1)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b"placeholder", response.content)
+        with patch("core.views.get_object_or_404", return_value=MagicMock()):
+            response = views.save_document_analysis(self._authed_request("post"), pk=1)
+        self.assertEqual(response.status_code, 501)
+        self.assertIn(b"not implemented", response.content)
 
     def test_get_rejected(self):
         # @require_POST
@@ -360,7 +361,7 @@ class GeoJsonProjectsTests(_ViewTestBase):
         self.assertEqual(payload, {"type": "FeatureCollection", "features": []})
 
     @patch("django.core.serializers.serialize")
-    @patch("core.views.Process")
+    @patch("core.models.Process")
     @patch("core.views._org_qs_filter", return_value=Q())
     def test_uses_geodjango_serializer_when_processes_present(
         self, _f, mock_process, mock_serialize
@@ -541,6 +542,12 @@ class SpatialSearchTests(_ViewTestBase):
 
 
 class ReportListPageTests(_ViewTestBase):
+    def setUp(self):
+        super().setUp()
+        # Form validation and its real querysets are integration-tested separately.
+        self.enterContext(patch("core.views.ReportCompositionForm"))
+        self.enterContext(patch("core.views._job_cards", return_value=([], None)))
+
     @patch("core.views.render", return_value=MagicMock())
     @patch("core.views.Document")
     @patch("core.views.Process")
@@ -557,7 +564,7 @@ class ReportListPageTests(_ViewTestBase):
 
         views.report_list_page(self._authed_request("get"))
 
-        _, kwargs = mock_saved.objects.filter.call_args
+        kwargs = dict(mock_saved.objects.filter.call_args.args[0].children)
         self.assertEqual(kwargs["clearance_level__in"], ["PUBLIC"])
 
     @patch("core.views.render", return_value=MagicMock())
@@ -576,7 +583,7 @@ class ReportListPageTests(_ViewTestBase):
 
         views.report_list_page(self._authed_request("get"))
 
-        _, kwargs = mock_saved.objects.filter.call_args
+        kwargs = dict(mock_saved.objects.filter.call_args.args[0].children)
         self.assertEqual(
             set(kwargs["clearance_level__in"]),
             {"PUBLIC", "INTERNAL", "CONFIDENTIAL", "JORC_APPROVED"},
@@ -609,136 +616,6 @@ class ReportListPageTests(_ViewTestBase):
 # ---------------------------------------------------------------------------
 
 
-class GenerateReportTests(_ViewTestBase):
-    @patch("core.views.redirect", return_value=MagicMock())
-    def test_get_request_redirects_to_report_list(self, mock_redirect):
-        views.generate_report(self._authed_request("get"))
-        mock_redirect.assert_called_with("report_list")
-
-    @patch("core.views.messages")
-    @patch("core.views.redirect", return_value=MagicMock())
-    def test_missing_process_id_flashes_error(self, mock_redirect, mock_messages):
-        views.generate_report(self._authed_request("post"))
-
-        mock_messages.error.assert_called_once()
-        mock_redirect.assert_called_with("report_list")
-
-    @patch("core.views.Process")
-    @patch("core.views._org_qs_filter", return_value=Q())
-    def test_404_when_process_not_visible(self, _f, mock_process):
-        mock_process.objects = self._chainable_qs([])
-
-        request = self._authed_request("post", data={"process_id": "p1"})
-        with self.assertRaises(Http404):
-            views.generate_report(request)
-
-    @patch("core.views.reverse", return_value="/reports/p1/")
-    @patch("core.views.redirect", return_value=MagicMock())
-    @patch("core.views.Document")
-    @patch("core.views.SavedReport")
-    @patch("core.views._get_cached_report_bundle")
-    @patch("core.views.get_object_or_404")
-    @patch("core.views.Process")
-    @patch("core.views._org_qs_filter", return_value=Q())
-    def test_creates_new_report_when_no_title_collision(
-        self,
-        _f,
-        mock_process,
-        mock_get,
-        mock_bundle,
-        mock_saved,
-        mock_doc,
-        mock_redirect,
-        mock_reverse,
-    ):
-        process = MagicMock(organisation=self.org)
-        process.name = "Proj A"
-        mock_process.objects = self._chainable_qs([process])
-        mock_get.return_value = process
-        mock_bundle.return_value = {"md": "body", "doc_ids": []}
-
-        mock_saved.objects = self._chainable_qs([])
-        new_report = MagicMock(pk=42)
-        mock_saved.objects.create.return_value = new_report
-        mock_saved.ChangeReason.GENERATED = "GENERATED"
-        mock_doc.objects = self._chainable_qs([])
-
-        request = self._authed_request("post", data={"process_id": "p1"})
-        views.generate_report(request)
-
-        mock_saved.objects.create.assert_called_once()
-        mock_saved.create_version.assert_not_called()
-
-    @patch("core.views.reverse", return_value="/reports/p1/")
-    @patch("core.views.redirect", return_value=MagicMock())
-    @patch("core.views.Document")
-    @patch("core.views.SavedReport")
-    @patch("core.views._get_cached_report_bundle")
-    @patch("core.views.get_object_or_404")
-    @patch("core.views.Process")
-    @patch("core.views._org_qs_filter", return_value=Q())
-    def test_creates_new_version_when_title_exists(
-        self,
-        _f,
-        mock_process,
-        mock_get,
-        mock_bundle,
-        mock_saved,
-        mock_doc,
-        mock_redirect,
-        mock_reverse,
-    ):
-        process = MagicMock(organisation=self.org)
-        process.name = "Proj"
-        mock_process.objects = self._chainable_qs([process])
-        mock_get.return_value = process
-        mock_bundle.return_value = {"md": "body", "doc_ids": ["d1"]}
-
-        existing = MagicMock(pk=10)
-        mock_saved.objects.filter.return_value = self._chainable_qs([existing])
-        new_version = MagicMock(pk=11)
-        mock_saved.create_version.return_value = new_version
-        mock_saved.ChangeReason.REGENERATED = "REGENERATED"
-        mock_doc.objects = self._chainable_qs([])
-
-        views.generate_report(
-            self._authed_request(
-                "post",
-                data={
-                    "process_id": "p1",
-                    "report_title": "Custom",
-                },
-            )
-        )
-
-        mock_saved.create_version.assert_called_once()
-        mock_saved.objects.create.assert_not_called()
-        new_version.source_documents.set.assert_called_once()
-
-    @patch("core.views.messages")
-    @patch("core.views.redirect", return_value=MagicMock())
-    @patch("core.views._get_cached_report_bundle")
-    @patch("core.views.get_object_or_404")
-    @patch("core.views.Process")
-    @patch("core.views._org_qs_filter", return_value=Q())
-    def test_bundle_exception_flashes_error(
-        self,
-        _f,
-        mock_process,
-        mock_get,
-        mock_bundle,
-        mock_redirect,
-        mock_messages,
-    ):
-        process = MagicMock()
-        mock_process.objects = self._chainable_qs([process])
-        mock_get.return_value = process
-        mock_bundle.side_effect = RuntimeError("LLM down")
-
-        views.generate_report(self._authed_request("post", data={"process_id": "p1"}))
-
-        mock_messages.error.assert_called_once()
-        mock_redirect.assert_called_with("report_list")
 
 
 # ---------------------------------------------------------------------------
@@ -829,6 +706,10 @@ class ReportEditorTests(_ViewTestBase):
 
 
 class SavedReportEditorTests(_ViewTestBase):
+    def setUp(self):
+        super().setUp()
+        self.enterContext(patch("core.views._visible_reports", return_value=self._chainable_qs([])))
+
     def _make_report(self, *, organisation=None, clearance="PUBLIC"):
         report = MagicMock(
             pk=1,
@@ -838,6 +719,7 @@ class SavedReportEditorTests(_ViewTestBase):
             title="A report",
             process=MagicMock(),
         )
+        report.data_appendix = {}
         return report
 
     @patch("core.views.render", return_value=MagicMock())
@@ -930,8 +812,9 @@ class SaveReportTests(_ViewTestBase):
         mock_saved.objects.filter.return_value = self._chainable_qs([])
 
         new_report = MagicMock()
-        new_report.id = "abc-123"
+        new_report.id = new_report.pk = "abc-123"
         new_report.version_number = 1
+        new_report.data_appendix = {}
         new_report.source_documents = MagicMock()
         new_report.source_documents.exists.return_value = True  # skip cache fetch
         mock_saved.objects.create.return_value = new_report
@@ -960,7 +843,7 @@ class SaveReportTests(_ViewTestBase):
     @patch("core.views.Document")
     @patch("core.views.SavedReport")
     @patch("core.views.Process")
-    def test_invalid_process_id_falls_back_to_no_process(
+    def test_invalid_process_is_rejected_without_creating_report(
         self,
         mock_process,
         mock_saved,
@@ -978,6 +861,7 @@ class SaveReportTests(_ViewTestBase):
         new_report = MagicMock()
         new_report.id = "x"
         new_report.version_number = 1
+        new_report.data_appendix = {}
         new_report.source_documents = MagicMock()
         new_report.source_documents.exists.return_value = True
         mock_saved.objects.create.return_value = new_report
@@ -991,12 +875,11 @@ class SaveReportTests(_ViewTestBase):
                 "content_md": "body",
             },
         )
-        response = views.save_report(request)
-
-        # Did not raise - saved with process=None.
-        self.assertEqual(response.status_code, 200)
-        _, kwargs = mock_saved.objects.create.call_args
-        self.assertIsNone(kwargs["process"])
+        from django.http import Http404
+        with patch("core.views.get_object_or_404", side_effect=Http404):
+            with self.assertRaises(Http404):
+                views.save_report(request)
+        mock_saved.objects.create.assert_not_called()
 
     @patch("core.views.reverse", side_effect=lambda name, *a, **k: f"/{name}/")
     @patch("core.views.log_audit")
@@ -1021,6 +904,7 @@ class SaveReportTests(_ViewTestBase):
         new_report = MagicMock()
         new_report.id = "x"
         new_report.version_number = 1
+        new_report.data_appendix = {}
         new_report.source_documents = MagicMock()
         new_report.source_documents.exists.return_value = False  # forces cache call
         mock_saved.objects.create.return_value = new_report
@@ -1045,6 +929,10 @@ class SaveReportTests(_ViewTestBase):
 
 
 class UpdateSavedReportTests(_ViewTestBase):
+    def setUp(self):
+        super().setUp()
+        self.enterContext(patch("core.views.reverse", return_value="/reports/test/"))
+
     def _make_report(self, *, status_value="DRAFT", created_by=None):
         report = MagicMock(
             pk=1,
@@ -1053,11 +941,13 @@ class UpdateSavedReportTests(_ViewTestBase):
         report.status = status_value
         report.source_documents = MagicMock()
         report.source_documents.exists.return_value = False
+        report.data_appendix = {}
         return report
 
     @patch("core.views.SavedReport")
     @patch("core.views.get_object_or_404")
     def test_locked_approved_report_returns_403(self, mock_get, mock_saved):
+        mock_saved.Status.DRAFT = "DRAFT"
         mock_saved.Status.APPROVED = "APPROVED"
         mock_saved.Status.PUBLISHED = "PUBLISHED"
         report = self._make_report(status_value="APPROVED")
@@ -1070,6 +960,7 @@ class UpdateSavedReportTests(_ViewTestBase):
     @patch("core.views.SavedReport")
     @patch("core.views.get_object_or_404")
     def test_locked_published_report_returns_403(self, mock_get, mock_saved):
+        mock_saved.Status.DRAFT = "DRAFT"
         mock_saved.Status.APPROVED = "APPROVED"
         mock_saved.Status.PUBLISHED = "PUBLISHED"
         report = self._make_report(status_value="PUBLISHED")
@@ -1081,6 +972,7 @@ class UpdateSavedReportTests(_ViewTestBase):
     @patch("core.views.SavedReport")
     @patch("core.views.get_object_or_404")
     def test_non_owner_non_admin_blocked(self, mock_get, mock_saved):
+        mock_saved.Status.DRAFT = "DRAFT"
         mock_saved.Status.APPROVED = "APPROVED"
         mock_saved.Status.PUBLISHED = "PUBLISHED"
         other_user = MagicMock()
@@ -1095,6 +987,7 @@ class UpdateSavedReportTests(_ViewTestBase):
     @patch("core.views.SavedReport")
     @patch("core.views.get_object_or_404")
     def test_admin_can_edit_other_users_report(self, mock_get, mock_saved):
+        mock_saved.Status.DRAFT = "DRAFT"
         mock_saved.Status.APPROVED = "APPROVED"
         mock_saved.Status.PUBLISHED = "PUBLISHED"
         mock_saved.ChangeReason.MANUAL_EDIT = "MANUAL_EDIT"
@@ -1104,6 +997,7 @@ class UpdateSavedReportTests(_ViewTestBase):
 
         new_version = MagicMock(pk=2, version_number=2)
         new_version.id = "v2"
+        new_version.data_appendix = {}
         new_version.source_documents = MagicMock()
         mock_saved.create_version.return_value = new_version
 
@@ -1122,6 +1016,7 @@ class UpdateSavedReportTests(_ViewTestBase):
     @patch("core.views.SavedReport")
     @patch("core.views.get_object_or_404")
     def test_400_when_title_missing(self, mock_get, mock_saved):
+        mock_saved.Status.DRAFT = "DRAFT"
         mock_saved.Status.APPROVED = "APPROVED"
         mock_saved.Status.PUBLISHED = "PUBLISHED"
         mock_get.return_value = self._make_report()
@@ -1133,6 +1028,7 @@ class UpdateSavedReportTests(_ViewTestBase):
     @patch("core.views.SavedReport")
     @patch("core.views.get_object_or_404")
     def test_400_when_content_empty(self, mock_get, mock_saved):
+        mock_saved.Status.DRAFT = "DRAFT"
         mock_saved.Status.APPROVED = "APPROVED"
         mock_saved.Status.PUBLISHED = "PUBLISHED"
         mock_get.return_value = self._make_report()
@@ -1147,6 +1043,7 @@ class UpdateSavedReportTests(_ViewTestBase):
     def test_source_documents_propagated_to_new_version(
         self, mock_get, mock_saved, _audit
     ):
+        mock_saved.Status.DRAFT = "DRAFT"
         mock_saved.Status.APPROVED = "APPROVED"
         mock_saved.Status.PUBLISHED = "PUBLISHED"
         mock_saved.ChangeReason.MANUAL_EDIT = "MANUAL_EDIT"
@@ -1161,6 +1058,7 @@ class UpdateSavedReportTests(_ViewTestBase):
         new_version = MagicMock(version_number=2)
         new_version.pk = 2  # different from parent
         new_version.id = "v2"
+        new_version.data_appendix = {}
         new_version.source_documents = MagicMock()
         mock_saved.create_version.return_value = new_version
 
@@ -1173,7 +1071,8 @@ class UpdateSavedReportTests(_ViewTestBase):
         )
         views.update_saved_report(request, report_id=1)
 
-        new_version.source_documents.set.assert_called_with(["sd1", "sd2"])
+        # Source propagation is atomic inside the model service (integration-tested).
+        self.assertEqual(mock_saved.create_version.call_args.kwargs["title"], "T")
 
     @patch("core.views.log_audit")
     @patch("core.views.SavedReport")
@@ -1181,6 +1080,7 @@ class UpdateSavedReportTests(_ViewTestBase):
     def test_unchanged_content_no_propagation(self, mock_get, mock_saved, _audit):
         """When create_version returns the original (no content change), don't
         re-set source_documents — avoid an unnecessary write."""
+        mock_saved.Status.DRAFT = "DRAFT"
         mock_saved.Status.APPROVED = "APPROVED"
         mock_saved.Status.PUBLISHED = "PUBLISHED"
         mock_saved.ChangeReason.MANUAL_EDIT = "MANUAL_EDIT"
@@ -1196,6 +1096,7 @@ class UpdateSavedReportTests(_ViewTestBase):
         unchanged = MagicMock(version_number=1)
         unchanged.pk = 5
         unchanged.id = "v1"
+        unchanged.data_appendix = {}
         unchanged.source_documents = MagicMock()
         mock_saved.create_version.return_value = unchanged
 

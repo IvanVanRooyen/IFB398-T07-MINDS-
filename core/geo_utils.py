@@ -1,3 +1,4 @@
+import math
 import re
 from functools import lru_cache
 
@@ -56,6 +57,17 @@ def projected_to_wgs84(easting: float, northing: float, source_epsg: int) -> tup
     Returns:
         (longitude, latitude) as floats in WGS84.
     """
+    if not all(math.isfinite(v) for v in (easting, northing)):
+        raise ValueError("Coordinates must be finite")
+    if source_epsg in _EPSG_MAP.values() and not (
+        100000 <= easting <= 900000 and 0 <= northing <= 10000000
+    ):
+        raise ValueError("Coordinates are outside the supported UTM grid range")
     transformer = _get_transformer(source_epsg)
-    lon, lat = transformer.transform(easting, northing)
+    try:
+        lon, lat = transformer.transform(easting, northing, errcheck=True)
+    except Exception as exc:
+        raise ValueError("Coordinate transformation failed") from exc
+    if not (math.isfinite(lon) and math.isfinite(lat) and -180 <= lon <= 180 and -90 <= lat <= 90):
+        raise ValueError("Transformed coordinates are outside WGS84 bounds")
     return lon, lat

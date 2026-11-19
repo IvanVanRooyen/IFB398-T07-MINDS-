@@ -39,6 +39,7 @@ class GetClearanceLevelTests(TestCase):
     def test_returns_profile_clearance_for_authenticated_user(self):
         user = MagicMock()
         user.is_authenticated = True
+        user.is_superuser = False
         user.profile.clearance_level = "CONFIDENTIAL"
 
         self.assertEqual(views._get_clearance_level(self._request_with(user)), "CONFIDENTIAL")
@@ -57,12 +58,12 @@ class ReportCacheKeyTests(TestCase):
     def test_key_includes_microsecond_precision_timestamp(self):
         ts = datetime(2026, 5, 16, 12, 34, 56, 123456)
         key = views._report_cache_key("proc-1", "PUBLIC", ts)
-        self.assertEqual(key, "report:v1:proc-1:PUBLIC:20260516123456123456")
+        self.assertEqual(key, "report:v2:proc-1:PUBLIC:20260516123456123456")
 
     def test_key_uses_empty_when_timestamp_is_none(self):
         self.assertEqual(
             views._report_cache_key("proc-1", "PUBLIC", None),
-            "report:v1:proc-1:PUBLIC:empty",
+            "report:v2:proc-1:PUBLIC:empty",
         )
 
     def test_different_clearance_levels_produce_different_keys(self):
@@ -94,6 +95,7 @@ class GetCachedReportBundleTests(TestCase):
         chain.order_by.return_value = chain
         chain.values_list.return_value = chain
         chain.first.return_value = ts
+        chain.count.return_value = 1
         mock_document.objects.filter.return_value = chain
 
         mock_cache.get.return_value = {"md": "cached body", "doc_ids": ["d1"]}
@@ -169,7 +171,7 @@ class GetCachedReportBundleTests(TestCase):
         views._get_cached_report_bundle("p", "PUBLIC")
 
         cache_key_used = mock_cache.get.call_args[0][0]
-        self.assertEqual(cache_key_used, "report:v1:p:PUBLIC:empty")
+        self.assertEqual(cache_key_used, "report:v2:p:PUBLIC:empty")
 
 
 class GetCachedReportMdTests(TestCase):
@@ -187,6 +189,13 @@ class GetCachedReportMdTests(TestCase):
 
 class _ViewTestBase(TestCase):
     def setUp(self):
+        # Policy is integration-tested with real records in test_access_security.
+        # These orchestration tests supply mocks without persisted tenant fields.
+        self.enterContext(patch("core.views.require_record_access"))
+        self.enterContext(patch("core.views.require_report_author"))
+        self.enterContext(patch("core.views._lock_report_version", side_effect=lambda report: report))
+        self.enterContext(patch("core.views._has_newer_report", return_value=False))
+        self.enterContext(patch("core.views._document_filter", return_value=Q()))
         self.factory = RequestFactory()
         self.user = User.objects.create_user(
             username="alice", password="pw", email="alice@example.com"
@@ -200,12 +209,15 @@ class _ViewTestBase(TestCase):
         )
 
     def _authed_request(self, method="get", path="/", files=None, post_data=None, **kwargs):
+        if "body" in kwargs:
+            kwargs["data"] = kwargs.pop("body")
+            kwargs["content_type"] = "application/json"
         request = getattr(self.factory, method)(path, **kwargs)
         request.user = self.user
-        type(request.user).profile = property(lambda s, p=self.profile: p)
+        self.enterContext(patch.object(type(request.user), "profile", property(lambda s, p=self.profile: p)))
         if files is not None or post_data is not None:
             qd = QueryDict(mutable=True)
-            for k, v in (post_data or {}).items():
+            for k, v in (post_data if post_data is not None else kwargs.get("data", {})).items():
                 qd[k] = v
             qd._mutable = False
             request._post = qd
@@ -485,6 +497,7 @@ class DocumentsViewTests(_ViewTestBase):
             "prev_page_number": None,
         }
 
+        self.user.is_superuser = True  # isolate cache rendering; visibility is tested over HTTP
         views.documents(self._authed_request("get"))
         mock_paginate.assert_not_called()
 
@@ -552,6 +565,7 @@ class DocumentsViewTests(_ViewTestBase):
         mock_paginate.return_value = MagicMock(object_list=[], paginator=MagicMock(num_pages=1))
 
         # Any of the filter params being set must skip the cache entirely.
+        self.user.is_superuser = True  # this unit test isolates the cache-render path
         request = self._authed_request("get", path="/?q=hello")
         views.documents(request)
 
@@ -742,17 +756,19 @@ class DownloadDocumentTests(_ViewTestBase):
     @patch("core.views.redirect", return_value=MagicMock(status_code=302))
     @patch("core.views.log_audit")
     @patch("core.views.get_object_or_404")
-    def test_allowed_user_redirected_to_file_url(self, mock_get, mock_audit, mock_redirect):
+    def test_allowed_user_receives_stream(self, mock_get, mock_audit, mock_redirect):
         self.profile.can_access_document.return_value = True
         doc = MagicMock(title="Report.pdf")
         doc.file.url = "https://files.example.com/report.pdf"
         mock_get.return_value = doc
 
         request = self._authed_request("get")
-        views.download_document(request, pk=1)
+        response = views.download_document(request, pk=1)
 
         mock_audit.assert_called_once()
-        mock_redirect.assert_called_with("https://files.example.com/report.pdf")
+        mock_redirect.assert_not_called()
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.streaming)
 
     @patch("core.views.get_object_or_404")
     def test_user_without_access_blocked(self, mock_get):
@@ -776,8 +792,10 @@ class DownloadDocumentTests(_ViewTestBase):
         doc.file.url = "https://x/y"
         mock_get.return_value = doc
 
-        views.download_document(self._authed_request("get"), pk=1)
-        mock_redirect.assert_called_with("https://x/y")
+        response = views.download_document(self._authed_request("get"), pk=1)
+        mock_redirect.assert_not_called()
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.streaming)
 
     @patch("core.views.redirect", return_value=MagicMock())
     @patch("core.views.log_audit")

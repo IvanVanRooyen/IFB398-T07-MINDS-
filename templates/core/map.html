@@ -423,34 +423,20 @@ map.on('load', () => {
         map.setLayoutProperty('drillholes-layer', 'visibility', e.target.checked ? 'visible' : 'none'));
 
     // --- Popups ---
-    map.on('click', 'projects-fill', e => {
+    // Use text nodes for record values; imported names are not HTML.
+    const popupLayers = {
+      'projects-fill': p => mapPopupContent('Project: ' + (p.name || 'Unnamed'), [['Type', p.mode], ['Commodity', p.commodity]]),
+      'tenements-fill': p => mapPopupContent('Tenement: ' + (p.name || 'Unnamed')),
+      'prospects-layer': p => mapPopupContent('Prospect: ' + (p.name || 'Unnamed')),
+      'drillholes-layer': p => mapPopupContent('Drillhole: ' + (p.name || 'Unnamed'), [['Depth', p.depth == null ? null : p.depth + 'm'], ['Azimuth', p.azimuth == null ? null : p.azimuth + '°'], ['Dip', p.dip == null ? null : p.dip + '°']]),
+    };
+    for (const [layer, content] of Object.entries(popupLayers)) {
+      map.on('click', layer, e => {
         if (isDrawing) return;
-        const p = e.features[0].properties;
         new maplibregl.Popup().setLngLat(e.lngLat)
-            .setHTML(`<div style="font-family:sans-serif"><h3 style="font-weight:bold;margin-bottom:8px">Project: ${p.name||'Unnamed'}</h3><p><strong>Type:</strong> ${p.mode||'N/A'}</p><p><strong>Commodity:</strong> ${p.commodity||'N/A'}</p></div>`)
-            .addTo(map);
-    });
-    map.on('click', 'tenements-fill', e => {
-        if (isDrawing) return;
-        const p = e.features[0].properties;
-        new maplibregl.Popup().setLngLat(e.lngLat)
-            .setHTML(`<div style="font-family:sans-serif"><h3 style="font-weight:bold;margin-bottom:8px">Tenement: ${p.name||'Unnamed'}</h3></div>`)
-            .addTo(map);
-    });
-    map.on('click', 'prospects-layer', e => {
-        if (isDrawing) return;
-        const p = e.features[0].properties;
-        new maplibregl.Popup().setLngLat(e.lngLat)
-            .setHTML(`<div style="font-family:sans-serif"><h3 style="font-weight:bold;margin-bottom:8px">Prospect: ${p.name||'Unnamed'}</h3></div>`)
-            .addTo(map);
-    });
-    map.on('click', 'drillholes-layer', e => {
-        if (isDrawing) return;
-        const p = e.features[0].properties;
-        new maplibregl.Popup().setLngLat(e.lngLat)
-            .setHTML(`<div style="font-family:sans-serif"><h3 style="font-weight:bold;margin-bottom:8px">Drillhole: ${p.name||'Unnamed'}</h3><p><strong>Depth:</strong> ${p.depth?p.depth+'m':'N/A'}</p><p><strong>Azimuth:</strong> ${p.azimuth?p.azimuth+'°':'N/A'}</p><p><strong>Dip:</strong> ${p.dip?p.dip+'°':'N/A'}</p></div>`)
-            .addTo(map);
-    });
+          .setDOMContent(content(e.features[0].properties)).addTo(map);
+      });
+    }
 
     // Pointer cursor on hover (suppressed during drawing)
     ['projects-fill','tenements-fill','prospects-layer','drillholes-layer'].forEach(id => {

@@ -25,7 +25,7 @@ class Command(BaseCommand):
             "--update",
             action="store_true",
             default=False,
-            help="Update existing Drillhole records matched by HOLEID.",
+            help="Replace collars and all child rows for matching HOLEIDs; empty sheets clear child rows.",
         )
 
     def handle(self, *args, **options):
@@ -56,6 +56,8 @@ class Command(BaseCommand):
             warn=self.stderr.write,
         )
 
+        if not result["valid"]:
+            raise CommandError("Workbook validation failed; no data written.")
         c = result["counters"]
         dry_label = " [DRY RUN — no data written]" if options["dry_run"] else ""
         self.stdout.write(self.style.SUCCESS(f"\nImport complete{dry_label}"))

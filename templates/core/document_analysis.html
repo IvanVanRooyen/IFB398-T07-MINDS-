@@ -45,7 +45,7 @@
               </div>
               <div class="flex gap-2 flex-shrink-0">
                 {% if doc.file %}
-                  <a href="{{ doc.file.url }}" target="_blank"
+                  <a href="{% url 'download_document' doc.pk %}" target="_blank"
                      class="px-3 py-1 text-cyan-600 dark:text-cyan-400 hover:underline text-sm">
                     View
                   </a>

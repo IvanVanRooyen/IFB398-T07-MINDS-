@@ -35,6 +35,25 @@
     });
   </script>
   {% block head_extra %}{% endblock %}
+  <script>
+    function readMapData(id) {
+      const value = JSON.parse(document.getElementById(id).textContent);
+      return typeof value === 'string' ? JSON.parse(value) : value;
+    }
+    function mapPopupContent(title, fields = []) {
+      const container = document.createElement('div');
+      container.style.fontFamily = 'sans-serif';
+      const heading = document.createElement('strong');
+      heading.textContent = title;
+      container.append(heading);
+      for (const [label, value] of fields) {
+        const row = document.createElement('div');
+        row.textContent = label + ': ' + (value ?? 'N/A');
+        container.append(row);
+      }
+      return container;
+    }
+  </script>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
   <div class="flex min-h-screen">

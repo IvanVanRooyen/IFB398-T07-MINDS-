@@ -1,0 +1,69 @@
+<section class="mb-8" aria-labelledby="generations-heading">
+  <h2 id="generations-heading" class="text-xl font-semibold mb-3">Report generations</h2>
+  <p id="job-refresh-status" class="text-sm mb-3" role="status" aria-live="polite"></p>
+  {% for job in generation_jobs %}
+  <article data-generation-job="{{ job.id }}" data-active="{{ job.active|yesno:'true,false' }}" class="mb-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg break-words bg-white dark:bg-gray-900">
+    <h3 class="font-semibold">{{ job.title }}</h3>
+    <p class="mt-2 text-sm" data-job-stage role="status" aria-live="polite">{{ job.stage }}</p>
+    <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">Status: <span data-job-state>{{ job.status_label }}</span> · Attempts: <span data-job-attempts>{{ job.attempts }}</span></p>
+    <p data-job-error class="mt-2 text-sm text-red-800 dark:text-red-200">{{ job.error }}</p>
+    <div class="flex flex-wrap gap-3 mt-3 items-center text-sm">
+      <a data-job-result href="{{ job.report_url|default:'#' }}" {% if not job.report_url %}style="display:none"{% endif %} class="underline font-semibold">Open draft</a>
+      <form data-job-cancel method="post" action="{{ job.cancel_url }}" {% if not job.can_cancel %}style="display:none"{% endif %}>{% csrf_token %}<button class="px-3 py-2 border rounded-lg" type="submit">Cancel generation</button></form>
+      <form data-job-retry method="post" action="{{ job.retry_url }}" {% if not job.can_retry %}style="display:none"{% endif %}>{% csrf_token %}<button class="px-3 py-2 border rounded-lg" type="submit">Retry generation</button></form>
+      <a href="{{ job.resume_url }}" class="underline">Review request</a>
+    </div>
+  </article>
+  {% empty %}
+  <p class="text-sm text-gray-600 dark:text-gray-300">No generations yet. Submitted requests will appear here, so you can leave and return while a draft is being prepared.</p>
+  {% endfor %}
+  {% if jobs_page.has_other_pages %}
+  <nav aria-label="Generation history pages" class="flex gap-4 text-sm">
+    {% if jobs_page.has_previous %}<a class="underline" href="?jobs_page={{ jobs_page.previous_page_number }}">Newer generations</a>{% endif %}
+    <span>Page {{ jobs_page.number }} of {{ jobs_page.paginator.num_pages }}</span>
+    {% if jobs_page.has_next %}<a class="underline" href="?jobs_page={{ jobs_page.next_page_number }}">Older generations</a>{% endif %}
+  </nav>
+  {% endif %}
+</section>
+<script>
+  async function refreshGenerations() {
+    if (!document.querySelector('[data-generation-job]')) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete('resume');
+    url.searchParams.set('job_status', '1');
+    try {
+      const response = await fetch(url, {headers: {'Accept':'application/json'}, cache:'no-store'});
+      if (!response.ok || response.redirected) throw new Error('refresh');
+      const data = await response.json();
+      for (const job of data.jobs) {
+        const row = document.querySelector(`[data-generation-job="${job.id}"]`);
+        if (!row) continue;
+        row.dataset.active = String(job.active);
+        row.querySelector('[data-job-stage]').textContent = job.stage;
+        row.querySelector('[data-job-state]').textContent = job.status_label;
+        row.querySelector('[data-job-attempts]').textContent = job.attempts;
+        row.querySelector('[data-job-error]').textContent = job.error || (job.status === 'SUCCEEDED' && !job.report_url ? 'The completed draft is no longer accessible.' : '');
+        row.querySelector('[data-job-cancel]').style.display = job.can_cancel ? '' : 'none';
+        row.querySelector('[data-job-retry]').style.display = job.can_retry ? '' : 'none';
+        const result = row.querySelector('[data-job-result]');
+        result.style.display = job.report_url ? '' : 'none';
+        if (job.report_url) result.href = job.report_url;
+      }
+      document.getElementById('job-refresh-status').textContent = '';
+    } catch (error) {
+      document.getElementById('job-refresh-status').textContent = 'Unable to refresh generation status. Reload this page to reconnect.';
+    }
+  }
+  let generationPoll;
+  async function pollGenerations() {
+    if (!document.hidden) await refreshGenerations();
+    if (document.querySelector('[data-generation-job][data-active="true"]')) {
+      generationPoll = setTimeout(pollGenerations, 2000);
+    }
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshGenerations(); });
+  window.addEventListener('pagehide', () => clearTimeout(generationPoll));
+  window.addEventListener('pageshow', () => { clearTimeout(generationPoll); pollGenerations(); });
+  // Native refresh keeps the same job history available when JavaScript is disabled.
+</script>
+<noscript><p class="mb-6 text-sm">Refresh this page to see generation progress.</p></noscript>

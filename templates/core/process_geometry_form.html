@@ -72,8 +72,9 @@
   </div>
 </div>
 
+{{ initial_geojson|default:"null"|json_script:"process_geometry_form-data-0" }}
 <script>
-const INITIAL_GEOJSON = {{ initial_geojson|default:"null"|safe }};
+const INITIAL_GEOJSON = readMapData("process_geometry_form-data-0");
 
 const map = new maplibregl.Map({
     container: 'process-map',
