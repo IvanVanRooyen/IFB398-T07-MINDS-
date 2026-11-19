@@ -1,229 +1,143 @@
-# Orefox KMS — Knowledge Management System
+# MINDS Geospatial
 
-**IFB399 Capstone Project — Team T07**
+An exploration and mining knowledge system that connects geological records, technical documents, spatial investigation and traceable reporting.
 
-A web-based Knowledge Management System built for the mining and exploration industry. It provides a centralised platform for managing documents, geospatial datasets, drillhole data, and AI-generated reports.
+MINDS brings the evidence behind an exploration decision into one workflow: manage project data, investigate a prospect, inspect supporting records, prepare a report and review a fixed revision. Reports can combine authored narrative, optional evidence-scoped AI drafting, geological tables and a collar-location figure.
 
----
+**Status:** active development. The current application has been verified with 592 automated tests and targeted browser/file-format checks. Fresh-install automation, continuous integration, broader interface work and production deployment remain in progress. There is no public demo release yet.
 
-## Features
+[Architecture](docs/ARCHITECTURE.md) · [Development setup](docs/DEVELOPMENT.md) · [Verification](docs/VERIFICATION.md) · [Roadmap](docs/ROADMAP.md)
 
-| Feature | Description | -
+## The workflow
+
+1. **Organise evidence.** Maintain projects, prospects, documents and drillhole records within an organisation.
+2. **Import and inspect.** Validate collar, survey, lithology and assay workbooks before writing; inspect locations and linked records on the map.
+3. **Develop a prospect.** Connect an interpretation and investigation objective to its documents and drillholes.
+4. **Prepare a report.** Start with a manual outline or request an AI-assisted draft from a bounded set of accessible evidence.
+5. **Assemble geological evidence.** Capture collar, Au/Cu assay and lithology tables, with an optional collar-location figure.
+6. **Review and export.** Save revisions, submit a fixed version for review and export its narrative and geological appendix to PDF or DOCX.
+
+## Capabilities
+
+| Area | Current implementation |
 |---|---|
-| Document Management | Upload, search, version, and delete PDFs/DOCX files with SHA-256 deduplication |
-| Full-Text Search | PostgreSQL `tsvector` search across documents and saved reports |
-| Geospatial Data | Prospects, tenements, drillholes stored with WGS84 geometry (PostGIS) |
-| AI Reports | Granite LLM generates project summaries from document context via RAG |
-| Role-Based Access | Nine roles (Geologist, Field Lead, Admin, etc.) with clearance levels |
-| Audit Trail | Every create/view/edit/delete action is logged for compliance |
-| Drillhole Import | Bulk import from Excel with collar, survey, lithology, and assay data |
-| Approval Workflows | JORC/VALMIN approval chains on documents and reports |
-| Observability | Grafana dashboards backed by Prometheus, Loki, and Tempo |
+| Documents | PDF/DOCX text extraction, organisation-scoped access, checksums, version chains and private downloads |
+| Geological data | Collar, survey, lithology and assay records; validated workbook imports with dry runs and atomic replacement |
+| Geography | PostGIS geometry and MapLibre views for projects, tenements, prospects and drillholes |
+| Search and drafting | PostgreSQL full-text retrieval, ranked document passages, explicit evidence selection and inspectable drafting inputs |
+| Background work | Durable PostgreSQL report queue, progress stages, explicit retry, cancellation, interrupted-worker recovery and submission receipts |
+| Report assembly | Manual outlines, editable narrative and versioned geological tables/figures captured from the selected project or prospect |
+| Governance | Organisation/role/clearance checks, report revisions, review transitions and audit records |
+| Export | Native DOCX tables and embedded figure; PDF tables and vector figure using the saved geological snapshot |
+| Evaluation | Versioned synthetic retrieval/citation cases and an offline regression command |
 
----
+JORC/VALMIN-labelled review routes support human review. They do not establish certification or regulatory compliance. Citation feedback checks labels and literal excerpt matches; it does not prove factual or semantic support.
 
-## Technology Stack
+## Architecture
 
-**Backend**
-- [Django 5.x](https://www.djangoproject.com/) — web framework, ORM, auth
-- [GeoDjango](https://docs.djangoproject.com/en/stable/ref/contrib/gis/) — geospatial model fields and queries
-- [PostgreSQL 16 + PostGIS 3.4](https://postgis.net/) — relational database with spatial extensions
-- [Redis](https://redis.io/) — caching for document lists and AI report results
-- [MinIO](https://min.io/) — S3-compatible object storage for uploaded files
-
-**AI**
-- [IBM Granite](https://www.ibm.com/granite) via [Ollama](https://ollama.com/) — local LLM for report generation
-- RAG (Retrieval-Augmented Generation) over `DocumentChunk` records
-
-**Frontend**
-- [HTMX](https://htmx.org/) — dynamic page updates without a JavaScript framework
-- [Tailwind CSS](https://tailwindcss.com/) — utility-first CSS loaded via CDN (no build step)
-- [Leaflet.js](https://leafletjs.com/) — interactive maps for prospects and tenements
-
-**Infrastructure**
-- [Docker + Docker Compose](https://docs.docker.com/compose/) — containerised development environment
-- [Grafana Alloy](https://grafana.com/oss/alloy/) — OpenTelemetry collector
-- [Grafana](https://grafana.com/), [Prometheus](https://prometheus.io/), [Loki](https://grafana.com/oss/loki/), [Tempo](https://grafana.com/oss/tempo/) — metrics, logs, traces
-
----
-
-## Project Structure
-
-```
-IFB398-T07-MINDS/
-├── config/                     # Django project configuration
-│   ├── settings.py             # Database, storage, middleware, caching
-│   ├── urls.py                 # Root URL routing
-│   └── wsgi.py / asgi.py       # Server entry points
-│
-├── core/                       # Main Django application
-│   ├── models.py               # All database models
-│   ├── views.py                # Request handlers and business logic
-│   ├── urls.py                 # App-level URL routing
-│   ├── forms.py                # Django forms
-│   ├── utils.py                # SHA-256 hashing, text extraction, chunking
-│   ├── permissions.py          # Role and clearance decorators
-│   ├── tagging.py              # Document tag definitions
-│   ├── instrument.py           # OpenTelemetry tracing decorator
-│   ├── importers.py            # Drillhole Excel import logic
-│   ├── ai/
-│   │   ├── granite_client.py   # Ollama/HuggingFace LLM client
-│   │   ├── report_service.py   # Report generation orchestration
-│   │   └── retrieval.py        # RAG chunk retrieval
-│   ├── migrations/             # Database migration history
-│   ├── management/commands/    # Custom manage.py commands
-│   └── tests/                  # Unit and integration tests
-│
-├── templates/                  # HTML templates (Jinja-style Django)
-│   ├── base.html               # Shared layout with sidebar
-│   └── core/                   # Per-feature page templates
-│
-├── infra/
-│   ├── web/                    # Django Dockerfile and requirements
-│   └── telemetry/              # Grafana, Prometheus, Loki, Tempo config
-│
-├── fixtures/                   # Seed data and sample documents
-├── static/                     # Static assets (logo, favicon)
-├── docker-compose.yml          # Full multi-container stack
-├── pyproject.toml              # Python project metadata and dependencies
-└── .env                        # Environment variables 
+```mermaid
+flowchart LR
+    Browser[Browser: Django templates, HTMX, MapLibre] --> Web[Django / GeoDjango]
+    Web --> DB[(PostgreSQL / PostGIS)]
+    Web --> Storage[(S3-compatible document storage)]
+    Web --> Cache[(Redis cache)]
+    Worker[Report worker] --> DB
+    Worker --> Model[Optional Ollama / Granite]
 ```
 
----
+PostgreSQL owns report-job claims and publication state. Model calls run outside database transactions. The worker checks source snapshots and current access before publishing a draft. Cancellation invalidates the attempt token so late responses cannot save a cancelled draft.
 
-## Getting Started
+Manual drafting uses the same worker without a model call. Saved geological appendices retain their own values, record IDs, scope, capture time and digest. Later edits to live geological data do not silently alter a saved report.
 
-### Prerequisites
+## Technology
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
-- [Ollama](https://ollama.com/) installed locally (for AI report generation)
+| Layer | Stack |
+|---|---|
+| Application | Python 3.11, Django 5.2, GeoDjango |
+| Database | PostgreSQL 16, PostGIS 3.4 |
+| Interface | Django templates, HTMX, Tailwind CSS, MapLibre GL JS, EasyMDE |
+| Storage and cache | MinIO-compatible S3 storage, Redis |
+| Drafting | IBM Granite through Ollama; optional Hugging Face adapter |
+| Reports | ReportLab, python-docx, Pillow |
+| Development | Docker Compose, Django test runner, Ruff |
+| Optional telemetry | OpenTelemetry, Grafana, Prometheus, Loki, Tempo, Alloy |
 
-### 1. Clone the repository
+The container's application dependency list is [infra/web/requirements.txt](infra/web/requirements.txt). The root `pyproject.toml` currently lists only a subset; dependency consolidation is planned.
+
+## Local development
+
+Prerequisites: Docker Engine/Desktop with Compose v2. Ollama and an installed model are optional for manual reports.
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/IvanVanRooyen/IFB398-T07-MINDS-.git
 cd IFB398-T07-MINDS-
+cp .env.example .env
 ```
 
-### 2. Pull the Granite model
+Replace the secret/password placeholders in `.env`. Keep the `POSTGRES_*` and corresponding `DB_*` settings aligned. Then start the application services and their dependencies:
 
 ```bash
-ollama pull granite4:350m
+docker compose up --build web report-worker
 ```
 
-### 3. Create your `.env` file
-
-Copy the example below and fill in values (see [Environment Variables](#environment-variables)):
-
-```bash
-cp .env.example .env   # or create .env manually
-```
-
-### 4. Start the full stack
-
-```bash
-docker compose up --build
-```
-
-This will start PostgreSQL, Redis, MinIO, and the Django web server. Migrations run automatically on startup.
-
-The application will be available at **http://localhost:8000**.
-
----
-
-## Environment Variables
-
-Create a `.env` file in the project root with the following:
-
-```env
-# Django
-SECRET_KEY=your-long-random-secret-key-here
-DJANGO_DEBUG=1
-
-# PostgreSQL
-POSTGRES_DB=orefox
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-DB_NAME=orefox
-DB_USER=postgres
-DB_PASS=postgres
-DB_HOST=db
-DB_PORT=5432
-
-# MinIO (object storage)
-MINIO_ROOT_USER=minio
-MINIO_ROOT_PASSWORD=minio12345
-MINIO_BUCKET=documents
-MINIO_ENDPOINT=minio:9000
-MINIO_EXTERNAL_ENDPOINT=localhost:9000
-MINIO_USE_SSL=0
-
-# Redis
-REDIS_URL=redis://redis:6379/0
-
-# Granite AI (Ollama)
-GRANITE_BACKEND=ollama
-GRANITE_MODEL=granite4:350m
-OLLAMA_URL=http://host.docker.internal:11434
-
-# Grafana DB reader (used by migration 0011 to create a read-only PG user)
-GF_PG_READER_USER=grafana
-GF_PG_READER_PASS=grafana
-```
-
----
-
-## Running the Application
-
-Once the stack is running with `docker compose up`, the services are available at:
-
-| Service | URL |
-|---|---|
-| Django web app | http://localhost:8000 |
-| Django admin | http://localhost:8000/admin |
-| MinIO console | http://localhost:9001 |
-| Grafana | http://localhost:3000 |
-
-### Create a superuser
+The current development definition exposes the web app at `http://localhost:8000`. Migrations run in the web startup command; the worker waits for database/schema availability.
 
 ```bash
 docker compose exec web python manage.py createsuperuser
 ```
 
----
+Use the platform admin to configure an organisation and user profile. Application role and clearance determine access; platform superuser access should be reserved for administration.
 
-## Loading Seed Data
+The supplied Compose configuration is a development stack. Its full storage/telemetry startup has not yet been verified as a clean-install release. It publishes infrastructure ports, and its optional Grafana configuration enables anonymous administration. Review [setup details and current limits](docs/DEVELOPMENT.md) before running it on a shared or publicly reachable host.
 
-To populate the database with sample organisations, projects, documents, and drillholes:
+For AI-assisted drafting, configure an available provider/model in `.env`. Model availability and hardware requirements are separate from the application. The application does not download a model automatically. The default client configuration is `granite3.2:8b-instruct-fp16`; choose a model deliberately for the evaluation environment.
 
-```bash
-docker compose exec web python manage.py load_fixture_data
-```
+## Verification
 
-Sample PDF documents will be loaded from `fixtures/media/docs/` into MinIO automatically.
-
----
-
-## Observability (Grafana Stack)
-
-The `docker-compose.yml` includes a full observability stack:
-
-- **Grafana** (`:3000`) — dashboards for all metrics and logs
-- **Prometheus** (scrapes Django, Redis, Postgres, Ollama metrics)
-- **Loki** — log aggregation
-- **Tempo** — distributed tracing (OpenTelemetry)
-- **Grafana Alloy** — OTEL collector routing data to the above
-
-Django views and utility functions are instrumented with the `@instrument` decorator (`core/instrument.py`), which emits traces to Alloy on every request.
-
-
----
-
-## Running Tests
+In a configured development environment:
 
 ```bash
-docker compose exec web python manage.py test core
+docker compose exec web python manage.py test core --noinput
+docker compose exec web python manage.py makemigrations --check --dry-run
+docker compose exec web python manage.py evaluate_ai --check --output /tmp/minds-evaluation.json
 ```
 
-Tests live in `core/tests/` and cover models, permissions, views, search, and utilities.
+The last verified suite, on 19 November 2026, passed **592 tests**, including real PostGIS transaction/concurrency checks. Targeted browser checks covered report editing, queue recovery, cancellation, manual drafting and review. Actual PDF/DOCX output was parsed, and PDF pages were inspected.
 
+The authored passage benchmark selects the annotated answer span in **8/10** answerable cases, compared with **2/10** for leading excerpts. Fourteen citation regression cases pass. These are synthetic development results, not independent benchmarks or measurements of real-model factual accuracy. [Evaluation scope and known misses](docs/ai/QUALITY.md).
+
+CI is not yet configured. [Verification details](docs/VERIFICATION.md) distinguish automated coverage, browser checks and unverified deployment/model behavior.
+
+## Repository structure
+
+```text
+config/                 Django configuration and platform administration
+core/
+  access.py             Shared organisation, role and clearance policy
+  ai/                   Composition, jobs, retrieval, citations and evaluation
+  reporting/            Geological snapshots, figures and export renderers
+  importers.py          Workbook validation and import transactions
+  management/commands/  Worker, evaluation, import and fixture commands
+  migrations/           Database schema history
+  tests/                Unit, integration, concurrency and file-format tests
+templates/              Application interface
+infra/                  Application container and optional telemetry
+fixtures/               Original seed data and example documents
+docs/                   Architecture, behavior, verification and roadmap
+```
+
+## Current limits and next work
+
+The next milestone is a reproducible development/test environment and CI, including dependency consolidation and security updates. The following UX pass will connect project → map → prospect → evidence → report, with responsive navigation, static assets and accessible error/empty states.
+
+Further work includes metre-correct spatial queries and stronger relationship validation, real-model/domain evaluation, richer report sections and filters, a meaningful mining-mode example, immutable export packages and a controlled demonstration environment. Geological appendices currently use fixed schemas and bounded record counts; the collar figure is a local schematic, not a survey plan.
+
+See the [roadmap](docs/ROADMAP.md) for the sequence and acceptance conditions.
+
+## Project background
+
+This repository began as the Team T07 university capstone application developed for OreFox. The current rework builds on that shared codebase and retains its document, geospatial, reporting and governance purpose. The independent revisions strengthen data integrity, access policy, evidence handling and report reliability. Original team work and subsequent revisions remain distinguishable through repository history; no claim is made that the original application was a solo project.
+
+## License
+
+The repository does not currently declare an open-source license. No redistribution or relicensing rights are implied by this README.

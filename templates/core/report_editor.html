@@ -1,12 +1,18 @@
 {% extends "base.html" %}
-{% block main_extra_class %} flex flex-col{% endblock %}
+{% block main_extra_class %} flex flex-col min-w-0{% endblock %}
 {% block head_extra %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
 <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
 {% endblock %}
 {% block content %}
     <div class="max-w-5xl mx-auto w-full flex-1 flex flex-col">
+      <noscript><p class="mb-4">JavaScript is required for Save and downloads. Submitting for review includes the title and text shown below.</p></noscript>
 
+      {% if latest_report and latest_report.pk != saved_report.pk %}
+      <p class="mb-4 text-sm">You are viewing an earlier version.
+        <a href="{% url 'saved_report_editor' latest_report.pk %}" class="underline">Open the latest version</a>.
+      </p>
+      {% endif %}
       <!-- Status bar (only for saved reports) -->
       {% if saved_report %}
       <div class="mb-4 p-4 bg-white dark:bg-gray-900 rounded-xl shadow">
@@ -34,7 +40,7 @@
             {% endif %}
           {% endif %}
 
-          {% if saved_report.status == 'APPROVED' or saved_report.status == 'PUBLISHED' %}
+          {% if saved_report and not can_edit %}
             <span class="text-sm text-gray-500 dark:text-gray-400">This report is locked and cannot be edited.</span>
           {% endif %}
 
@@ -42,16 +48,17 @@
           <div class="ml-auto flex gap-2 flex-wrap items-center">
 
             <!-- Submit for Review (DRAFT only) — expands to show options -->
-            {% if saved_report.status == 'DRAFT' %}
+            {% if can_edit %}
             <details class="relative">
-              <summary class="cursor-pointer list-none inline-flex items-center px-4 py-2 bg-yellow-500 text-white text-sm rounded-lg hover:bg-yellow-600">
+              <summary class="cursor-pointer list-none inline-flex items-center px-4 py-2 bg-amber-700 text-white text-sm rounded-lg hover:bg-amber-800">
                 Submit for Review
               </summary>
               <div class="absolute right-0 mt-1 z-10 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-4 w-72">
-                <form method="post" action="{% url 'submit_report_for_review' saved_report.pk %}">
+                <form id="form-review" method="post" action="{% url 'submit_report_for_review' saved_report.pk %}">
                   {% csrf_token %}
-                  <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Compliance Framework</label>
+                  <label for="review-framework" class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Review framework</label>
                   <select name="workflow_type"
+                          id="review-framework"
                           class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400">
                     <option value="JORC">JORC Compliance</option>
                     <option value="VALMIN">VALMIN Compliance</option>
@@ -153,17 +160,20 @@
       {% endif %}
 
       <!-- Header row -->
-      <div class="mb-6 flex items-start justify-between gap-4">
-        <div class="flex-1">
+      <div class="mb-6 flex flex-col md:flex-row items-start justify-between gap-4">
+        <div class="flex-1 min-w-0 w-full">
           <!-- Editable title -->
+          <label for="report-title" class="sr-only">Report title</label>
           <input
             type="text"
+            maxlength="256"
             id="report-title"
+            name="title" form="form-review"
             value="{{ default_title }}"
-            {% if saved_report.status == 'APPROVED' or saved_report.status == 'PUBLISHED' %}readonly{% endif %}
+            {% if saved_report and not can_edit %}readonly{% endif %}
             class="w-full text-2xl font-bold text-gray-900 dark:text-gray-100 bg-transparent border-b border-transparent
                    hover:border-gray-300 dark:hover:border-gray-600 focus:border-cyan-500 focus:outline-none transition
-                   {% if saved_report.status == 'APPROVED' or saved_report.status == 'PUBLISHED' %}cursor-not-allowed opacity-60{% endif %}"
+                   {% if saved_report and not can_edit %}cursor-not-allowed opacity-60{% endif %}"
             placeholder="Report title..."
           >
           {% if process %}
@@ -175,10 +185,10 @@
         </div>
 
         <!-- Action buttons -->
-        <div class="flex items-center gap-2 flex-shrink-0">
+        <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
 
           <!-- Save button (hidden when locked) -->
-          {% if saved_report.status != 'APPROVED' and saved_report.status != 'PUBLISHED' %}
+          {% if not saved_report or can_edit %}
           <button
             id="btn-save"
             class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white
@@ -222,7 +232,18 @@
       </div>
 
       <!-- Save status banner -->
-      <div id="save-status" class="hidden mb-4 px-4 py-2 rounded-lg text-sm font-medium"></div>
+      <div id="save-status" role="status" aria-live="polite" class="hidden mb-4 px-4 py-2 rounded-lg text-sm font-medium"></div>
+
+      {% if saved_report.generation_manifest %}
+      <section id="citation-panel" class="mb-4 p-4 bg-white dark:bg-gray-900 rounded-lg break-words" aria-labelledby="citation-heading">
+        <h2 id="citation-heading" class="font-semibold">Citation check for saved text</h2>
+        <p id="citation-summary" class="mt-2 text-sm" role="status" aria-live="polite">{{ citation_check.summary }}</p>
+        <p id="citation-stale" class="hidden mt-2 text-sm text-amber-800 dark:text-amber-200">Unsaved edits have not been checked.</p>
+        <ul id="citation-notes" class="mt-2 text-sm list-disc pl-5">{% for note in citation_check.review_notes %}<li>{{ note }}</li>{% endfor %}</ul>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">These checks compare source labels, quotes and measurements with supplied excerpts. Factual and semantic support still need review.</p>
+      </section>
+      {% endif %}
+      {{ citation_check|json_script:"citation-check-data" }}
 
       <!-- Unsaved changes indicator -->
       <div id="unsaved-badge"
@@ -240,8 +261,15 @@
 
       <!-- Markdown editor -->
       <div class="flex-1">
-        <textarea id="md-editor">{{ markdown_content }}</textarea>
+        <label for="md-editor" class="sr-only">Report content in Markdown</label>
+        <textarea id="md-editor" name="content_md" form="form-review" class="w-full min-h-[500px] p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-base leading-relaxed" {% if saved_report and not can_edit %}readonly{% endif %}>{{ markdown_content }}</textarea>
       </div>
+
+      <!-- Prospect Assignment panel (saved reports only) -->
+      {% if saved_report %}
+      {% include "core/partials/appendix_controls.html" %}
+      <div id="report-appendix">{% include "core/partials/report_appendix.html" %}</div>
+      {% endif %}
 
       <!-- Prospect Assignment panel (saved reports only) -->
       {% if saved_report and process_prospects %}
@@ -265,13 +293,14 @@
               Link this report to a specific prospect within the project. This enables the report to appear on the prospect detail page.
             </p>
             <div class="flex items-center gap-2">
-              <select id="prospect-selector" class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400">
+              <label for="prospect-selector" class="sr-only">Linked prospect</label>
+              <select id="prospect-selector" {% if not can_edit %}disabled{% endif %} class="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400">
                 <option value="">— No prospect —</option>
                 {% for p in process_prospects %}
                   <option value="{{ p.pk }}" {% if saved_report.prospect_id == p.pk %}selected{% endif %}>{{ p.name }}</option>
                 {% endfor %}
               </select>
-              <button type="button" onclick="assignProspect()"
+              <button type="button" onclick="assignProspect()" {% if not can_edit %}disabled{% endif %}
                       class="px-3 py-2 bg-cyan-600 text-white text-sm rounded-lg hover:bg-cyan-700">
                 Save
               </button>
@@ -317,6 +346,29 @@
       </div>
       {% endif %}
 
+      {% if saved_report.generation_manifest %}
+      <details class="mt-4 p-4 bg-white dark:bg-gray-900 rounded-xl">
+        <summary class="cursor-pointer font-semibold">Original draft evidence</summary>
+        {% if saved_report.generation_manifest.backend == 'manual' %}<p class="mt-2 text-sm">Manual outline. No model was called; these records were captured for author reference.</p>{% endif %}
+        <p class="mt-3 text-sm">{{ saved_report.generation_manifest.report_type_label }} · {{ saved_report.generation_manifest.tone_label }} · {{ saved_report.generation_manifest.sources|length }} source file{{ saved_report.generation_manifest.sources|length|pluralize }}</p>
+        {% with target=saved_report.generation_manifest.context.prospect %}{% if target %}
+        <div class="mt-3 space-y-2 text-sm break-words">
+          <p class="font-semibold">{{ target.name }} — prospect inputs</p>
+          <p>Hypothesis (unverified): {{ target.hypothesis }}</p>
+          <p>Objective: {{ target.objective }}</p>
+          <p>Linked drillholes supplied: {{ target.drillholes|length }} of {{ target.linked_drillhole_count }}.</p>
+        </div>
+        {% endif %}{% endwith %}
+        {% if saved_report.generation_manifest.options.instructions %}<p class="mt-3 whitespace-pre-wrap text-sm">{{ saved_report.generation_manifest.options.instructions }}</p>{% endif %}
+        {% for source in saved_report.generation_manifest.context.documents %}
+        <details class="mt-3">
+          <summary class="cursor-pointer text-sm">{{ source.label }} · {{ source.title }} — supplied excerpt</summary>
+          <p class="mt-2 whitespace-pre-wrap break-words text-sm">{{ source.excerpt|default:"No extracted text was available." }}</p>
+        </details>
+        {% endfor %}
+        <p class="mt-3 text-sm text-gray-600 dark:text-gray-300">These are the original inputs. Later edits to the draft or source records do not change this record.</p>
+      </details>
+      {% endif %}
     </div>
 <!-- Hidden form for file downloads (POST with CSRF) -->
 <form id="form-export" method="POST" action="{{ export_url }}">
@@ -336,6 +388,9 @@
 
   // Mutable reference — changes to update URL after first save of a new report
   let SAVE_URL_CURRENT = SAVE_URL;
+  let SUBMIT_URL_CURRENT = document.getElementById("form-review")?.action;
+  let ASSIGN_URL_CURRENT = "{% if saved_report %}{% url 'assign_report_prospect' saved_report.pk %}{% endif %}";
+  let saveInFlight = null;
 
   // ── CDN fallback: use raw textarea if EasyMDE fails to load ─────────────
   const getContent = () =>
@@ -343,7 +398,7 @@
       ? easyMDE.value()
       : document.getElementById("md-editor").value;
 
-  const IS_LOCKED = {% if saved_report.status == 'APPROVED' or saved_report.status == 'PUBLISHED' %}true{% else %}false{% endif %};
+  const IS_LOCKED = {% if saved_report and not can_edit %}true{% else %}false{% endif %};
 
   // ── EasyMDE setup ────────────────────────────────────────────────────────
   let easyMDE;
@@ -369,19 +424,44 @@
     console.warn("EasyMDE failed to initialise, falling back to plain textarea:", e);
   }
 
+  function renderCitationCheck(check) {
+    const summary = document.getElementById("citation-summary");
+    const notes = document.getElementById("citation-notes");
+    if (!summary || !notes || !check) return;
+    summary.textContent = check.summary;
+    notes.replaceChildren();
+    for (const note of check.review_notes || []) {
+      const row = document.createElement("li");
+      row.textContent = note;
+      notes.append(row);
+    }
+  }
+
   // ── Unsaved-changes tracking ─────────────────────────────────────────────
   let isDirty = false;
+  function appendixValues() {
+    return new URLSearchParams(Array.from(new FormData(document.getElementById("form-review") || document.createElement("form"))).filter(([key]) => key.startsWith("appendix_"))).toString();
+  }
+  function addAppendixValues(body) {
+    const form = document.getElementById("form-review");
+    if (!form) return;
+    for (const [key, value] of new FormData(form)) {
+      if (key.startsWith("appendix_")) body.append(key, value);
+    }
+  }
 
   function markDirty() {
     if (!isDirty) {
       isDirty = true;
       document.getElementById("unsaved-badge").classList.remove("hidden");
+      document.getElementById("citation-stale")?.classList.remove("hidden");
     }
   }
 
   function markClean() {
     isDirty = false;
     document.getElementById("unsaved-badge").classList.add("hidden");
+    document.getElementById("citation-stale")?.classList.add("hidden");
   }
 
   if (!IS_LOCKED) {
@@ -391,6 +471,7 @@
       document.getElementById("md-editor").addEventListener("input", markDirty);
     }
     document.getElementById("report-title").addEventListener("input", markDirty);
+    document.getElementById("appendix-controls")?.addEventListener("change", markDirty);
   }
 
   // Browser tab/window close or address-bar navigation
@@ -401,53 +482,91 @@
     }
   });
 
-  // HTMX internal-link navigation
-  document.body.addEventListener("htmx:beforeRequest", function (e) {
-    if (isDirty) {
-      const ok = confirm("You have unsaved changes to this report.\n\nSave before leaving?");
-      if (ok) {
-        e.preventDefault();
-        saveReport().then(() => {
-          window.location.href = e.detail.requestConfig.path;
-        });
-      }
+  // A failed save must never lead to navigation or review submission.
+  document.body.addEventListener("htmx:beforeRequest", function (event) {
+    const verb = event.detail.requestConfig?.verb;
+    if (!isDirty || (verb && verb.toLowerCase() !== "get")) return;
+    event.preventDefault();
+    if (confirm("Save this report before leaving?")) {
+      saveReport().then(saved => {
+        if (saved && !isDirty) window.location.href = event.detail.requestConfig.path;
+      });
     }
   });
 
-  // Workflow form submissions navigate back to the same editor — don't block with beforeunload
-  document.addEventListener("submit", function (e) {
-    if (e.target.id !== "form-export") {
-      isDirty = false;
-    }
-  });
-
-  // Intercept ordinary anchor clicks for non-HTMX links
-  document.addEventListener("click", function (e) {
-    const anchor = e.target.closest("a[href]");
-    if (!anchor || !isDirty) return;
+  document.addEventListener("click", function (event) {
+    const anchor = event.target.closest("a[href]");
+    if (!anchor || !isDirty || anchor.hasAttribute("download") || anchor.target === "_blank") return;
     const href = anchor.getAttribute("href");
-    if (!href || href.startsWith("http") || href.startsWith("#")) return;
-    e.preventDefault();
-    const ok = confirm("You have unsaved changes. Leave without saving?");
-    if (ok) {
+    if (!href || href.startsWith("#")) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (confirm("Save this report before leaving?")) {
+      saveReport().then(saved => {
+        if (saved && !isDirty) window.location.href = href;
+      });
+    }
+  }, true);
+
+  const reviewForm = document.getElementById("form-review");
+  let submittingReview = false;
+  if (reviewForm) reviewForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    if (submittingReview) return;
+    if (saveInFlight && !(await saveInFlight)) return;
+    submittingReview = true;
+    const button = reviewForm.querySelector("button[type=submit]");
+    button.disabled = true;
+    const title = document.getElementById("report-title").value.trim();
+    const content = getContent();
+    const body = new FormData(reviewForm);
+    const appendixSubmitted = appendixValues();
+    body.set("title", title);
+    body.set("content_md", content);
+    try {
+      const response = await fetch(SUBMIT_URL_CURRENT, {
+        method: "POST", headers: {"X-CSRFToken": CSRF_TOKEN}, body,
+      });
+      if (!response.ok || !response.redirected || !response.url.includes("/view/")) {
+        const data = await response.json().catch(() => ({}));
+        showStatus(data.error || "Review submission failed. Your changes are still here.", "error", data.latest_url);
+        return;
+      }
+      // If the user typed during submission, retain those edits in this tab.
+      if (title !== document.getElementById("report-title").value.trim() || content !== getContent() || appendixSubmitted !== appendixValues()) {
+        showStatus("The submitted version is saved for review. Copy your later edits before reloading.", "error");
+        return;
+      }
       markClean();
-      window.location.href = href;
+      window.location.href = response.url;
+    } catch (error) {
+      showStatus(error.message || "Could not submit for review. Please retry.", "error");
+    } finally {
+      submittingReview = false;
+      button.disabled = false;
     }
   });
 
   // ── Save logic ───────────────────────────────────────────────────────────
-  async function saveReport() {
+  function saveReport() {
+    if (saveInFlight) return saveInFlight;
+    saveInFlight = performSave().finally(() => { saveInFlight = null; });
+    return saveInFlight;
+  }
+
+  async function performSave() {
     const title    = document.getElementById("report-title").value.trim();
     const content  = getContent();
+    const appendixSubmitted = appendixValues();
     const btn      = document.getElementById("btn-save");
 
     if (!title) {
       showStatus("Please enter a report title.", "error");
-      return;
+      return false;
     }
     if (!content) {
       showStatus("Report content is empty.", "error");
-      return;
+      return false;
     }
 
     btn.disabled = true;
@@ -461,6 +580,7 @@
       title:      title,
       content_md: content,
     });
+    addAppendixValues(body);
 
     try {
       const resp = await fetch(SAVE_URL_CURRENT, {
@@ -473,19 +593,30 @@
       });
       const data = await resp.json();
 
-      if (data.success) {
+      if (!resp.ok || !data.success) {
+        showStatus(data.error || "Save failed. Your changes are still here.", "error", data.latest_url);
+        return false;
+      }
+      renderCitationCheck(data.citation_check);
+      const appendixPanel = document.getElementById("report-appendix");
+      if (data.appendix_html && appendixPanel) appendixPanel.innerHTML = data.appendix_html;
+      SAVE_URL_CURRENT = data.save_url;
+      SUBMIT_URL_CURRENT = data.submit_url;
+      ASSIGN_URL_CURRENT = data.assign_url;
+      document.querySelector('#form-export [name="report_id"]').value = data.report_id;
+      history.replaceState(null, "", data.redirect_url);
+      if (title === document.getElementById("report-title").value.trim() && content === getContent() && appendixSubmitted === appendixValues()) {
+        const appendixAction = document.getElementById("appendix-action");
+        if (appendixAction) appendixAction.value = "preserve";
         markClean();
         showStatus("Report saved successfully.", "success");
-        if (data.redirect_url) {
-          history.replaceState(null, "", data.redirect_url);
-          // Future saves go to the update endpoint
-          SAVE_URL_CURRENT = data.redirect_url.replace("/view/", "/update/");
-        }
       } else {
-        showStatus(data.error || "Save failed.", "error");
+        showStatus("Version saved. Your newer edits still need saving.", "success");
       }
+      return true;
     } catch (err) {
-      showStatus("Network error — could not save.", "error");
+      showStatus("Could not save. Your changes are still here; check your connection and retry.", "error");
+      return false;
     } finally {
       btn.disabled = false;
       btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -498,7 +629,9 @@
   if (btnSave) btnSave.addEventListener("click", saveReport);
 
   // ── Export (PDF / DOCX) ──────────────────────────────────────────────────
-  function triggerExport(format) {
+  async function triggerExport(format) {
+    if (isDirty && !(await saveReport())) return;
+    if (isDirty) return;
     document.getElementById("export-format").value  = format;
     document.getElementById("export-content").value = getContent();
     document.getElementById("export-title").value   = document.getElementById("report-title").value;
@@ -509,16 +642,23 @@
   document.getElementById("btn-docx").addEventListener("click", () => triggerExport("docx"));
 
   // ── Status banner helper ─────────────────────────────────────────────────
-  function showStatus(msg, type) {
+  function showStatus(msg, type, latestUrl) {
     const el = document.getElementById("save-status");
     el.textContent = msg;
+    if (latestUrl && latestUrl.startsWith("/")) {
+      const link = document.createElement("a");
+      link.href = latestUrl;
+      link.className = "underline ml-2";
+      link.textContent = "Open latest version";
+      el.append(link);
+    }
     el.className = "mb-4 px-4 py-2 rounded-lg text-sm font-medium " + (
       type === "success"
         ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 text-green-700 dark:text-green-400"
         : "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-400"
     );
     el.classList.remove("hidden");
-    setTimeout(() => el.classList.add("hidden"), 4000);
+    if (type === "success") setTimeout(() => el.classList.add("hidden"), 4000);
   }
 
   // ── Prospect assignment ───────────────────────────────────────────────────
@@ -527,14 +667,16 @@
     const sel    = document.getElementById("prospect-selector");
     const status = document.getElementById("prospect-save-status");
     if (!sel) return;
+    if (isDirty && !(await saveReport())) return;
     const body = new URLSearchParams({ prospect_id: sel.value });
     try {
-      const resp = await fetch("{% url 'assign_report_prospect' saved_report.pk %}", {
+      const resp = await fetch(ASSIGN_URL_CURRENT, {
         method: "POST",
         headers: { "X-CSRFToken": CSRF_TOKEN, "Content-Type": "application/x-www-form-urlencoded" },
         body: body.toString(),
       });
       const data = await resp.json();
+      if (!resp.ok || !data.success) throw new Error(data.error || "Failed to save prospect.");
       if (data.success) {
         status.textContent = "Prospect saved.";
         status.className = "text-xs mt-2 text-green-600";

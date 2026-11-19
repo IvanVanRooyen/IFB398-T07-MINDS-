@@ -4,7 +4,7 @@
   <h1 class="text-xl font-bold mb-4">Report History</h1>
   {% for title, versions in grouped.items %}
   <div class="mb-6 bg-white dark:bg-gray-900 rounded-xl shadow">
-    <div class="p-4 border-b dark:border-gray-700 font-semibold">{{ title }}</div>
+    <div class="p-4 border-b dark:border-gray-700 font-semibold">{{ versions.0.title }}</div>
     <ul class="divide-y dark:divide-gray-700">
       {% for v in versions %}
       <li class="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800">

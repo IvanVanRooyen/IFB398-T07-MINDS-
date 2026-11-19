@@ -39,7 +39,7 @@ class GraniteClient:
             payload = {
                 "model": self.model,
                 "prompt": prompt,
-                "options": {"num_ctx": 8192},
+                "options": {"num_ctx": 8192, "num_predict": max_new_tokens},
                 "stream": False,
             }
             r = requests.post(self.url, json=payload, timeout=self.timeout)
@@ -47,7 +47,6 @@ class GraniteClient:
             data = r.json()
             log.debug("Ollama response keys: %s", list(data.keys()))
             log.debug("Ollama response text: %s", data.get("response", "")[:100])
-            result = data.get("response", "")
             return data.get("response", "")
 
         headers = (

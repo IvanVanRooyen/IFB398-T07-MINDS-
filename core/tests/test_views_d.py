@@ -35,7 +35,7 @@ class AssignReportProspectTests(_ViewTestBase):
     @patch("core.views.Prospect")
     @patch("core.views.get_object_or_404")
     def test_clears_prospect_when_no_id_supplied(self, mock_get, _mock_prospect):
-        report = MagicMock(organisation=self.org, prospect_id=None)
+        report = MagicMock(status="DRAFT", organisation=self.org, prospect_id=None)
         mock_get.return_value = report
 
         request = self._authed_request("post", data={})
@@ -53,10 +53,9 @@ class AssignReportProspectTests(_ViewTestBase):
     def test_assigns_prospect_scoped_to_report_process(self, mock_get, mock_prospect):
         process = Process
 
-        report = MagicMock(organisation=self.org, process=process)
-        mock_get.return_value = report
-
+        report = MagicMock(status="DRAFT", organisation=self.org, process=process)
         prospect = MagicMock(pk=99)
+        mock_get.side_effect = [report, prospect]
         prospect_qs = self._chainable_qs([prospect])
         mock_prospect.objects.filter.return_value = prospect_qs
         report.prospect_id = 99
@@ -66,14 +65,14 @@ class AssignReportProspectTests(_ViewTestBase):
 
         # the lookup is scoped to the report's process - shouldn't be possible to 'sneak' a prospect
         # from another project onto a report.
-        mock_prospect.objects.filter.assert_called_with(pk="99", process=process)
+        mock_get.assert_called_with(mock_prospect, pk="99", process=process)
         self.assertIs(report.prospect, prospect)
         report.save.assert_called_once_with(update_fields=["prospect"])
 
     @patch("core.views.get_object_or_404")
     def test_cross_org_user_blocked(self, mock_get):
         other_org = MagicMock(name="other org")
-        report = MagicMock(organisation=other_org)
+        report = MagicMock(status="DRAFT", organisation=other_org)
         mock_get.return_value = report
 
         with self.assertRaises(PermissionDenied):
@@ -84,7 +83,7 @@ class AssignReportProspectTests(_ViewTestBase):
     def test_superuser_can_assign_across_orgs(self, mock_get, mock_prospect):
         self.user.is_superuser = True
         self.user.save()
-        report = MagicMock(organisation=MagicMock(name="other"))
+        report = MagicMock(status="DRAFT", organisation=MagicMock(name="other"))
         mock_get.return_value = report
         mock_prospect.objects.filter.return_value = self._chainable_qs([])
 
@@ -430,7 +429,8 @@ class CreateDocLinkTests(_ViewTestBase):
         doc = MagicMock(title="X")
         prospect = MagicMock()
 
-        mock_get.side_effect = [doc, prospect]
+        doc.organisation_id = prospect.organisation_id = 7
+        mock_get.side_effect = [prospect, doc, prospect]
         mock_doclink.objects.get_or_create.return_value = (MagicMock(), True)
         mock_doclink.objects.filter.return_value = self._chainable_qs([])
 
@@ -515,7 +515,7 @@ class DeleteDocLinkTests(_ViewTestBase):
         link.document = MagicMock(title="x")
         prospect = MagicMock()
 
-        mock_get.side_effect = [link, prospect]
+        mock_get.side_effect = [link, prospect, prospect]
         mock_doclink.objects.filter.return_value = self._chainable_qs([])
 
         views.delete_doc_link(self._authed_request("post"), pk=1)
@@ -571,6 +571,7 @@ class LinkDrillholeTests(_ViewTestBase):
     def test_assigns_prospect_and_renders_partial(self, mock_get, mock_drillhole, mock_render):
         prospect = MagicMock(pk=1)
         drillhole = MagicMock()
+        drillhole.process_id = prospect.process_id = "project"
         mock_get.side_effect = [prospect, drillhole]
         mock_drillhole.objects.filter.return_value = self._chainable_qs([drillhole])
 
@@ -928,6 +929,8 @@ class DrillholeImportTests(_ViewTestBase):
             data={"organisation": "1", "process": "1"},
             files={"file": MagicMock()},
         )
+        mock_org_model.objects.all.return_value = mock_org_model.objects
+        mock_process.objects.filter.return_value = mock_process.objects
         views.drillhole_import(request)
 
         ctx = mock_render.call_args[0][2]

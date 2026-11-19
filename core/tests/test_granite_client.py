@@ -144,7 +144,7 @@ class GraniteClientCompleteOllamaTests(SimpleTestCase):
         payload = mock_post.call_args.kwargs["json"]
         self.assertEqual(payload["model"], "granite3.2:8b-instruct-fp16")
         self.assertEqual(payload["prompt"], "the prompt")
-        self.assertEqual(payload["options"], {"num_ctx": 8192})
+        self.assertEqual(payload["options"], {"num_ctx": 8192, "num_predict": 900})
         self.assertFalse(payload["stream"])
 
     @patch(REQUESTS_POST)

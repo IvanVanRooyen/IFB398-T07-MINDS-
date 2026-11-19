@@ -129,8 +129,9 @@
   </div>
 </div>
 
+{{ initial_geojson|default:"null"|json_script:"tenement_form-data-0" }}
 <script>
-const INITIAL_GEOJSON = {{ initial_geojson|default:"null"|safe }};
+const INITIAL_GEOJSON = readMapData("tenement_form-data-0");
 
 const map = new maplibregl.Map({
     container: 'tenement-map',

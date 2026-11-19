@@ -96,12 +96,12 @@ class FetchProcessBundleTests(SimpleTestCase):
             {"public", "internal", "confidential", "jorc_restricted"},
         )
 
-    def test_unknown_clearance_defaults_to_internal_level(self):
+    def test_unknown_clearance_returns_no_documents(self):
         _, mock_Document = self._patch_models()
         fetch_process_bundle("p1", clearance_level="NOT_A_REAL_LEVEL")
         self.assertEqual(
             self._filter_confidentiality(mock_Document),
-            {"public", "internal"},
+            set(),
         )
 
     def test_default_clearance_argument_is_internal(self):
@@ -318,7 +318,7 @@ class BuildPromptTests(SimpleTestCase):
 class GenerateProjectReportTests(SimpleTestCase):
     def _patch_all(self):
         fetch_p = patch(f"{MODULE_PATH}.fetch_process_bundle")
-        retrieve_p = patch(f"{MODULE_PATH}.retrieve_context")
+        retrieve_p = patch(f"{MODULE_PATH}.retrieve_evidence")
         client_p = patch(f"{MODULE_PATH}.GraniteClient")
 
         mock_fetch = fetch_p.start()
@@ -343,7 +343,7 @@ class GenerateProjectReportTests(SimpleTestCase):
         doc1.id = "doc-1"
         doc2.id = "doc-2"
         mock_fetch.return_value = {"process": proc, "docs": [doc1, doc2]}
-        mock_retrieve.return_value = "retrieved chunks"
+        mock_retrieve.return_value = ("retrieved chunks", [])
         mock_client.complete.return_value = "# Generated Report"
 
         text, doc_ids = generate_project_report("p-1", clearance_level="CONFIDENTIAL")
@@ -367,7 +367,7 @@ class GenerateProjectReportTests(SimpleTestCase):
         proc.name = ""
         proc.commodity = ""
         mock_fetch.return_value = {"process": proc, "docs": []}
-        mock_retrieve.return_value = ""
+        mock_retrieve.return_value = ("", [])
         mock_client.complete.return_value = ""
 
         generate_project_report("p-1")
@@ -381,7 +381,7 @@ class GenerateProjectReportTests(SimpleTestCase):
         proc.name = None
         proc.commodity = None
         mock_fetch.return_value = {"process": proc, "docs": []}
-        mock_retrieve.return_value = ""
+        mock_retrieve.return_value = ("", [])
         mock_client.complete.return_value = ""
 
         generate_project_report("p-1")
@@ -397,7 +397,7 @@ class GenerateProjectReportTests(SimpleTestCase):
         d = MagicMock()
         d.id = 12345  # (should resolve to string despite being numeric)
         mock_fetch.return_value = {"process": proc, "docs": [d]}
-        mock_retrieve.return_value = ""
+        mock_retrieve.return_value = ("", [])
         mock_client.complete.return_value = ""
 
         _, doc_ids = generate_project_report("p-1")
@@ -410,7 +410,7 @@ class GenerateProjectReportTests(SimpleTestCase):
         proc.name = "ProjN"
         proc.commodity = "Ag"
         mock_fetch.return_value = {"process": proc, "docs": []}
-        mock_retrieve.return_value = "EXCERPT_MARKER"
+        mock_retrieve.return_value = ("EXCERPT_MARKER", [])
         mock_client.complete.return_value = ""
 
         generate_project_report("p-1")
@@ -479,7 +479,7 @@ class SaveReportTests(SimpleTestCase):
         self.assertEqual(kwargs["version_number"], 1)
         self.assertEqual(kwargs["change_reason"], "GENERATED")
         self.assertEqual(kwargs["change_summary"], "initial")
-        self.assertEqual(kwargs["clearance_level"], "INTERNAL")
+        self.assertEqual(kwargs["clearance_level"], "JORC_APPROVED")
         self.assertIn("content_hash", kwargs)
 
         mock_log_audit.assert_called_once()
@@ -504,6 +504,7 @@ class SaveReportTests(SimpleTestCase):
             user,
             reason="UPDATED",
             summary="fix typo",
+            parent=existing,
         )
 
         mock_SavedReport.create_version.assert_called_once_with(
@@ -512,6 +513,8 @@ class SaveReportTests(SimpleTestCase):
             user=user,
             reason="UPDATED",
             summary="fix typo",
+            clearance_level="JORC_APPROVED",
+            title="Title",
         )
         mock_SavedReport.objects.create.assert_not_called()
         mock_log_audit.assert_called_once()
@@ -530,27 +533,12 @@ class SaveReportTests(SimpleTestCase):
         kwargs = mock_SavedReport.objects.create.call_args.kwargs
         self.assertEqual(kwargs["content_hash"], expected)
 
-    def test_filters_existing_by_process_and_title(self):
+    def test_new_save_does_not_lookup_another_report_by_title(self):
         mock_SavedReport, _, _ = self._patch_all()
-        self._set_existing(mock_SavedReport, None)
         mock_SavedReport.objects.create.return_value = MagicMock(version_number=1)
-
-        proc = MagicMock()
-        save_report(proc, MagicMock(), "Unique Title", "x", MagicMock())
-
-        kwargs = mock_SavedReport.objects.filter.call_args.kwargs
-        self.assertEqual(kwargs["process"], proc)
-        self.assertEqual(kwargs["title"], "Unique Title")
-
-    def test_orders_existing_by_version_descending(self):
-        mock_SavedReport, _, _ = self._patch_all()
-        self._set_existing(mock_SavedReport, None)
-        mock_SavedReport.objects.create.return_value = MagicMock(version_number=1)
-
-        save_report(MagicMock(), MagicMock(), "T", "x", MagicMock())
-
-        order_call = mock_SavedReport.objects.filter.return_value.order_by
-        order_call.assert_called_once_with("-version_number")
+        save_report(MagicMock(), MagicMock(), "Same Title", "x", MagicMock())
+        mock_SavedReport.objects.filter.assert_not_called()
+        mock_SavedReport.create_version.assert_not_called()
 
     def test_audit_log_records_action_and_description(self):
         mock_SavedReport, mock_AuditLog, mock_log_audit = self._patch_all()

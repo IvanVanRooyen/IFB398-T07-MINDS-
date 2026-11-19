@@ -59,7 +59,7 @@ services:
         done
 
         mc mb -p local/${MINIO_BUCKET} || true
-        mc anonymous set download local/${MINIO_BUCKET} || true
+        mc anonymous set none local/${MINIO_BUCKET} || exit 1
 
         mc mb -p local/tempo || true
       '
@@ -83,6 +83,22 @@ services:
         condition: service_healthy
       create-bucket:
         condition: service_completed_successfully
+
+  report-worker:
+    <<: *common
+    build: ./infra/web
+    env_file: .env
+    environment:
+      IN_DOCKER: "1"
+    command: python manage.py run_report_worker
+    restart: unless-stopped
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
 
   # --------------------------------------------------------------------------------------
   

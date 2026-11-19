@@ -1,4 +1,6 @@
+import logging
 import uuid
+from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -7,7 +9,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.search import SearchVectorField
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
@@ -402,47 +405,74 @@ class Document(models.Model):
         from .utils import chunk_text, extract_text, sha256_file
 
         checksum = sha256_file(new_file)
-        if cls.objects.filter(checksum_sha256=checksum).exists():
-            raise ValueError("Identical file already exists.")
-        parent.is_latest = False
-        parent.save(update_fields=["is_latest"])
-        doc = cls.objects.create(
-            title=parent.title,
-            file=new_file,
-            organisation=parent.organisation,
-            process=parent.process,
-            tags=parent.tags,
-            timestamp=parent.timestamp,
-            doc_type=parent.doc_type,
-            confidentiality=parent.confidentiality,
-            created_by=user,
-            checksum_sha256=checksum,
-            version_number=parent.version_number + 1,
-            parent_document=parent,
-            is_latest=True,
-            tenement=parent.tenement,
-            commodity=parent.commodity,
-            reporting_stage=parent.reporting_stage,
-            author_name=parent.author_name,
-        )
+        # Extract before storage can consume or close the uploaded stream.
         text = extract_text(new_file)
-        doc.extracted_text = text or ""
-        doc.save(update_fields=["extracted_text"])
-        if text:
-            chunks = chunk_text(text)
-            DocumentChunk.objects.bulk_create(
-                [
-                    DocumentChunk(
-                        document=doc,
-                        chunk_index=i,
-                        text=chunk,
-                        process=doc.process,
-                        doc_type=doc.doc_type,
-                        timestamp=doc.timestamp,
+        new_file.seek(0)
+        doc = None
+        stored_name = None
+        try:
+            with transaction.atomic():
+                # Re-read under a lock: two uploads against one parent cannot
+                # both succeed or create sibling "latest" versions.
+                parent = cls.objects.select_for_update().get(pk=parent.pk)
+                if not parent.is_latest:
+                    raise ValueError("This document has a newer version; reload before uploading.")
+                if cls.objects.filter(
+                    organisation=parent.organisation, checksum_sha256=checksum
+                ).exists():
+                    raise ValueError("Identical file already exists.")
+                doc = cls(
+                    title=parent.title,
+                    organisation=parent.organisation,
+                    process=parent.process,
+                    tags=parent.tags,
+                    timestamp=parent.timestamp,
+                    doc_type=parent.doc_type,
+                    confidentiality=parent.confidentiality,
+                    created_by=user,
+                    checksum_sha256=checksum,
+                    version_number=parent.version_number + 1,
+                    parent_document=parent,
+                    is_latest=True,
+                    tenement=parent.tenement,
+                    commodity=parent.commodity,
+                    reporting_stage=parent.reporting_stage,
+                    author_name=parent.author_name,
+                )
+                # Save explicitly to know the exact new storage key for cleanup
+                # if subsequent database work fails. Never delete the parent file.
+                # Unique keys also protect older bytes on overwrite-enabled S3
+                # backends when the replacement has the same uploaded filename.
+                doc.file.save(f"{doc.pk}/{Path(new_file.name).name}", new_file, save=False)
+                stored_name = doc.file.name
+                doc.extracted_text = text or ""
+                doc.save()
+                if text:
+                    chunks = chunk_text(text)
+                    DocumentChunk.objects.bulk_create(
+                        [
+                            DocumentChunk(
+                                document=doc,
+                                chunk_index=i,
+                                text=chunk,
+                                process=doc.process,
+                                doc_type=doc.doc_type,
+                                timestamp=doc.timestamp,
+                            )
+                            for i, chunk in enumerate(chunks)
+                        ]
                     )
-                    for i, chunk in enumerate(chunks)
-                ]
-            )
+                parent.is_latest = False
+                parent.save(update_fields=["is_latest"])
+        except Exception:
+            if stored_name:
+                try:
+                    doc.file.storage.delete(stored_name)
+                except Exception:
+                    logging.getLogger(__name__).exception(
+                        "Could not clean up failed document version file %s", stored_name
+                    )
+            raise
         return doc
 
     def get_version_family(self):
@@ -625,30 +655,13 @@ class UserProfile(models.Model):
 
     def can_access_document(self, document):
         """Attribute-based access control for documents"""
-        # Same organisation check
-        if document.organisation and document.organisation != self.organisation:
+        from .access import require_record_access
+
+        try:
+            require_record_access(self.user, document)
+        except PermissionDenied:
             return False
-
-        # Clearance level check
-        doc_clearance_hierarchy = {
-            "public": 0,
-            "internal": 1,
-            "confidential": 2,
-            "jorc_restricted": 3,
-        }
-        user_clearance_hierarchy = {
-            self.ClearanceLevel.PUBLIC: 0,
-            self.ClearanceLevel.INTERNAL: 1,
-            self.ClearanceLevel.CONFIDENTIAL: 2,
-            self.ClearanceLevel.JORC_APPROVED: 3,
-        }
-
-        doc_level = doc_clearance_hierarchy.get(
-            document.confidentiality.lower() if document.confidentiality else "internal", 0
-        )
-        user_level = user_clearance_hierarchy.get(self.clearance_level, 0)
-
-        return user_level >= doc_level
+        return True
 
 
 class SavedReport(models.Model):
@@ -677,6 +690,9 @@ class SavedReport(models.Model):
         related_name="reports",
     )
     organisation = models.ForeignKey(Organisation, on_delete=models.SET_NULL, null=True, blank=True)
+    series_id = models.UUIDField(default=uuid.uuid4, editable=False, db_index=True)
+    generation_manifest = models.JSONField(default=dict, blank=True)
+    data_appendix = models.JSONField(default=dict, blank=True)
     title = models.CharField(max_length=256)
     content_md = models.TextField()
     search_tsv = SearchVectorField(null=True, blank=True)  # populated by DB trigger
@@ -723,29 +739,116 @@ class SavedReport(models.Model):
         return f"{self.title} ({self.created_at:%Y-%m-%d})"
 
     @classmethod
-    def create_version(cls, parent: "SavedReport", content_md: str, user, reason: str, summary=""):
+    def lock_version(cls, report):
+        """Caller must hold an atomic transaction; lock series before its row."""
+        anchor = cls.objects.filter(series_id=report.series_id).order_by("created_at", "pk").first()
+        cls.objects.select_for_update().get(pk=anchor.pk)
+        return cls.objects.select_for_update().get(pk=report.pk)
+
+    @classmethod
+    def create_version(cls, parent: "SavedReport", content_md: str, user, reason: str,
+                       summary="", clearance_level=None, title=None, data_appendix=None):
+        """Append one immutable revision; reject an outdated or locked parent."""
         import hashlib
 
-        content_hash = hashlib.sha256(content_md.encode()).hexdigest()
+        from .access import CLEARANCE_LEVELS
 
-        # Don't save if content hasn't changed
-        if parent.content_hash == content_hash:
-            return parent
+        with transaction.atomic():
+            # All writers in a report series lock its first surviving revision.
+            # This also serializes historical branched series conservatively.
+            parent = cls.lock_version(parent)
+            latest = cls.objects.filter(series_id=parent.series_id).order_by(
+                "-version_number", "-created_at", "pk"
+            ).first()
+            if latest.pk != parent.pk:
+                raise ValueError("A newer report version exists. Open the latest version before saving.")
+            if parent.status != cls.Status.DRAFT:
+                raise ValueError("This report is locked for review and cannot be edited.")
+            target_title = parent.title if title is None else title.strip()
+            if not target_title or len(target_title) > 256 or not content_md.strip():
+                raise ValueError("A title of at most 256 characters and report content are required.")
+            content_hash = hashlib.sha256(content_md.encode()).hexdigest()
+            appendix = parent.data_appendix if data_appendix is None else data_appendix
+            target_clearance = max(
+                (parent.clearance_level, clearance_level or parent.clearance_level),
+                key=lambda value: CLEARANCE_LEVELS.get(value, 4),
+            )
+            if (parent.content_md == content_md and target_title == parent.title
+                    and target_clearance == parent.clearance_level and appendix == parent.data_appendix):
+                return parent
+            report = cls.objects.create(
+                series_id=parent.series_id,
+                generation_manifest=parent.generation_manifest,
+                data_appendix=appendix,
+                process=parent.process,
+                prospect=parent.prospect,
+                organisation=parent.organisation,
+                title=target_title,
+                content_md=content_md,
+                content_hash=content_hash,
+                clearance_level=target_clearance,
+                created_by=user,
+                version_number=parent.version_number + 1,
+                change_reason=reason,
+                change_summary=summary,
+                parent_version=parent,
+            )
+            report.source_documents.set(parent.source_documents.all())
+            return report
 
-        return cls.objects.create(
-            process=parent.process,
-            prospect=parent.prospect,
-            organisation=parent.organisation,
-            title=parent.title,
-            content_md=content_md,
-            content_hash=content_hash,
-            clearance_level=parent.clearance_level,
-            created_by=user,
-            version_number=parent.version_number + 1,
-            change_reason=reason,
-            change_summary=summary,
-            parent_version=parent,
-        )
+
+class ReportGenerationJob(models.Model):
+    class Status(models.TextChoices):
+        QUEUED = "QUEUED", _("Queued")
+        RUNNING = "RUNNING", _("Running")
+        SUCCEEDED = "SUCCEEDED", _("Completed")
+        FAILED = "FAILED", _("Failed")
+        CANCELLED = "CANCELLED", _("Cancelled")
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    requested_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
+    process = models.ForeignKey(Process, on_delete=models.CASCADE)
+    prospect = models.ForeignKey(Prospect, null=True, blank=True, on_delete=models.CASCADE)
+    clearance_level = models.CharField(max_length=32, choices=UserProfile.ClearanceLevel.choices)
+    title = models.CharField(max_length=256)
+    payload = models.JSONField()
+    request_hash = models.CharField(max_length=64)
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.QUEUED)
+    stage = models.CharField(max_length=32, default="QUEUED")
+    attempts = models.PositiveIntegerField(default=0)
+    run_token = models.UUIDField(null=True, editable=False)
+    lease_expires_at = models.DateTimeField(null=True, blank=True)
+    error_code = models.CharField(max_length=32, blank=True)
+    error_message = models.TextField(blank=True)
+    retryable = models.BooleanField(default=False)
+    result = models.OneToOneField(SavedReport, null=True, blank=True, on_delete=models.SET_NULL,
+                                  related_name="generation_job")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "report_generation_jobs"
+        ordering = ["-created_at", "id"]
+        indexes = [models.Index(fields=["status", "created_at"], name="report_job_queue_idx")]
+        constraints = [models.UniqueConstraint(
+            fields=["requested_by", "request_hash"],
+            condition=models.Q(status__in=["QUEUED", "RUNNING"]), name="unique_active_report_job",
+        )]
+
+
+class ReportGenerationSubmission(models.Model):
+    requested_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    request_id = models.UUIDField()
+    request_hash = models.CharField(max_length=64)
+    job = models.ForeignKey(ReportGenerationJob, on_delete=models.CASCADE, related_name="submissions")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["requested_by", "request_id"],
+                                               name="unique_report_submission")]
 
 
 @receiver(post_save, sender=User)
@@ -779,6 +882,11 @@ class AuditLog(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.UUIDField()
     content_object = GenericForeignKey("content_type", "object_id")
+
+    # Snapshot access context so deleted records and transferred users cannot
+    # change the audience of historical audit events.
+    organisation = models.ForeignKey(Organisation, null=True, blank=True, on_delete=models.SET_NULL)
+    clearance_level = models.CharField(max_length=32, choices=UserProfile.ClearanceLevel.choices, default="JORC_APPROVED")
 
     # Context
     description = models.TextField(blank=True)
@@ -1009,7 +1117,25 @@ class Survey(models.Model):
 
 def log_audit(user, action, obj, description="", ip_address=None, user_agent=""):
     """Create audit trail entry"""
+    from .access import CLEARANCE_LEVELS, DOCUMENT_LEVELS
+
+    level = getattr(obj, "clearance_level", "PUBLIC")
+    organisation_id = getattr(obj, "organisation_id", None)
+    if hasattr(obj, "confidentiality"):
+        rank = DOCUMENT_LEVELS.get(obj.confidentiality, 3)
+        level = next(name for name, value in CLEARANCE_LEVELS.items() if value == rank)
+        if obj.confidentiality not in DOCUMENT_LEVELS:
+            organisation_id = None
+    if obj._meta.label_lower == "core.savedreport":
+        rank = CLEARANCE_LEVELS.get(level, 3)
+        for source in obj.source_documents.values("organisation_id", "confidentiality"):
+            rank = max(rank, DOCUMENT_LEVELS.get(source["confidentiality"], 3))
+            if source["organisation_id"] != organisation_id or source["confidentiality"] not in DOCUMENT_LEVELS:
+                organisation_id = None
+        level = next(name for name, value in CLEARANCE_LEVELS.items() if value == rank)
     AuditLog.objects.create(
+        organisation_id=organisation_id,
+        clearance_level=level,
         user=user,
         action=action,
         content_type=ContentType.objects.get_for_model(obj),

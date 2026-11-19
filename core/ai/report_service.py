@@ -10,7 +10,7 @@ from django.utils.timezone import localtime
 from ..instrument import instrument
 from ..models import AuditLog, Document, Process, SavedReport, log_audit
 from .granite_client import GraniteClient
-from .retrieval import retrieve_context
+from .retrieval import retrieve_evidence
 
 log = logging.getLogger(__name__)
 
@@ -57,13 +57,13 @@ def fetch_process_bundle(process_id: str, clearance_level: str = "INTERNAL") -> 
     """
     proc = Process.objects.select_related("organisation").get(pk=process_id)
 
-    user_level = CLEARANCE_LEVELS.get(clearance_level, 1)
+    user_level = CLEARANCE_LEVELS.get(clearance_level, -1)
     accessible_confidentiality = [
         conf for conf, level in CONFIDENTIALITY_MAP.items() if level <= user_level
     ]
 
     docs: QuerySet[Document] = (
-        Document.objects.filter(process=proc, confidentiality__in=accessible_confidentiality)
+        Document.objects.filter(process=proc, organisation=proc.organisation, is_latest=True, confidentiality__in=accessible_confidentiality)
         .select_related("created_by", "organisation", "process")
         .order_by("-timestamp", "-created_at")[:50]
         .only(
@@ -181,7 +181,7 @@ def generate_project_report(
     metadata_ctx = build_structured_context(bundle)
 
     # Retrieved document content chunks (scoped to same clearance level)
-    content_ctx = retrieve_context(
+    content_ctx, chunk_doc_ids = retrieve_evidence(
         query=f"{p.name or ''} {p.commodity or ''}".strip(),
         process=p,
         clearance_level=clearance_level,
@@ -193,19 +193,18 @@ def generate_project_report(
 
     client = GraniteClient()
     text = client.complete(prompt)
-    return text, doc_ids
+    return text, list(dict.fromkeys(doc_ids + chunk_doc_ids))
 
 
 @instrument
-def save_report(process, organisation, title, content_md, user, reason="GENERATED", summary=""):
+def save_report(process, organisation, title, content_md, user, reason="GENERATED", summary="", parent=None):
     import hashlib
+
+    from ..access import clearance_level
 
     content_hash = hashlib.sha256(content_md.encode()).hexdigest()
 
-    # Check if a report already exists for this process+title
-    existing = (
-        SavedReport.objects.filter(process=process, title=title).order_by("-version_number").first()
-    )
+    existing = parent  # Titles are labels, never a report identity.
 
     if existing:
         # Create a new version
@@ -215,6 +214,8 @@ def save_report(process, organisation, title, content_md, user, reason="GENERATE
             user=user,
             reason=reason,
             summary=summary,
+            clearance_level=clearance_level(user),
+            title=title,
         )
     else:
         # First version ever
@@ -224,7 +225,7 @@ def save_report(process, organisation, title, content_md, user, reason="GENERATE
             title=title,
             content_md=content_md,
             content_hash=content_hash,
-            clearance_level="INTERNAL",
+            clearance_level=clearance_level(user),
             created_by=user,
             version_number=1,
             change_reason=reason,

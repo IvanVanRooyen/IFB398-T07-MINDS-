@@ -175,6 +175,7 @@
   </div>
 </div>
 
+{{ initial_area_geojson|default:"null"|json_script:"prospect_form-data-0" }}
 <script>
 const map = new maplibregl.Map({
     container: 'prospect-map',
@@ -237,7 +238,7 @@ map.on('click', (e) => {
 });
 
 // ── Area boundary map ────────────────────────────────────────────────────────
-const INITIAL_AREA_GEOJSON = {{ initial_area_geojson|default:"null"|safe }};
+const INITIAL_AREA_GEOJSON = readMapData("prospect_form-data-0");
 
 const areaMap = new maplibregl.Map({
     container: 'area-map',

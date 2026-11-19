@@ -68,7 +68,7 @@ class CountModelTests(TestCase):
         mdl.objects.count.assert_called_once_with()
 
     @patch("core.views._get_model")
-    def test_where_clause_argument_is_accepted_but_unused(self, mock_get_model):
+    def test_unknown_keyword_is_rejected(self, mock_get_model):
         # The current implementation ignores ``where_clause`` — pin that
         # behaviour so accidental changes get flagged.
         mdl = MagicMock()
@@ -76,9 +76,9 @@ class CountModelTests(TestCase):
         mdl.objects.filter = MagicMock()
         mock_get_model.return_value = mdl
 
-        result = views._count_model("core", "Real", where_clause="x=1")
+        with self.assertRaises(TypeError):
+            views._count_model("core", "Real", where_clause="x=1")
 
-        self.assertEqual(result, 3)
         mdl.objects.filter.assert_not_called()
 
 
@@ -249,7 +249,7 @@ class HomeViewTests(_ViewTestBase):
         # Process filtered with just the org filter.
         mock_process.objects.filter.assert_called_with(org_q)
         # Document filtered with org filter AND is_latest=True.
-        mock_document.objects.filter.assert_called_with(org_q, is_latest=True)
+        mock_document.objects.filter.assert_called_with(views._document_filter(self._authed_get()), is_latest=True)
 
     @patch("core.views.render", return_value=MagicMock())
     @patch("core.views.Document")
@@ -452,44 +452,49 @@ class DocsCacheKeyTests(TestCase):
 
     def test_superuser_uses_global_all_key(self):
         user = MagicMock()
+        user.profile.clearance_level = "PUBLIC"
         user.is_superuser = True
         self.assertEqual(
             views._docs_cache_key(self._request_with(user)),
-            "docs:unfiltered:page1:v1:all",
+            "docs:unfiltered:page1:v2:all",
         )
 
     def test_user_with_org_keyed_by_org_id(self):
         user = MagicMock()
+        user.profile.clearance_level = "PUBLIC"
         user.is_superuser = False
         user.is_authenticated = True
         user.profile.organisation.id = 1234
 
         self.assertEqual(
             views._docs_cache_key(self._request_with(user)),
-            "docs:unfiltered:page1:v1:1234",
+            "docs:unfiltered:page1:v2:1234:PUBLIC",
         )
 
     def test_user_with_uuid_org_id_stringifies_correctly(self):
         # Defends against orgs that use UUID PKs.
         user = MagicMock()
+        user.profile.clearance_level = "PUBLIC"
         user.is_superuser = False
         user.is_authenticated = True
         user.profile.organisation.id = "abc-123-uuid"
 
         self.assertEqual(
             views._docs_cache_key(self._request_with(user)),
-            "docs:unfiltered:page1:v1:abc-123-uuid",
+            "docs:unfiltered:page1:v2:abc-123-uuid:PUBLIC",
         )
 
     def test_authenticated_user_without_org_uses_noorg(self):
         user = MagicMock()
+        user.profile.clearance_level = "PUBLIC"
         user.is_superuser = False
         user.is_authenticated = True
+        user.profile.clearance_level = "PUBLIC"
         user.profile.organisation = None
 
         self.assertEqual(
             views._docs_cache_key(self._request_with(user)),
-            "docs:unfiltered:page1:v1:noorg",
+            "docs:unfiltered:page1:v2:noorg:PUBLIC",
         )
 
     def test_authenticated_user_without_profile_uses_noorg(self):
@@ -499,13 +504,13 @@ class DocsCacheKeyTests(TestCase):
 
         self.assertEqual(
             views._docs_cache_key(self._request_with(user)),
-            "docs:unfiltered:page1:v1:noorg",
+            "docs:unfiltered:page1:v2:noorg:PUBLIC",
         )
 
     def test_anonymous_user_uses_noorg(self):
         self.assertEqual(
             views._docs_cache_key(self._request_with(AnonymousUser())),
-            "docs:unfiltered:page1:v1:noorg",
+            "docs:unfiltered:page1:v2:noorg:PUBLIC",
         )
 
     def test_two_different_orgs_produce_different_keys(self):
@@ -532,9 +537,6 @@ class DocsCacheKeyTests(TestCase):
 
 class CacheConstantsTests(TestCase):
     """Pin the cache-key constants so accidental edits trip a test."""
-
-    def test_docs_cache_key_constant(self):
-        self.assertEqual(views.DOCS_CACHE_KEY, "docs:unfiltered:page1:v1")
 
     def test_docs_cache_ttl_is_two_minutes(self):
         self.assertEqual(views.DOCS_CACHE_TTL, 120)

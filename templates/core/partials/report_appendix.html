@@ -1,0 +1,39 @@
+{% load l10n %}
+{% if appendix.snapshot %}
+<section aria-labelledby="appendix-heading" class="mt-6 break-words">
+  <h2 id="appendix-heading" class="text-xl font-semibold">Geological evidence appendix</h2>
+  <p class="mt-2 text-sm">Scope: {{ appendix.snapshot.scope.project }}{% if appendix.snapshot.scope.prospect %} / {{ appendix.snapshot.scope.prospect }}{% endif %}. Captured {{ appendix.snapshot.captured_at }}.</p>
+  <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{ appendix.snapshot.note }}</p>
+  {% for table in appendix.snapshot.tables %}
+  <div class="mt-6">
+    <h3 class="font-semibold mb-2">{{ table.title }}</h3>
+    <div class="overflow-x-auto" tabindex="0" role="region" aria-label="{{ table.title }}">
+      <table class="w-full text-sm text-left border-collapse" style="font-variant-numeric:tabular-nums">
+        <caption class="sr-only">{{ table.title }} — saved database snapshot</caption>
+        <thead><tr>{% for column in table.columns %}<th scope="col" class="p-2 border-b border-gray-400">{{ column }}</th>{% endfor %}</tr></thead>
+        <tbody>{% for row in table.rows %}<tr>{% for cell in row.cells %}<td class="p-2 border-b border-gray-200 dark:border-gray-700">{% if forloop.first %}<a class="underline" href="{{ row.url }}">{{ cell }}</a>{% else %}{{ cell }}{% endif %}</td>{% endfor %}</tr>{% empty %}<tr><td class="p-2" colspan="{{ table.columns|length }}">No records in the captured scope.</td></tr>{% endfor %}</tbody>
+      </table>
+    </div>
+  </div>
+  {% endfor %}
+  {% if appendix.snapshot.plan %}
+  <figure class="mt-6">
+    <figcaption class="font-semibold">{{ appendix.snapshot.plan.title }}</figcaption>
+    <p class="mt-2 text-sm">{{ appendix.snapshot.plan.note }}</p>
+    {% if appendix.plot_points %}
+    <svg viewBox="0 0 600 330" role="img" aria-label="Saved collar locations, numbered to match the key below. North is up." class="mt-3 w-full bg-white text-gray-900 border border-gray-300">
+      <text x="560" y="26" font-size="14">N</text>
+      <path d="M564 55 V35 M564 35 L560 43 M564 35 L568 43" fill="none" stroke="currentColor" stroke-width="2"/>
+      {% for point in appendix.plot_points %}<circle cx="{{ point.x|unlocalize }}" cy="{{ point.y|unlocalize }}" r="4" fill="#0e7490"/><text x="{{ point.x|unlocalize }}" y="{{ point.y|unlocalize }}" dx="7" dy="-5" font-size="12">{{ point.label }}</text>{% endfor %}
+    </svg>
+    <ul class="mt-3 text-sm flex flex-wrap gap-x-6 gap-y-2" aria-label="Collar figure key">{% for row in appendix.snapshot.plan.key %}<li>{{ row.cells.0 }}: {{ row.cells.1 }} ({{ row.cells.2 }}, {{ row.cells.3 }})</li>{% endfor %}</ul>
+    {% else %}<p class="mt-3">No mapped collars in the captured scope.</p>{% endif %}
+    <p class="mt-2 text-sm">Collars without coordinates: {{ appendix.snapshot.plan.omitted }}.</p>
+  </figure>
+  {% endif %}
+  <details class="mt-4 text-sm"><summary class="cursor-pointer">Snapshot identity and record IDs</summary>
+    <p class="mt-2 break-all">SHA-256: {{ appendix.snapshot.sha256 }}</p>
+    {% for table in appendix.snapshot.tables %}<p class="mt-2">{{ table.title }}:</p><ul>{% for row in table.rows %}<li class="break-all">{{ row.id }}</li>{% endfor %}</ul>{% endfor %}
+  </details>
+</section>
+{% else %}<p class="mt-4 text-sm text-gray-600 dark:text-gray-300">No geological appendix saved in this revision.</p>{% endif %}

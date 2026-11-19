@@ -56,8 +56,9 @@
 
 <link href="https://unpkg.com/maplibre-gl@5.5.0/dist/maplibre-gl.css" rel="stylesheet" />
 <script src="https://unpkg.com/maplibre-gl@5.5.0/dist/maplibre-gl.js"></script>
+{{ tenement.geom.json|json_script:"tenement_detail-data-0" }}
 <script>
-const GEOM = {{ tenement.geom.json|safe }};
+const GEOM = readMapData("tenement_detail-data-0");
 const map = new maplibregl.Map({
     container: 'tenement-map',
     style: {

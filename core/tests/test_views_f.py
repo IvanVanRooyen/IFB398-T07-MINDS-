@@ -28,6 +28,13 @@ User = get_user_model()
 
 class _ViewTestBase(TestCase):
     def setUp(self):
+        # Policy is integration-tested with real records in test_access_security.
+        # These orchestration tests supply mocks without persisted tenant fields.
+        self.enterContext(patch("core.views.require_record_access"))
+        self.enterContext(patch("core.views.require_report_author"))
+        self.enterContext(patch("core.views._lock_report_version", side_effect=lambda report: report))
+        self.enterContext(patch("core.views._has_newer_report", return_value=False))
+        self.enterContext(patch("core.views._document_filter", return_value=Q()))
         self.factory = RequestFactory()
         self.user = User.objects.create_user(
             username="alice", password="pw", email="alice@example.com"
@@ -42,9 +49,12 @@ class _ViewTestBase(TestCase):
         )
 
     def _authed_request(self, method="get", path="/", files=None, **kwargs):
+        if "body" in kwargs:
+            kwargs["data"] = kwargs.pop("body")
+            kwargs["content_type"] = "application/json"
         request = getattr(self.factory, method)(path, **kwargs)
         request.user = self.user
-        type(request.user).profile = property(lambda s, p=self.profile: p)
+        self.enterContext(patch.object(type(request.user), "profile", property(lambda s, p=self.profile: p)))
         if files is not None:
             normalised = {
                 k: (v if isinstance(v, list) else [v]) for k, v in files.items()
@@ -504,22 +514,24 @@ class ReportHistoryTests(_ViewTestBase):
     @patch("core.views.render", return_value=MagicMock())
     @patch("core.views.SavedReport")
     @patch("core.views._org_qs_filter", return_value=Q())
-    def test_groups_reports_by_title(self, _f, mock_saved, mock_render):
+    def test_groups_report_revisions_by_series(self, _f, mock_saved, mock_render):
         r1a = MagicMock()
         r1a.title = "Annual"
         r1b = MagicMock()
-        r1b.title = "Annual"
+        r1b.title = "Renamed Annual"
+        r1a.series_id = r1b.series_id = "annual-series"
         r2 = MagicMock()
         r2.title = "Quarterly"
+        r2.series_id = "quarterly-series"
         mock_saved.objects.filter.return_value = self._chainable_qs([r1a, r1b, r2])
 
         views.report_history(self._authed_request("get"), process_id="p1")
 
         ctx = mock_render.call_args[0][2]
         grouped = ctx["grouped"]
-        self.assertEqual(set(grouped.keys()), {"Annual", "Quarterly"})
-        self.assertEqual(len(grouped["Annual"]), 2)
-        self.assertEqual(len(grouped["Quarterly"]), 1)
+        self.assertEqual(set(grouped.keys()), {"annual-series", "quarterly-series"})
+        self.assertEqual(len(grouped["annual-series"]), 2)
+        self.assertEqual(len(grouped["quarterly-series"]), 1)
         self.assertEqual(ctx["process_id"], "p1")
 
 
@@ -581,6 +593,8 @@ class AllReportsHistoryTests(_ViewTestBase):
         r2 = self._make_report(title="Annual", project_name="Alpha", project_id="A")
         r3 = self._make_report(title="Q1", project_name="Alpha", project_id="A")
         r4 = self._make_report(title="Geo", project_name=None)
+        r1.series_id = r2.series_id = "annual-series"
+        r3.series_id = "quarterly-series"
         mock_saved.objects.filter.return_value = self._chainable_qs([r1, r2, r3, r4])
 
         views.all_reports_history(self._authed_request("get"))
@@ -588,8 +602,8 @@ class AllReportsHistoryTests(_ViewTestBase):
         ctx = mock_render.call_args[0][2]
         grouped = ctx["grouped"]
         self.assertEqual(set(grouped.keys()), {"Alpha", "No Project"})
-        self.assertEqual(len(grouped["Alpha"]["titles"]["Annual"]), 2)
-        self.assertEqual(len(grouped["Alpha"]["titles"]["Q1"]), 1)
+        self.assertEqual(len(grouped["Alpha"]["titles"]["annual-series"]), 2)
+        self.assertEqual(len(grouped["Alpha"]["titles"]["quarterly-series"]), 1)
         self.assertEqual(grouped["No Project"]["process_id"], None)
         self.assertIsNone(ctx["total"])  # total only populated for search.
 
@@ -683,8 +697,8 @@ class ExportReportTests(_ViewTestBase):
             title="Doc B", doc_type=None, confidentiality=None, timestamp=None
         )
 
-        saved = MagicMock()
-        saved.source_documents.order_by.return_value = [d1, d2]
+        saved = MagicMock(data_appendix={})
+        saved.source_documents.filter.return_value.order_by.return_value = [d1, d2]
         chain = MagicMock()
         chain.get.return_value = saved
         mock_saved.objects.prefetch_related.return_value = chain
@@ -700,6 +714,7 @@ class ExportReportTests(_ViewTestBase):
                 "report_id": "uuid-here",
             },
         )
+        self.enterContext(patch("core.views.get_object_or_404", return_value=saved))
         views.export_report(request)
 
         all_args = [c.args[0] for c in mock_paragraph.call_args_list if c.args]
@@ -743,7 +758,8 @@ class ExportReportTests(_ViewTestBase):
 class ReportDetailTests(_ViewTestBase):
     @patch("core.views.render", return_value=MagicMock())
     def test_renders_template_with_report_id(self, mock_render):
-        views.report_detail(self._authed_request("get"), report_id="r1")
+        with patch("core.views.get_object_or_404", return_value=MagicMock()):
+            views.report_detail(self._authed_request("get"), report_id="r1")
 
         args = mock_render.call_args[0]
         self.assertEqual(args[1], "core/report_detail.html")
@@ -808,7 +824,7 @@ class AuditLogViewTests(_ViewTestBase):
 
         views.audit_log_view(self._authed_request("get"))
 
-        qs.filter.assert_not_called()
+        qs.filter.assert_called_once()
 
     @patch("core.views.AuditLog")
     @patch("core.views._org_qs_filter", return_value=Q())
@@ -973,7 +989,7 @@ class AnalyzeDocumentTests(_ViewTestBase):
         document = MagicMock(organisation=self.org, extracted_text="")
         mock_get.return_value = document
 
-        views.analyze_document(self._authed_request("get"), pk=1)
+        views.analyze_document(self._authed_request("post"), pk=1)
 
         mock_messages.error.assert_called_once()
         mock_redirect.assert_called_with("document_analysis_page")
@@ -997,7 +1013,7 @@ class AnalyzeDocumentTests(_ViewTestBase):
         client.complete.return_value = "## Summary\nLooks good."
         mock_granite_cls.return_value = client
 
-        views.analyze_document(self._authed_request("get"), pk=42)
+        views.analyze_document(self._authed_request("post"), pk=42)
 
         client.complete.assert_called_once()
         prompt = client.complete.call_args[0][0]
@@ -1020,7 +1036,7 @@ class AnalyzeDocumentTests(_ViewTestBase):
 
         mock_granite_cls.side_effect = RuntimeError("model down")
 
-        views.analyze_document(self._authed_request("get"), pk=1)
+        views.analyze_document(self._authed_request("post"), pk=1)
 
         mock_messages.error.assert_called_once()
         mock_redirect.assert_called_with("document_analysis_page")
@@ -1047,10 +1063,10 @@ class AnalyzeDocumentTests(_ViewTestBase):
             patch("core.views.messages"),
             patch("core.views.redirect", return_value=MagicMock()),
         ):
-            views.analyze_document(self._authed_request("get"), pk=1)
+            views.analyze_document(self._authed_request("post"), pk=1)
 
         prompt = client.complete.call_args[0][0]
-        self.assertEqual(prompt.count("A"), 12000)
+        self.assertEqual(prompt.split("Document text:\n", 1)[1].strip(), "A" * 12000)
 
     @patch("core.views.get_object_or_404")
     def test_cross_org_user_blocked(self, mock_get):
@@ -1058,7 +1074,7 @@ class AnalyzeDocumentTests(_ViewTestBase):
         mock_get.return_value = document
 
         with self.assertRaises(PermissionDenied):
-            views.analyze_document(self._authed_request("get"), pk=1)
+            views.analyze_document(self._authed_request("post"), pk=1)
 
 
 # ---------------------------------------------------------------------------

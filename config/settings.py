@@ -16,7 +16,7 @@ ALLOWED_HOSTS = ["orefox.ivanvanrooyen.com", "localhost", "127.0.0.1"]
 CSRF_TRUSTED_ORIGINS = ["https://orefox.ivanvanrooyen.com"]
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    "config.apps.PlatformAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -107,8 +107,6 @@ STORAGES = {
             "secret_key": env("MINIO_ROOT_PASSWORD"),
             "bucket_name": env("MINIO_BUCKET"),
             "endpoint_url": f"http://{env('MINIO_ENDPOINT')}",
-            "url_protocol": "http:",
-            "custom_domain": f"{env('MINIO_EXTERNAL_ENDPOINT', default='localhost:9000')}/{env('MINIO_BUCKET')}",
             "use_ssl": env.bool("MINIO_USE_SSL", default=False),
             "file_overwrite": False,
             "default_acl": None,
@@ -118,3 +116,6 @@ STORAGES = {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
+
+# Durable report worker lease; always extended beyond the provider timeout.
+REPORT_JOB_LEASE_SECONDS = env.int("REPORT_JOB_LEASE_SECONDS", default=600)

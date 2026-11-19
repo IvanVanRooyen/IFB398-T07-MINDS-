@@ -4,6 +4,7 @@ from __future__ import annotations
 import io
 import logging
 import re
+import uuid
 from types import SimpleNamespace
 
 from django.apps import apps
@@ -12,11 +13,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.search import SearchQuery, SearchRank
 from django.core.cache import cache
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
-from django.db.models import Q
-from django.http import Http404, HttpResponse, HttpResponseBadRequest, JsonResponse
+from django.db import transaction
+from django.db.models import F, Q
+from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from docx import Document as DocxDocument
@@ -31,6 +34,18 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
 from core.ai.report_service import generate_project_report
 
+from .access import (
+    clearance_level,
+    document_filter,
+    organisation_filter,
+    report_filter,
+    require_author,
+    require_record_access,
+    require_report_author,
+)
+from .ai import jobs as report_jobs
+from .ai.citations import audit_citations
+from .ai.composition import ReportCompositionForm
 from .ai.granite_client import GraniteClient
 from .forms import (
     DocumentForm,
@@ -61,11 +76,41 @@ from .models import (
     UserProfile,
     log_audit,
 )
-from .permissions import log_view_access, role_required
+from .permissions import author_required, log_view_access, role_required
+from .reporting import appendix as report_appendix
+from .reporting.exports import docx_appendix, pdf_appendix
 from .tagging import TAG_LABEL
 from .utils import chunk_text, extract_text, sha256_file
 
 log = logging.getLogger(__name__)
+
+
+def _document_filter(request):
+    return document_filter(request.user)
+
+
+def _report_filter(request):
+    return report_filter(request.user)
+
+
+def _get_accessible_object(request, model, **lookups):
+    try:
+        obj = get_object_or_404(model, **lookups)
+    except (ValidationError, ValueError):
+        raise Http404("Record not found")
+    require_record_access(request.user, obj)
+    # Also protect existing reports whose stored classification was too low.
+    if getattr(getattr(obj, "_meta", None), "label_lower", None) == "core.savedreport" and not request.user.is_superuser:
+        if obj.source_documents.exclude(_document_filter(request)).exists():
+            raise PermissionDenied
+    return obj
+
+
+def _visible_reports(request):
+    qs = SavedReport.objects.filter(_report_filter(request))
+    if not request.user.is_superuser:
+        qs = qs.exclude(source_documents__in=Document.objects.exclude(_document_filter(request)))
+    return qs.distinct()
 
 
 # ---------- Helpers ----------
@@ -105,13 +150,7 @@ def _org_qs_filter(request):
     - Authenticated users with an assigned organisation: Q(organisation=their_org).
     - Authenticated users with no organisation: Q(pk__in=[]) — see nothing.
     """
-    if request.user.is_superuser:
-        return Q()
-    if request.user.is_authenticated and hasattr(request.user, "profile"):
-        org = request.user.profile.organisation
-        if org is not None:
-            return Q(organisation=org)
-    return Q(pk__in=[])
+    return organisation_filter(request.user)
 
 
 # ---------- Landing / Dashboard ----------
@@ -126,7 +165,7 @@ def home(request):
     """
     org_filter = _org_qs_filter(request)
     projects = Process.objects.filter(org_filter).order_by("-created_at")[:10]
-    docs = Document.objects.filter(org_filter, is_latest=True).order_by("-created_at")[:10]
+    docs = Document.objects.filter(_document_filter(request), is_latest=True).order_by("-created_at")[:10]
     return render(
         request,
         "core/home.html",
@@ -147,12 +186,12 @@ def dashboard(request):
     Tenement = _get_model("core", "Tenement")
     metrics = {
         "project_count": Process.objects.filter(org_filter).count(),
-        "document_count": Document.objects.filter(org_filter, is_latest=True).count(),
+        "document_count": Document.objects.filter(_document_filter(request), is_latest=True).count(),
         "prospect_count": Prospect.objects.filter(org_filter).count() if Prospect else 0,
         "drillhole_count": Drillhole.objects.filter(org_filter).count() if Drillhole else 0,
         "tenement_count": Tenement.objects.filter(org_filter).count() if Tenement else 0,
     }
-    recent_docs = Document.objects.filter(org_filter, is_latest=True).order_by("-created_at")[:8]
+    recent_docs = Document.objects.filter(_document_filter(request), is_latest=True).order_by("-created_at")[:8]
     return render(
         request,
         "core/dashboard.html",
@@ -171,7 +210,7 @@ def stats_partial(request):
     Tenement = _get_model("core", "Tenement")
     ctx = {
         "project_count": Process.objects.filter(org_filter).count(),
-        "document_count": Document.objects.filter(org_filter, is_latest=True).count(),
+        "document_count": Document.objects.filter(_document_filter(request), is_latest=True).count(),
         "prospect_count": Prospect.objects.filter(org_filter).count() if Prospect else 0,
         "drillhole_count": Drillhole.objects.filter(org_filter).count() if Drillhole else 0,
         "tenement_count": Tenement.objects.filter(org_filter).count() if Tenement else 0,
@@ -188,12 +227,12 @@ DOCS_CACHE_TTL = 120  # 2 minutes
 def _docs_cache_key(request):
     """Per-organisation cache key so users only see their own org's cached documents."""
     if request.user.is_superuser:
-        return "docs:unfiltered:page1:v1:all"
+        return "docs:unfiltered:page1:v2:all"
     org = None
     if request.user.is_authenticated and hasattr(request.user, "profile"):
         org = request.user.profile.organisation
     org_id = str(org.id) if org else "noorg"
-    return f"docs:unfiltered:page1:v1:{org_id}"
+    return f"docs:unfiltered:page1:v2:{org_id}:{_get_clearance_level(request)}"
 
 
 # ---------- Documents ----------
@@ -202,15 +241,13 @@ def _docs_cache_key(request):
 @instrument
 def _get_clearance_level(request) -> str:
     """return the requesting user's clearance level string, defaulting to PUBLIC"""
-    if request.user.is_authenticated and hasattr(request.user, "profile"):
-        return request.user.profile.clearance_level
-    return "PUBLIC"
+    return clearance_level(request.user)
 
 
 @instrument
 def _report_cache_key(process_id: str, clearance_level: str, latest_doc_ts) -> str:
     doc_fingerprint = latest_doc_ts.strftime("%Y%m%d%H%M%S%f") if latest_doc_ts else "empty"
-    return f"report:v1:{process_id}:{clearance_level}:{doc_fingerprint}"
+    return f"report:v2:{process_id}:{clearance_level}:{doc_fingerprint}"
 
 
 @instrument
@@ -231,6 +268,20 @@ def _get_cached_report_bundle(process_id: str, clearance_level: str) -> dict:
     cache_key = _report_cache_key(process_id, clearance_level, latest_doc_ts)
 
     cached = cache.get(cache_key)
+    if isinstance(cached, dict):
+        # Access may change without a new upload (e.g. reclassification).
+        # Never reuse text whose declared source set is no longer available.
+        from .access import CLEARANCE_LEVELS, DOCUMENT_LEVELS
+
+        rank = CLEARANCE_LEVELS.get(clearance_level, -1)
+        allowed = [name for name, level in DOCUMENT_LEVELS.items() if level <= rank]
+        source_ids = cached.get("doc_ids", [])
+        valid_sources = Document.objects.filter(
+            process_id=process_id, organisation_id=F("process__organisation_id"),
+            pk__in=source_ids, is_latest=True, confidentiality__in=allowed,
+        ).count()
+        if valid_sources != len(set(source_ids)):
+            cached = None
     # Regenerate for any non-dict cached value (None, legacy str, or tuple from old code)
     if not isinstance(cached, dict):
         md, doc_ids = generate_project_report(process_id, clearance_level=clearance_level)
@@ -262,7 +313,7 @@ def upload_doc(request):
     """
     if request.method == "POST":
         _upload_org = getattr(getattr(request.user, "profile", None), "organisation", None)
-        form = DocumentForm(request.POST, request.FILES, organisation=_upload_org)
+        form = DocumentForm(request.POST, request.FILES, organisation=_upload_org, user=request.user)
         log.debug("FILES keys: %s", list(request.FILES.keys()))  # debug: ensure 'file' is present
         if form.is_valid():
             doc = form.save(commit=False)
@@ -280,10 +331,10 @@ def upload_doc(request):
 
             if (
                 doc.checksum_sha256
-                and Document.objects.filter(checksum_sha256=doc.checksum_sha256).exists()
+                and Document.objects.filter(organisation=doc.organisation, checksum_sha256=doc.checksum_sha256).exists()
             ):
                 # Duplicate detected — re-render with error + keep their form state
-                docs = Document.objects.filter(_org_qs_filter(request), is_latest=True).order_by(
+                docs = Document.objects.filter(_document_filter(request), is_latest=True).order_by(
                     "-created_at"
                 )[:20]
                 return render(
@@ -347,7 +398,7 @@ def upload_doc(request):
             # Show validation errors + keep the recent docs list
             # Show *why* it failed
             log.warning("Upload invalid: %s", form.errors)
-            docs = Document.objects.filter(_org_qs_filter(request), is_latest=True).order_by(
+            docs = Document.objects.filter(_document_filter(request), is_latest=True).order_by(
                 "-created_at"
             )[:20]
             return render(
@@ -362,8 +413,8 @@ def upload_doc(request):
 
     # GET
     _upload_org = getattr(getattr(request.user, "profile", None), "organisation", None)
-    form = DocumentForm(organisation=_upload_org)
-    docs = Document.objects.filter(_org_qs_filter(request), is_latest=True).order_by("-created_at")[
+    form = DocumentForm(organisation=_upload_org, user=request.user)
+    docs = Document.objects.filter(_document_filter(request), is_latest=True).order_by("-created_at")[
         :20
     ]
     return render(request, "core/upload.html", {"form": form, "docs": docs})
@@ -378,7 +429,7 @@ def documents(request):
     """
     # Build doc_type choices from whatever is actually in the DB
     existing_types = (
-        Document.objects.filter(_org_qs_filter(request))
+        Document.objects.filter(_document_filter(request))
         .exclude(doc_type="")
         .exclude(doc_type__isnull=True)
         .values_list("doc_type", flat=True)
@@ -389,9 +440,9 @@ def documents(request):
     type_choices = [("", "All types")] + [(t, t) for t in existing_types]
 
     org = getattr(getattr(request.user, "profile", None), "organisation", None)
-    form = DocumentSearchForm(request.GET or None, doc_type_choices=type_choices, organisation=org)
+    form = DocumentSearchForm(request.GET or None, doc_type_choices=type_choices, organisation=org, user=request.user)
     qs = (
-        Document.objects.filter(_org_qs_filter(request), is_latest=True)
+        Document.objects.filter(_document_filter(request), is_latest=True)
         .select_related("process", "organisation")
         .order_by("-created_at")
     )
@@ -476,6 +527,12 @@ def documents(request):
     # Serve from cache for the default view (no filters, page 1)
     if not filters_active and page_num == "1":
         cached = cache.get(_docs_cache_key(request))
+        if cached is not None and not request.user.is_superuser:
+            # Recheck visibility after clearance/metadata changes, including
+            # changes made by a different user while this cache was warm.
+            ids = [doc.pk for doc in cached["docs"]]
+            current = list(Document.objects.filter(_document_filter(request), pk__in=ids).order_by("-created_at"))
+            cached = {**cached, "docs": current} if len(current) == len(ids) else None
         if cached is not None:
             # Reconstruct a Page-like proxy from the cached dict so the template
             # interface (page.object_list, page.has_next, etc.) works unchanged.
@@ -534,7 +591,7 @@ def documents(request):
 @require_GET
 @instrument
 def document_detail(request, pk):
-    doc = get_object_or_404(Document, pk=pk)
+    doc = _get_accessible_object(request, Document, pk=pk)
     if not request.user.is_superuser:
         if (
             hasattr(request.user, "profile")
@@ -544,7 +601,7 @@ def document_detail(request, pk):
         ):
             raise PermissionDenied
     tag_labels = [TAG_LABEL.get(t, f"Tag {t}") for t in (doc.tags or [])]
-    version_family = doc.get_version_family()
+    version_family = [version for version in doc.get_version_family() if request.user.is_superuser or request.user.profile.can_access_document(version)]
     latest_version = version_family[-1] if version_family else doc
     profile = getattr(request.user, "profile", None)
     can_upload_version = profile and profile.role in (
@@ -578,7 +635,7 @@ def delete_document(request, pk):
     """
     Delete a document and its associated file from storage (MinIO).
     """
-    doc = get_object_or_404(Document, pk=pk)
+    doc = _get_accessible_object(request, Document, pk=pk)
     if not request.user.is_superuser:
         if (
             hasattr(request.user, "profile")
@@ -631,7 +688,7 @@ def delete_document(request, pk):
 @require_GET
 @instrument
 def download_document(request, pk):
-    doc = get_object_or_404(Document, pk=pk)
+    doc = _get_accessible_object(request, Document, pk=pk)
     profile = getattr(request.user, "profile", None)
     if not request.user.is_superuser:
         if profile and not profile.can_access_document(doc):
@@ -644,8 +701,15 @@ def download_document(request, pk):
         ip_address=request.META.get("REMOTE_ADDR"),
         user_agent=request.META.get("HTTP_USER_AGENT", "")[:500],
     )
-    url = doc.file.url
-    return redirect(url)
+    if not doc.file:
+        raise Http404("File not found")
+    try:
+        file = doc.file.open("rb")
+    except FileNotFoundError:
+        raise Http404("File not found")
+    response = FileResponse(file, as_attachment=True, filename=doc.file.name.rsplit("/", 1)[-1])
+    response["Cache-Control"] = "private, no-store"
+    return response
 
 
 @login_required
@@ -657,8 +721,7 @@ def download_document(request, pk):
 )
 @instrument
 def replace_document(request, pk):
-    org = getattr(getattr(request.user, "profile", None), "organisation", None)
-    parent = get_object_or_404(Document, pk=pk, organisation=org)
+    parent = _get_accessible_object(request, Document, pk=pk)
     new_file = request.FILES.get("file")
     if not new_file:
         messages.error(request, "No file uploaded.")
@@ -696,7 +759,7 @@ def projects(request):
         .annotate(
             prospect_count=Count("prospect", distinct=True),
             drillhole_count=Count("drillhole", distinct=True),
-            document_count=Count("document", distinct=True),
+            document_count=Count("document", filter=document_filter(request.user, "document__"), distinct=True),
         )
         .order_by("-created_at")
     )
@@ -713,11 +776,11 @@ def project_detail(request, pk):
     org_filter = _org_qs_filter(request)
     process = get_object_or_404(Process.objects.filter(org_filter), pk=pk)
 
-    prospects_qs = Prospect.objects.filter(process=process).order_by("-created_at")
-    drillholes_qs = Drillhole.objects.filter(process=process).order_by("name")
-    tenements_qs = Tenement.objects.filter(process=process).order_by("name")
-    documents_qs = Document.objects.filter(process=process, is_latest=True).order_by("-created_at")
-    reports_qs = SavedReport.objects.filter(process=process).order_by("-created_at")
+    prospects_qs = Prospect.objects.filter(_org_qs_filter(request), process=process).order_by("-created_at")
+    drillholes_qs = Drillhole.objects.filter(_org_qs_filter(request), process=process).order_by("name")
+    tenements_qs = Tenement.objects.filter(_org_qs_filter(request), process=process).order_by("name")
+    documents_qs = Document.objects.filter(_document_filter(request), process=process, is_latest=True).order_by("-created_at")
+    reports_qs = _visible_reports(request).filter(process=process).order_by("-created_at")
 
     return render(
         request,
@@ -758,7 +821,8 @@ def prospect_detail(request, pk):
 
     from django.core.serializers import serialize
 
-    prospect = get_object_or_404(Prospect, pk=pk)
+    request.generation_request_id = str(uuid.uuid4())
+    prospect = _get_accessible_object(request, Prospect, pk=pk)
     if not request.user.is_superuser:
         if (
             hasattr(request.user, "profile")
@@ -770,6 +834,7 @@ def prospect_detail(request, pk):
 
     doc_links = (
         DocLink.objects.filter(
+                document__in=Document.objects.filter(_document_filter(request)),
             content_type=ContentType.objects.get_for_model(Prospect),
             object_id=prospect.pk,
         )
@@ -777,11 +842,11 @@ def prospect_detail(request, pk):
         .order_by("-created_at")
     )
 
-    drillholes = Drillhole.objects.filter(prospect=prospect).order_by("name")
-    tenements = Tenement.objects.filter(process=prospect.process).order_by("name")
-    prospect_reports = SavedReport.objects.filter(prospect=prospect).order_by("-created_at")
-    samples = Sample.objects.filter(prospect=prospect).order_by("-created_at")
-    surveys = Survey.objects.filter(prospect=prospect).order_by("-created_at")
+    drillholes = Drillhole.objects.filter(_org_qs_filter(request), prospect=prospect).order_by("name")
+    tenements = Tenement.objects.filter(_org_qs_filter(request), process=prospect.process).order_by("name")
+    prospect_reports = _visible_reports(request).filter(prospect=prospect).order_by("-created_at")
+    samples = Sample.objects.filter(_org_qs_filter(request), prospect=prospect).order_by("-created_at")
+    surveys = Survey.objects.filter(_org_qs_filter(request), prospect=prospect).order_by("-created_at")
 
     drillholes_geojson = serialize(
         "geojson",
@@ -902,7 +967,7 @@ def create_prospect(request):
 def edit_prospect(request, pk):
     from django.contrib.gis.geos import Point
 
-    prospect = get_object_or_404(Prospect, pk=pk)
+    prospect = _get_accessible_object(request, Prospect, pk=pk)
     org = getattr(getattr(request.user, "profile", None), "organisation", None)
 
     if not request.user.is_superuser and prospect.organisation != org:
@@ -978,68 +1043,33 @@ def edit_prospect(request, pk):
 @require_POST
 @instrument
 def generate_prospect_report(request, pk):
-    import hashlib
-
-    prospect = get_object_or_404(Prospect, pk=pk)
-    org_filter = _org_qs_filter(request)
-    if not Prospect.objects.filter(org_filter, pk=pk).exists():
-        raise PermissionDenied
-
-    clearance_level = _get_clearance_level(request)
-    report_title = (
-        request.POST.get("report_title", "").strip() or f"{prospect.name} — Prospect Report"
-    )
-
+    prospect = _get_accessible_object(request, Prospect, pk=pk)
+    form = ReportCompositionForm(request.POST, user=request.user, prospect=prospect)
     try:
-        md, doc_ids = generate_project_report(
-            str(prospect.process_id), clearance_level=clearance_level
-        )
-    except Exception as e:
-        log.error("Prospect report generation failed: %s", e)
-        messages.error(request, f"Report generation failed: {e}")
-        return redirect("prospect_detail", pk=pk)
-
-    existing = (
-        SavedReport.objects.filter(prospect=prospect, title=report_title)
-        .order_by("-version_number")
-        .first()
-    )
-
-    if existing:
-        report = SavedReport.create_version(
-            parent=existing,
-            content_md=md,
-            user=request.user,
-            reason=SavedReport.ChangeReason.REGENERATED,
-        )
-    else:
-        report = SavedReport.objects.create(
-            process=prospect.process,
-            organisation=prospect.organisation,
-            prospect=prospect,
-            title=report_title,
-            content_md=md,
-            content_hash=hashlib.sha256(md.encode()).hexdigest(),
-            created_by=request.user,
-            version_number=1,
-            change_reason=SavedReport.ChangeReason.GENERATED,
-        )
-
-    if doc_ids:
-        report.source_documents.set(Document.objects.filter(pk__in=doc_ids))
-
-    return redirect("saved_report_editor", report_id=report.pk)
+        job = report_jobs.enqueue(form, request.POST.get("request_id"))
+    except PermissionDenied:
+        raise
+    except ValidationError as exc:
+        return JsonResponse({"success": False, "errors": form.errors or {"__all__": exc.messages}}, status=400)
+    return redirect(f"{reverse('report_list')}?job={job.pk}")
 
 
 # ---------- Prospect–Report Assignment ----------
 
 
 @login_required
+@author_required
 @require_POST
 @instrument
+@transaction.atomic
 def assign_report_prospect(request, report_id):
     """Assign or clear the prospect linked to a saved report."""
-    report = get_object_or_404(SavedReport, pk=report_id)
+    report = _get_accessible_object(request, SavedReport, pk=report_id)
+    require_report_author(request.user, report)
+    report = _lock_report_version(report)
+    if report.status != "DRAFT" or _has_newer_report(report):
+        return JsonResponse({"success": False, "error": "This version cannot be changed; open the latest draft."}, status=409)
+
     if not request.user.is_superuser:
         if (
             hasattr(request.user, "profile")
@@ -1050,7 +1080,7 @@ def assign_report_prospect(request, report_id):
             raise PermissionDenied
     prospect_id = request.POST.get("prospect_id") or None
     if prospect_id:
-        report.prospect = Prospect.objects.filter(pk=prospect_id, process=report.process).first()
+        report.prospect = _get_accessible_object(request, Prospect, pk=prospect_id, process=report.process)
     else:
         report.prospect = None
     report.save(update_fields=["prospect"])
@@ -1131,7 +1161,7 @@ def create_sample(request):
 @require_GET
 @instrument
 def sample_detail(request, pk):
-    sample = get_object_or_404(Sample, pk=pk)
+    sample = _get_accessible_object(request, Sample, pk=pk)
     if not request.user.is_superuser:
         if (
             hasattr(request.user, "profile")
@@ -1211,7 +1241,7 @@ def create_survey(request):
 @require_GET
 @instrument
 def survey_detail(request, pk):
-    survey = get_object_or_404(Survey, pk=pk)
+    survey = _get_accessible_object(request, Survey, pk=pk)
     if not request.user.is_superuser:
         if (
             hasattr(request.user, "profile")
@@ -1255,7 +1285,7 @@ def doc_link_picker(request):
     if content_type_label not in _LINKABLE_MODELS:
         return HttpResponseBadRequest("Invalid content type.")
 
-    documents = Document.objects.filter(_org_qs_filter(request)).order_by("-created_at")[:100]
+    documents = Document.objects.filter(_document_filter(request)).order_by("-created_at")[:100]
     return render(
         request,
         "core/partials/doc_link_picker.html",
@@ -1268,6 +1298,7 @@ def doc_link_picker(request):
 
 
 @login_required
+@author_required
 @require_POST
 @instrument
 def create_doc_link(request):
@@ -1288,9 +1319,14 @@ def create_doc_link(request):
     except ContentType.DoesNotExist:
         return HttpResponseBadRequest("Content type not found.")
 
-    created_by = request.user if request.user.is_authenticated else None
-    for document_id in document_ids:
-        document = get_object_or_404(Document, pk=document_id)
+    target_model = apps.get_model(app_label, model_name)
+    target = _get_accessible_object(request, target_model, pk=object_id)
+    documents = [_get_accessible_object(request, Document, pk=value) for value in document_ids]
+    if any(doc.organisation_id != target.organisation_id for doc in documents):
+        return HttpResponseBadRequest("Document and target must belong to the same organisation.")
+
+    created_by = request.user
+    for document in documents:
         link, created = DocLink.objects.get_or_create(
             document=document,
             content_type=ct,
@@ -1307,9 +1343,10 @@ def create_doc_link(request):
             )
 
     if content_type_label == "prospect":
-        prospect = get_object_or_404(Prospect, pk=object_id)
+        prospect = _get_accessible_object(request, Prospect, pk=object_id)
         doc_links = (
             DocLink.objects.filter(
+                document__in=Document.objects.filter(_document_filter(request)),
                 content_type=ct,
                 object_id=object_id,
             )
@@ -1330,11 +1367,16 @@ def create_doc_link(request):
 
 
 @login_required
+@author_required
 @require_POST
 @instrument
 def delete_doc_link(request, pk):
     """Delete a DocLink record and re-render the linked documents section."""
     link = get_object_or_404(DocLink, pk=pk)
+    require_record_access(request.user, link.document)
+    if link.content_type.model not in _LINKABLE_MODELS:
+        raise PermissionDenied
+    _get_accessible_object(request, link.content_type.model_class(), pk=link.object_id)
     ct = link.content_type
     object_id = link.object_id
     content_type_label = ct.model
@@ -1349,9 +1391,10 @@ def delete_doc_link(request, pk):
     link.delete()
 
     if content_type_label == "prospect":
-        prospect = get_object_or_404(Prospect, pk=object_id)
+        prospect = _get_accessible_object(request, Prospect, pk=object_id)
         doc_links = (
             DocLink.objects.filter(
+                document__in=Document.objects.filter(_document_filter(request)),
                 content_type=ct,
                 object_id=object_id,
             )
@@ -1379,7 +1422,7 @@ def delete_doc_link(request, pk):
 @instrument
 def drillhole_link_picker(request):
     prospect_id = request.GET.get("prospect_id")
-    prospect = get_object_or_404(Prospect, pk=prospect_id)
+    prospect = _get_accessible_object(request, Prospect, pk=prospect_id)
     available_drillholes = Drillhole.objects.filter(
         process=prospect.process,
         prospect__isnull=True,
@@ -1395,16 +1438,19 @@ def drillhole_link_picker(request):
 
 
 @login_required
+@author_required
 @require_POST
 @instrument
 def link_drillhole(request):
     drillhole_id = request.POST.get("drillhole_id")
     prospect_id = request.POST.get("prospect_id")
-    prospect = get_object_or_404(Prospect, pk=prospect_id)
-    drillhole = get_object_or_404(Drillhole, pk=drillhole_id)
+    prospect = _get_accessible_object(request, Prospect, pk=prospect_id)
+    drillhole = _get_accessible_object(request, Drillhole, pk=drillhole_id)
+    if drillhole.process_id != prospect.process_id:
+        return HttpResponseBadRequest("Drillhole and prospect must belong to the same project.")
     drillhole.prospect = prospect
     drillhole.save(update_fields=["prospect"])
-    drillholes = Drillhole.objects.filter(prospect=prospect).order_by("name")
+    drillholes = Drillhole.objects.filter(_org_qs_filter(request), prospect=prospect).order_by("name")
     return render(
         request,
         "core/partials/linked_drillholes.html",
@@ -1416,14 +1462,17 @@ def link_drillhole(request):
 
 
 @login_required
+@author_required
 @require_POST
 @instrument
 def unlink_drillhole(request, pk):
-    drillhole = get_object_or_404(Drillhole, pk=pk)
+    drillhole = _get_accessible_object(request, Drillhole, pk=pk)
     prospect = drillhole.prospect
+    if prospect is not None:
+        require_record_access(request.user, prospect)
     drillhole.prospect = None
     drillhole.save(update_fields=["prospect"])
-    drillholes = Drillhole.objects.filter(prospect=prospect).order_by("name")
+    drillholes = Drillhole.objects.filter(_org_qs_filter(request), prospect=prospect).order_by("name")
     return render(
         request,
         "core/partials/linked_drillholes.html",
@@ -1435,19 +1484,20 @@ def unlink_drillhole(request, pk):
 
 
 @login_required
+@author_required
 @require_POST
 @instrument
 def bulk_link_drillholes(request):
     """HTMX: link multiple drillholes to a prospect in one action."""
     prospect_id = request.POST.get("prospect_id")
     drillhole_ids = request.POST.getlist("drillhole_id")
-    prospect = get_object_or_404(Prospect, pk=prospect_id)
+    prospect = _get_accessible_object(request, Prospect, pk=prospect_id)
     if drillhole_ids:
         Drillhole.objects.filter(
-            pk__in=drillhole_ids,
+            _org_qs_filter(request), pk__in=drillhole_ids,
             process=prospect.process,
         ).update(prospect=prospect)
-    drillholes = Drillhole.objects.filter(prospect=prospect).order_by("name")
+    drillholes = Drillhole.objects.filter(_org_qs_filter(request), prospect=prospect).order_by("name")
     return render(
         request,
         "core/partials/linked_drillholes.html",
@@ -1459,6 +1509,7 @@ def bulk_link_drillholes(request):
 
 
 @login_required
+@author_required
 @require_POST
 @instrument
 def bulk_assign_drillholes(request):
@@ -1470,13 +1521,13 @@ def bulk_assign_drillholes(request):
         messages.error(request, "Select a prospect and at least one drillhole.")
         return redirect("drillholes")
 
-    prospect = get_object_or_404(Prospect, pk=prospect_id)
+    prospect = _get_accessible_object(request, Prospect, pk=prospect_id)
     org_filter = _org_qs_filter(request)
     if not Prospect.objects.filter(org_filter, pk=prospect_id).exists():
         raise PermissionDenied
 
     updated = Drillhole.objects.filter(
-        pk__in=drillhole_ids,
+        _org_qs_filter(request), pk__in=drillhole_ids,
         process=prospect.process,
     ).update(prospect=prospect)
 
@@ -1514,7 +1565,7 @@ def drillholes(request):
 @require_GET
 @instrument
 def drillhole_detail(request, pk):
-    drillhole = get_object_or_404(Drillhole, pk=pk)
+    drillhole = _get_accessible_object(request, Drillhole, pk=pk)
     if not request.user.is_superuser:
         if (
             hasattr(request.user, "profile")
@@ -1549,7 +1600,8 @@ def drillhole_import(request):
             raise PermissionDenied
 
     org_filter = _org_qs_filter(request)
-    organisations = Organisation.objects.filter(org_filter).order_by("name")
+    organisations = Organisation.objects.all() if request.user.is_superuser else Organisation.objects.filter(pk=getattr(getattr(request.user, "profile", None), "organisation_id", None))
+    organisations = organisations.order_by("name")
     processes = Process.objects.filter(org_filter).select_related("organisation").order_by("name")
 
     context = {"organisations": organisations, "processes": processes}
@@ -1571,21 +1623,22 @@ def drillhole_import(request):
 
         if not form_errors:
             try:
-                org = Organisation.objects.get(pk=org_id)
-                process = Process.objects.get(pk=proc_id, organisation=org)
-                result = run_drillhole_import(
-                    file, org=org, process=process, dry_run=dry_run, update=update
-                )
-                if not dry_run:
-                    c = result.get("counters", {})
-                    log_audit(
-                        request.user,
-                        AuditLog.ActionType.CREATE,
-                        process,
-                        f"Imported drillholes: {c.get('created', 0)} created, "
-                        f"{c.get('updated', 0)} updated, {c.get('skipped', 0)} skipped",
-                        ip_address=request.META.get("REMOTE_ADDR"),
+                org = organisations.get(pk=org_id)
+                process = processes.get(pk=proc_id, organisation=org)
+                with transaction.atomic():
+                    result = run_drillhole_import(
+                        file, org=org, process=process, dry_run=dry_run, update=update
                     )
+                    if not dry_run and result.get("applied", False):
+                        c = result.get("counters", {})
+                        log_audit(
+                            request.user,
+                            AuditLog.ActionType.CREATE,
+                            process,
+                            f"Imported drillholes: {c.get('collars_created', 0)} created, "
+                            f"{c.get('collars_updated', 0)} updated, {c.get('collars_skipped', 0)} skipped",
+                            ip_address=request.META.get("REMOTE_ADDR"),
+                        )
                 context.update(
                     {
                         "result": result,
@@ -1623,6 +1676,7 @@ def tenements(request):
 
 
 @login_required
+@author_required
 @require_http_methods(["GET", "POST"])
 @instrument
 def create_tenement(request):
@@ -1653,7 +1707,7 @@ def create_tenement(request):
 @instrument
 def tenement_detail(request, pk):
     tenement = get_object_or_404(Tenement.objects.filter(_org_qs_filter(request)), pk=pk)
-    documents = Document.objects.filter(tenement=tenement, is_latest=True).order_by("-created_at")[
+    documents = Document.objects.filter(_document_filter(request), tenement=tenement, is_latest=True).order_by("-created_at")[
         :10
     ]
     return render(
@@ -1667,6 +1721,7 @@ def tenement_detail(request, pk):
 
 
 @login_required
+@author_required
 @require_http_methods(["GET", "POST"])
 @instrument
 def edit_tenement(request, pk):
@@ -1700,6 +1755,7 @@ def edit_tenement(request, pk):
 
 
 @login_required
+@author_required
 @require_http_methods(["GET", "POST"])
 @instrument
 def edit_process_geometry(request, pk):
@@ -1755,9 +1811,9 @@ def ai_insights(request):
         request,
         "core/ai_insights.html",
         {
-            "recent_docs": Document.objects.filter(org_filter).order_by("-created_at")[:12],
+            "recent_docs": Document.objects.filter(_document_filter(request)).order_by("-created_at")[:12],
             "recent_projects": Process.objects.filter(org_filter).order_by("-created_at")[:8],
-            "recent_reports": SavedReport.objects.filter(org_filter)
+            "recent_reports": _visible_reports(request)
             .select_related("process")
             .order_by("-created_at")[:10],
         },
@@ -1787,6 +1843,7 @@ def healthcheck(request):
 @require_GET
 @instrument
 def project_report_pdf(request, process_id: str):
+    require_author(request.user)
     org_filter = _org_qs_filter(request)
     if not Process.objects.filter(org_filter, pk=process_id).exists():
         raise Http404("Project not found")
@@ -1872,6 +1929,7 @@ def project_report_pdf(request, process_id: str):
 @require_GET
 @instrument
 def project_report_docx(request, process_id: str):
+    require_author(request.user)
     org_filter = _org_qs_filter(request)
     if not Process.objects.filter(org_filter, pk=process_id).exists():
         raise Http404("Project not found")
@@ -1895,11 +1953,11 @@ def project_report_docx(request, process_id: str):
 
     for line in md_text.splitlines():
         if line.startswith("### "):
-            p = doc.add_heading(line[4:], level=3)
+            doc.add_heading(line[4:], level=3)
         elif line.startswith("## "):
-            p = doc.add_heading(line[3:], level=2)
+            doc.add_heading(line[3:], level=2)
         elif line.startswith("# "):
-            p = doc.add_heading(line[2:], level=1)
+            doc.add_heading(line[2:], level=1)
         elif line.startswith("- ") or line.startswith("* "):
             doc.add_paragraph(line[2:], style="List Bullet")
         elif re.match(r"^\d+\. ", line):
@@ -1924,7 +1982,7 @@ def project_report_docx(request, process_id: str):
 @login_required
 @instrument
 def document_analysis_detail(request, pk):
-    document = get_object_or_404(Document, pk=pk)
+    document = _get_accessible_object(request, Document, pk=pk)
     if not request.user.is_superuser:
         if (
             hasattr(request.user, "profile")
@@ -1947,10 +2005,12 @@ def document_analysis_detail(request, pk):
 
 
 @login_required
+@author_required
 @require_POST
 @instrument
 def save_document_analysis(request, pk):
-    return HttpResponse("Save document analysis placeholder")
+    _get_accessible_object(request, Document, pk=pk)
+    return JsonResponse({"error": "Editing document analysis is not implemented."}, status=501)
 
 
 # ---------- GeoJSON API Endpoints for Map Viewer ----------
@@ -2193,7 +2253,7 @@ def spatial_search(request):
 
         if linked_doc_ids:
             documents = list(
-                Document.objects.filter(org_filter, id__in=linked_doc_ids).values(
+                Document.objects.filter(_document_filter(request), id__in=linked_doc_ids).values(
                     "id", "title", "doc_type", "created_at"
                 )[:20]
             )
@@ -2227,20 +2287,74 @@ def spatial_search(request):
 # ---------- AI Report Generation & Document Analysis Pages ----------
 
 
+def _get_generation_job(request, job_id):
+    try:
+        return get_object_or_404(report_jobs.visible_jobs(request.user), pk=job_id)
+    except (ValidationError, ValueError):
+        raise Http404("Generation not found")
+
+
+def _job_cards(request):
+    qs = report_jobs.visible_jobs(request.user)
+    report_jobs.expire_jobs(qs)
+    page = Paginator(qs.select_related("result"), 10).get_page(request.GET.get("jobs_page"))
+    records = list(page.object_list)
+    if request.GET.get("job"):
+        selected = _get_generation_job(request, request.GET["job"])
+        if all(job.pk != selected.pk for job in records):
+            records.insert(0, selected)
+    cards = []
+    for job in records:
+        card = report_jobs.job_card(request.user, job)
+        card.update(cancel_url=reverse("cancel_report_job", args=[job.pk]),
+                    retry_url=reverse("retry_report_job", args=[job.pk]),
+                    resume_url=f"{reverse('report_list')}?resume={job.pk}")
+        cards.append(card)
+    return cards, page
+
+
+@login_required
+@author_required
+@require_POST
+def cancel_report_job(request, job_id):
+    _get_generation_job(request, job_id)
+    report_jobs.cancel(request.user, job_id)
+    return redirect(f"{reverse('report_list')}?job={job_id}")
+
+
+@login_required
+@author_required
+@require_POST
+def retry_report_job(request, job_id):
+    _get_generation_job(request, job_id)
+    try:
+        job = report_jobs.retry(request.user, job_id)
+    except ValidationError as exc:
+        messages.error(request, " ".join(exc.messages))
+        return redirect(f"{reverse('report_list')}?job={job_id}")
+    return redirect(f"{reverse('report_list')}?job={job.pk}")
+
+
 @login_required
 @instrument
-def report_list_page(request):
-    clearance_rank = {"PUBLIC": 0, "INTERNAL": 1, "CONFIDENTIAL": 2, "JORC_APPROVED": 3}
-    user_clearance = _get_clearance_level(request)
-    user_rank = clearance_rank.get(user_clearance, 0)
-
-    accessible_levels = [lvl for lvl, rank in clearance_rank.items() if rank <= user_rank]
+def report_list_page(request, composition_form=None, status=200):
+    cards, jobs_page = _job_cards(request)
+    if request.GET.get("job_status") == "1":
+        response = JsonResponse({"jobs": cards})
+        response["Cache-Control"] = "private, no-store"
+        return response
+    selected_ids = request.POST.getlist("document_ids") if request.method == "POST" else []
+    if request.GET.get("resume"):
+        job = _get_generation_job(request, request.GET["resume"])
+        if job.prospect_id:
+            return redirect("prospect_detail", pk=job.prospect_id)
+        initial = job.payload["form"]
+        composition_form = ReportCompositionForm(user=request.user, initial=initial)
+        selected_ids = initial["document_ids"]
     org_filter = _org_qs_filter(request)
     q = request.GET.get("q", "").strip()
 
-    base_qs = SavedReport.objects.filter(
-        org_filter, clearance_level__in=accessible_levels
-    ).select_related("process")
+    base_qs = _visible_reports(request).select_related("process")
 
     if q:
         sq = SearchQuery(q, search_type="websearch")
@@ -2252,14 +2366,14 @@ def report_list_page(request):
     else:
         recent_reports = base_qs.order_by("-created_at")[:20]
 
-    recent_projects = Process.objects.filter(org_filter).order_by("-created_at")[:20]
+    recent_projects = Process.objects.filter(org_filter).order_by("-created_at")
     all_documents = (
-        Document.objects.filter(org_filter, is_latest=True)
+        Document.objects.filter(_document_filter(request), is_latest=True)
         .select_related("process")
         .order_by("-created_at")
     )
 
-    return render(
+    response = render(
         request,
         "core/report_list.html",
         {
@@ -2267,8 +2381,18 @@ def report_list_page(request):
             "recent_projects": recent_projects,
             "all_documents": all_documents,
             "q": q,
+            "composition_form": composition_form or ReportCompositionForm(user=request.user, initial={
+                "source_mode": "selected", "report_type": "exploration", "tone": "professional",
+                "include_findings": True, "include_recommendations": True, "include_references": True,
+            }),
+            "selected_document_ids": selected_ids,
+            "generation_request_id": str(uuid.uuid4()),
+            "generation_jobs": cards, "jobs_page": jobs_page,
         },
+        status=status,
     )
+    response["Cache-Control"] = "private, no-store"
+    return response
 
 
 @login_required
@@ -2284,64 +2408,24 @@ def report_list_page(request):
 @instrument
 def generate_report(request):
     """
-    POST: generate (or retrieve cached) report for a process and redirect to the editor.
+    POST: validate composition, queue a scoped draft and show its progress.
     GET:  redirect back to the report list.
     """
     if request.method != "POST":
         return redirect("report_list")
 
-    process_id = request.POST.get("process_id", "").strip()
-    report_title = request.POST.get("report_title", "").strip()
-
-    if not process_id:
-        messages.error(request, "No project selected.")
-        return redirect("report_list")
-
-    org_filter = _org_qs_filter(request)
-    if not Process.objects.filter(org_filter, pk=process_id).exists():
-        raise Http404("Project not found")
-
-    clearance_level = _get_clearance_level(request)
+    form = ReportCompositionForm(request.POST, user=request.user)
     try:
-        process = get_object_or_404(Process, org_filter, pk=process_id)
-        bundle = _get_cached_report_bundle(process_id, clearance_level)
-        md = bundle["md"]
-        doc_ids = bundle.get("doc_ids", [])
-    except Exception as e:
-        log.error("Report generation failed during generate_report: %s", e)
-        messages.error(request, f"Report generation failed: {e}")
-        return redirect("report_list")
+        job = report_jobs.enqueue(form, request.POST.get("request_id"))
+    except PermissionDenied:
+        raise
+    except ValidationError as exc:
+        if not form.is_valid():
+            return report_list_page(request, composition_form=form, status=400)
+        form.add_error(None, exc)
+        return report_list_page(request, composition_form=form, status=400)
+    return redirect(f"{reverse('report_list')}?job={job.pk}")
 
-    import hashlib
-
-    title = report_title or f"{process.name or 'Project'} Report"
-    existing = (
-        SavedReport.objects.filter(process=process, title=title).order_by("-version_number").first()
-    )
-
-    if existing:
-        report = SavedReport.create_version(
-            parent=existing,
-            content_md=md,
-            user=request.user,
-            reason=SavedReport.ChangeReason.REGENERATED,
-        )
-    else:
-        report = SavedReport.objects.create(
-            process=process,
-            organisation=process.organisation,
-            title=title,
-            content_md=md,
-            content_hash=hashlib.sha256(md.encode()).hexdigest(),
-            created_by=request.user,
-            version_number=1,
-            change_reason=SavedReport.ChangeReason.GENERATED,
-        )
-
-    if doc_ids:
-        report.source_documents.set(Document.objects.filter(pk__in=doc_ids))
-
-    return redirect(reverse("report_editor", kwargs={"process_id": process_id}))
 
 
 @login_required
@@ -2351,6 +2435,7 @@ def report_editor(request, process_id):
     Serve the report editor page for a process
     loads markdown from cache (generated by generate_report before it redirects into here)
     """
+    require_author(request.user)
     org_filter = _org_qs_filter(request)
     try:
         process = (
@@ -2387,8 +2472,8 @@ def report_editor(request, process_id):
 @instrument
 def saved_report_editor(request, report_id):
     """serve the report editor page for an existing saved report"""
-    report = get_object_or_404(
-        SavedReport.objects.select_related("process", "organisation"),
+    report = _get_accessible_object(
+        request, SavedReport,
         pk=report_id,
     )
 
@@ -2407,17 +2492,29 @@ def saved_report_editor(request, report_id):
         raise PermissionDenied
 
     process_prospects = (
-        Prospect.objects.filter(process=report.process).order_by("name") if report.process else []
+        Prospect.objects.filter(_org_qs_filter(request), process=report.process).order_by("name") if report.process else []
     )
 
+    latest_report = _visible_reports(request).filter(series_id=report.series_id).order_by(
+        "-version_number", "-created_at"
+    ).first()
+    can_edit = report.status == "DRAFT" and not _has_newer_report(report)
+    try:
+        require_report_author(request.user, report)
+    except PermissionDenied:
+        can_edit = False
     return render(
         request,
         "core/report_editor.html",
         {
             "process": report.process,
             "markdown_content": report.content_md,
+            "citation_check": audit_citations(report.content_md, report.generation_manifest),
             "default_title": report.title,
             "saved_report": report,
+            "appendix": report_appendix.presentation(report.data_appendix),
+            "can_edit": can_edit,
+            "latest_report": latest_report,
             "save_url": reverse("update_saved_report", kwargs={"report_id": report_id}),
             "export_url": reverse("export_report"),
             "process_prospects": process_prospects,
@@ -2425,9 +2522,48 @@ def saved_report_editor(request, report_id):
     )
 
 
+def _lock_report_version(report):
+    return SavedReport.lock_version(report)
+
+
+def _has_newer_report(report):
+    latest = SavedReport.objects.filter(series_id=report.series_id).order_by(
+        "-version_number", "-created_at", "pk"
+    ).first()
+    return latest is not None and latest.pk != report.pk
+
+
+def _report_conflict(request, report, message):
+    latest = _visible_reports(request).filter(series_id=report.series_id).order_by(
+        "-version_number", "-created_at"
+    ).first()
+    return JsonResponse({
+        "success": False, "error": message,
+        "latest_url": reverse("saved_report_editor", kwargs={"report_id": latest.pk}) if latest else None,
+    }, status=409)
+
+
+def _report_save_response(report):
+    return {
+        "success": True,
+        "appendix_html": render_to_string("core/partials/report_appendix.html", {"appendix": report_appendix.presentation(report.data_appendix)}),
+        "citation_check": audit_citations(report.content_md, report.generation_manifest),
+        "report_id": str(report.id),
+        "new_version_id": str(report.id),
+        "series_id": str(report.series_id),
+        "version_number": report.version_number,
+        "redirect_url": reverse("saved_report_editor", kwargs={"report_id": report.pk}),
+        "save_url": reverse("update_saved_report", kwargs={"report_id": report.pk}),
+        "submit_url": reverse("submit_report_for_review", kwargs={"report_id": report.pk}),
+        "assign_url": reverse("assign_report_prospect", kwargs={"report_id": report.pk}),
+    }
+
+
 @login_required
+@author_required
 @require_POST
 @instrument
+@transaction.atomic
 def save_report(request):
     """
     create a new SavedReport record from the user/editors current content
@@ -2439,49 +2575,32 @@ def save_report(request):
 
     if not title:
         return JsonResponse({"success": False, "error": "Title is required."}, status=400)
+    if len(title) > 256:
+        return JsonResponse({"success": False, "error": "Title must be at most 256 characters."}, status=400)
     if not content_md:
         return JsonResponse({"success": False, "error": "Report content is empty."}, status=400)
 
-    process = None
-    organisation = None
-    if process_id:
-        try:
-            process = Process.objects.select_related("organisation").get(pk=process_id)
-            organisation = process.organisation
-        except Process.DoesNotExist:
-            pass
+    if not process_id:
+        return JsonResponse({"success": False, "error": "Project is required."}, status=400)
+    process = _get_accessible_object(request, Process, pk=process_id)
+    organisation = process.organisation
 
     clearance_level = _get_clearance_level(request)
     created_by = request.user if request.user.is_authenticated else None
 
-    existing = (
-        SavedReport.objects.filter(process=process, title=title).order_by("-version_number").first()
+    import hashlib
+
+    report = SavedReport.objects.create(
+        process=process,
+        organisation=organisation,
+        title=title,
+        content_md=content_md,
+        content_hash=hashlib.sha256(content_md.encode()).hexdigest(),
+        clearance_level=clearance_level,
+        created_by=created_by,
+        version_number=1,
+        change_reason=SavedReport.ChangeReason.GENERATED,
     )
-
-    if existing:
-        report = SavedReport.create_version(
-            parent=existing,
-            content_md=content_md,
-            user=created_by,
-            reason=SavedReport.ChangeReason.MANUAL_EDIT,
-        )
-        # Inherit source_documents from parent when no new ones available
-        if not report.source_documents.exists() and existing.source_documents.exists():
-            report.source_documents.set(existing.source_documents.all())
-    else:
-        import hashlib
-
-        report = SavedReport.objects.create(
-            process=process,
-            organisation=organisation,
-            title=title,
-            content_md=content_md,
-            content_hash=hashlib.sha256(content_md.encode()).hexdigest(),
-            clearance_level=clearance_level,
-            created_by=created_by,
-            version_number=1,
-            change_reason=SavedReport.ChangeReason.GENERATED,
-        )
 
     # Populate source_documents from cached generation context if not already set
     if process_id and not report.source_documents.exists():
@@ -2489,7 +2608,7 @@ def save_report(request):
             cached = _get_cached_report_bundle(process_id, clearance_level)
             doc_ids = cached.get("doc_ids", [])
             if doc_ids:
-                report.source_documents.set(Document.objects.filter(pk__in=doc_ids))
+                report.source_documents.set(Document.objects.filter(_document_filter(request), process=process, pk__in=doc_ids))
         except Exception:
             pass
 
@@ -2500,34 +2619,28 @@ def save_report(request):
         f"Saved report '{title}' v{report.version_number}",
         ip_address=request.META.get("REMOTE_ADDR"),
     )
-    return JsonResponse(
-        {
-            "success": True,
-            "report_id": str(report.id),
-            "version_number": report.version_number,
-            "redirect_url": reverse("saved_report_editor", kwargs={"report_id": report.id}),
-        }
-    )
+    return JsonResponse(_report_save_response(report))
 
 
 @login_required
+@author_required
 @require_POST
 @instrument
 def update_saved_report(request, report_id):
     """
-    overwrite of an existing SavedReport title and content
-    Returns JSON: {success: true}
+    Append a revision with the edited title and content; stale versions return 409.
     """
-    report = get_object_or_404(SavedReport, pk=report_id)
+    report = _get_accessible_object(request, SavedReport, pk=report_id)
+    require_report_author(request.user, report)
 
-    if report.status in (SavedReport.Status.APPROVED, SavedReport.Status.PUBLISHED):
+    if report.status != "DRAFT":
         return JsonResponse(
             {"success": False, "error": "This report is locked and cannot be edited."},
             status=403,
         )
 
     is_admin = hasattr(request.user, "profile") and request.user.profile.role == "ADMIN"
-    if report.created_by != request.user and not is_admin:
+    if not request.user.is_superuser and report.created_by != request.user and not is_admin:
         return JsonResponse({"success": False, "error": "Permission denied."}, status=403)
 
     title = request.POST.get("title", "").strip()
@@ -2538,29 +2651,27 @@ def update_saved_report(request, report_id):
     if not content_md:
         return JsonResponse({"success": False, "error": "Report content is empty."}, status=400)
 
-    new_version = SavedReport.create_version(
-        parent=report,
-        content_md=content_md,
-        user=request.user,
-        reason=SavedReport.ChangeReason.MANUAL_EDIT,
-    )
-    # Propagate source_documents to new version (new_version may equal report if content unchanged)
-    if new_version.pk != report.pk and report.source_documents.exists():
-        new_version.source_documents.set(report.source_documents.all())
-    log_audit(
-        request.user,
-        AuditLog.ActionType.EDIT,
-        new_version,
-        f"Updated report '{new_version.title}' to v{new_version.version_number}",
-        ip_address=request.META.get("REMOTE_ADDR"),
-    )
-    return JsonResponse(
-        {
-            "success": True,
-            "new_version_id": str(new_version.id),
-            "version_number": new_version.version_number,
-        }
-    )
+    if len(title) > 256:
+        return JsonResponse({"success": False, "error": "Title must be at most 256 characters."}, status=400)
+    try:
+        with transaction.atomic():
+            new_version = SavedReport.create_version(
+                parent=report, content_md=content_md, title=title,
+                user=request.user, reason=SavedReport.ChangeReason.MANUAL_EDIT,
+                data_appendix=report_appendix.from_post(request.POST, request.user, report),
+            )
+            log_audit(
+                request.user, AuditLog.ActionType.EDIT, new_version,
+                f"Saved report '{new_version.title}' v{new_version.version_number}",
+                ip_address=request.META.get("REMOTE_ADDR"),
+            )
+    except ValidationError as exc:
+        return JsonResponse({"success": False, "error": " ".join(exc.messages)}, status=400)
+    except ValueError as exc:
+        return _report_conflict(request, report, str(exc))
+    if request.GET.get("return") == "editor":
+        return redirect("saved_report_editor", report_id=new_version.pk)
+    return JsonResponse(_report_save_response(new_version))
 
 
 # ---------- JORC Approval Workflow Views ----------
@@ -2569,11 +2680,37 @@ def update_saved_report(request, report_id):
 @login_required
 @require_POST
 @instrument
+@transaction.atomic
 def submit_report_for_review(request, report_id):
-    report = get_object_or_404(SavedReport, pk=report_id)
+    report = _get_accessible_object(request, SavedReport, pk=report_id)
+    report = _lock_report_version(report)
+    require_report_author(request.user, report)
     if report.status != SavedReport.Status.DRAFT:
+        if "title" in request.POST or "content_md" in request.POST:
+            return _report_conflict(request, report, "This version is already locked for review. Your edits were not submitted.")
         messages.error(request, "Only draft reports can be submitted for review.")
         return redirect("saved_report_editor", report_id=report_id)
+
+    if _has_newer_report(report):
+        return _report_conflict(request, report, "A newer report version exists; open it before submitting.")
+    # The editor posts its current title/text. Legacy no-body callers submit the
+    # persisted version. A partial editor payload is always rejected.
+    if "title" in request.POST or "content_md" in request.POST:
+        title = request.POST.get("title", "").strip()
+        content = request.POST.get("content_md", "").strip()
+        if not title or len(title) > 256 or not content:
+            return JsonResponse({"success": False, "error": "Valid title and content are required."}, status=400)
+        try:
+            report = SavedReport.create_version(
+                parent=report, content_md=content, title=title, user=request.user,
+                reason=SavedReport.ChangeReason.MANUAL_EDIT,
+                data_appendix=report_appendix.from_post(request.POST, request.user, report),
+            )
+        except ValidationError as exc:
+            return JsonResponse({"success": False, "error": " ".join(exc.messages)}, status=400)
+        except ValueError as exc:
+            return JsonResponse({"success": False, "error": str(exc)}, status=409)
+        report_id = report.pk
 
     workflow_type_raw = request.POST.get("workflow_type", "JORC").upper()
     valid_types = {t.value for t in ApprovalWorkflow.WorkflowType}
@@ -2611,10 +2748,12 @@ def submit_report_for_review(request, report_id):
 @login_required
 @require_POST
 @instrument
+@transaction.atomic
 def approve_report(request, report_id):
     from django.utils import timezone
 
-    report = get_object_or_404(SavedReport, pk=report_id)
+    report = _get_accessible_object(request, SavedReport, pk=report_id)
+    report = _lock_report_version(report)
     profile = getattr(request.user, "profile", None)
 
     # Check permission based on the workflow type linked to this report
@@ -2658,10 +2797,12 @@ def approve_report(request, report_id):
 @login_required
 @require_POST
 @instrument
+@transaction.atomic
 def reject_report(request, report_id):
     from django.utils import timezone
 
-    report = get_object_or_404(SavedReport, pk=report_id)
+    report = _get_accessible_object(request, SavedReport, pk=report_id)
+    report = _lock_report_version(report)
     profile = getattr(request.user, "profile", None)
 
     workflow = getattr(report, "approval_workflow", None)
@@ -2705,8 +2846,10 @@ def reject_report(request, report_id):
 @login_required
 @require_POST
 @instrument
+@transaction.atomic
 def publish_report(request, report_id):
-    report = get_object_or_404(SavedReport, pk=report_id)
+    report = _get_accessible_object(request, SavedReport, pk=report_id)
+    report = _lock_report_version(report)
     profile = getattr(request.user, "profile", None)
     if not (
         profile
@@ -2736,16 +2879,14 @@ def publish_report(request, report_id):
 @login_required
 @instrument
 def report_history(request, process_id):
-    """Show all versions of reports for a process, grouped by title."""
-    # Get the latest version of each distinct report title
-    org_filter = _org_qs_filter(request)
-    reports = SavedReport.objects.filter(org_filter, process_id=process_id).order_by(
+    """Show report revision families for a process, independent of title changes."""
+    # Fetch only visible revisions before grouping by stable report identity.
+    reports = _visible_reports(request).filter(process_id=process_id).order_by(
         "title", "-version_number"
     )
-    # Group by title to show each report with its version chain
-    from itertools import groupby
-
-    grouped = {title: list(versions) for title, versions in groupby(reports, key=lambda r: r.title)}
+    grouped = {}
+    for report in reports.order_by("series_id", "-version_number"):
+        grouped.setdefault(report.series_id, []).append(report)
     return render(
         request,
         "core/report_history.html",
@@ -2757,8 +2898,8 @@ def report_history(request, process_id):
 @instrument
 def report_version_detail(request, report_id):
     """View a specific report version."""
-    report = get_object_or_404(SavedReport, pk=report_id)
-    all_versions = SavedReport.objects.filter(process=report.process, title=report.title).order_by(
+    report = _get_accessible_object(request, SavedReport, pk=report_id)
+    all_versions = _visible_reports(request).filter(series_id=report.series_id).order_by(
         "-version_number"
     )
 
@@ -2785,13 +2926,12 @@ def report_version_detail(request, report_id):
 @instrument
 def all_reports_history(request):
     """Show all saved reports grouped by project, with optional full-text search."""
-    org_filter = _org_qs_filter(request)
     q = request.GET.get("q", "").strip()
 
     reports = (
-        SavedReport.objects.filter(org_filter)
+        _visible_reports(request)
         .select_related("process", "created_by")
-        .order_by("process__name", "title", "-version_number")
+        .order_by("process__name", "series_id", "-version_number")
     )
 
     if q:
@@ -2810,9 +2950,9 @@ def all_reports_history(request):
         process_id = str(report.process.id) if report.process else None
         if project_name not in grouped:
             grouped[project_name] = {"process_id": process_id, "titles": {}}
-        if report.title not in grouped[project_name]["titles"]:
-            grouped[project_name]["titles"][report.title] = []
-        grouped[project_name]["titles"][report.title].append(report)
+        if report.series_id not in grouped[project_name]["titles"]:
+            grouped[project_name]["titles"][report.series_id] = []
+        grouped[project_name]["titles"][report.series_id].append(report)
 
     return render(
         request,
@@ -2841,16 +2981,26 @@ def export_report(request):
     md_text = request.POST.get("content_md", "")
     title = request.POST.get("title", "report")
     report_id = request.POST.get("report_id", "").strip()
-    slug = re.sub(r"[^\w-]", "_", title)
+    from html import escape
+
+    snapshot = {}
+    export_identity = ""
 
     # Build sources list if a saved report ID was provided
     source_docs = []
     if report_id:
-        try:
-            saved = SavedReport.objects.prefetch_related("source_documents").get(pk=report_id)
-            source_docs = list(saved.source_documents.order_by("title"))
-        except (SavedReport.DoesNotExist, Exception):
-            pass
+        saved = _get_accessible_object(request, SavedReport, pk=report_id)
+        if saved.data_appendix:
+            def canonical_lines(value):
+                return value.replace("\r\n", "\n").replace("\r", "\n").strip()
+            if (canonical_lines(md_text) != canonical_lines(saved.content_md) or title.strip() != saved.title):
+                return JsonResponse({"error": "Save changes before exporting a report with a geological appendix."}, status=409)
+            md_text, title = saved.content_md, saved.title
+            snapshot = saved.data_appendix
+            export_identity = f"Report {saved.pk} · revision {saved.version_number} · {saved.get_status_display()} · {saved.clearance_level}"
+        source_docs = list(saved.source_documents.filter(_document_filter(request)).order_by("title"))
+
+    slug = re.sub(r"[^\w-]", "_", title)
 
     def _render_pdf(md_text, source_docs):
         buf = io.BytesIO()
@@ -2891,8 +3041,9 @@ def export_report(request):
             leading=16,
         )
 
-        story = []
+        story = [Paragraph(escape(title), h1), Paragraph(escape(export_identity), body)] if export_identity else []
         for line in md_text.splitlines():
+            line = escape(line)
             if line.startswith("### "):
                 story.append(Paragraph(line[4:], h3))
             elif line.startswith("## "):
@@ -2908,6 +3059,7 @@ def export_report(request):
             else:
                 story.append(Paragraph(line, body))
 
+        pdf_appendix(story, snapshot)
         if source_docs:
             story.append(Spacer(1, 20))
             story.append(Paragraph("Sources", h2))
@@ -2921,7 +3073,7 @@ def export_report(request):
                 doc_date = d.timestamp.strftime("%Y-%m-%d") if d.timestamp else ""
                 story.append(
                     Paragraph(
-                        f"{i}. {d.title} — {d.doc_type or 'Document'} — {doc_date} — {d.confidentiality or ''}",
+                        escape(f"{i}. {d.title} — {d.doc_type or 'Document'} — {doc_date} — {d.confidentiality or ''}"),
                         bullet,
                     )
                 )
@@ -2932,6 +3084,9 @@ def export_report(request):
 
     def _render_docx(md_text, source_docs):
         doc = DocxDocument()
+        if export_identity:
+            doc.add_heading(title, level=1)
+            doc.add_paragraph(export_identity)
         style = doc.styles["Normal"]
         style.font.name = "Calibri"
         style.font.size = Pt(11)
@@ -2952,6 +3107,7 @@ def export_report(request):
             else:
                 doc.add_paragraph(line)
 
+        docx_appendix(doc, snapshot)
         if source_docs:
             doc.add_page_break()
             doc.add_heading("Sources", level=2)
@@ -2988,6 +3144,7 @@ def export_report(request):
 
 @login_required
 def report_detail(request, report_id):
+    _get_accessible_object(request, SavedReport, pk=report_id)
     return render(
         request,
         "core/report_detail.html",
@@ -3011,7 +3168,7 @@ def audit_log_view(request):
     from django.http import StreamingHttpResponse
 
     qs = AuditLog.objects.select_related("user", "content_type").order_by("-timestamp")
-    org_filter = _org_qs_filter(request)
+    qs = qs.filter(_report_filter(request))
 
     action = request.GET.get("action", "").strip()
     username = request.GET.get("username", "").strip()
@@ -3096,11 +3253,10 @@ def approval_workflows_list(request):
         has_approval = profile and (profile.can_approve_jorc or profile.can_approve_valmin)
         if not (has_role or has_approval):
             raise PermissionDenied
-    org_filter = _org_qs_filter(request)
 
     # Get workflow IDs associated with SavedReports in this org
     report_ct = ContentType.objects.get_for_model(SavedReport)
-    report_ids = SavedReport.objects.filter(org_filter).values_list("id", flat=True)
+    report_ids = _visible_reports(request).values_list("id", flat=True)
 
     qs = (
         ApprovalWorkflow.objects.filter(content_type=report_ct, object_id__in=report_ids)
@@ -3136,7 +3292,7 @@ def document_analysis_page(request):
         request,
         "core/document_analysis.html",
         {
-            "recent_docs": Document.objects.filter(_org_qs_filter(request))
+            "recent_docs": Document.objects.filter(_document_filter(request))
             .select_related("process")
             .order_by("-created_at"),
         },
@@ -3144,8 +3300,10 @@ def document_analysis_page(request):
 
 
 @login_required
+@author_required
+@require_POST
 def analyze_document(request, pk):
-    document = get_object_or_404(Document, pk=pk)
+    document = _get_accessible_object(request, Document, pk=pk)
 
     if not request.user.is_superuser:
         if (
@@ -3210,7 +3368,7 @@ Document text:
 @require_GET
 @instrument
 def export_document_analysis(request, pk):
-    document = get_object_or_404(Document, pk=pk)
+    document = _get_accessible_object(request, Document, pk=pk)
 
     md_text = (document.analysis_text or "").strip()
     if not md_text:

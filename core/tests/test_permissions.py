@@ -63,6 +63,7 @@ class PermissionsTestBase(TestCase):
         # clean out any profiles that get automatically created by signals
         cls.profileless_user = User.objects.create_user("noprofile", password="x")
         UserProfile.objects.filter(user=cls.profileless_user).delete()
+        cls.profileless_user.refresh_from_db()
 
     def setUp(self):
         self.factory = RequestFactory()

@@ -89,8 +89,9 @@
   <div id="survey-detail-map" class="rounded-lg border border-gray-200 dark:border-gray-700" style="height: 380px;"></div>
 </div>
 
+{{ area_geom_geojson|json_script:"survey_detail-data-0" }}
 <script>
-const SURVEY_GEOJSON = {{ area_geom_geojson|safe }};
+const SURVEY_GEOJSON = readMapData("survey_detail-data-0");
 
 const surveyMap = new maplibregl.Map({
     container: 'survey-detail-map',

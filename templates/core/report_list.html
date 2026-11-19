@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block main_extra_class %} min-w-0{% endblock %}
 {% block content %}
 
 <div class="max-w-7xl mx-auto w-full">
@@ -7,10 +8,22 @@
       <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Generate Report</h1>
         <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          Create AI-assisted reports using files and records stored in the system.
+          Create reports from saved evidence, with optional AI drafting.
         </p>
       </div>
 
+      {% if composition_form.errors %}
+      <div role="alert" class="mb-6 p-4 border border-red-300 rounded-lg text-red-800 dark:text-red-200">
+        <p class="font-semibold">Could not generate this report</p>
+        <ul class="list-disc pl-5">
+          {% for error in composition_form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+          {% for field in composition_form %}{% for error in field.errors %}<li>{{ field.label }}: {{ error }}</li>{% endfor %}{% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      <p id="composition-status" role="status" aria-live="polite" class="mb-4 text-sm"></p>
+      <noscript><p class="mb-4">Choose only files from the selected project. Filtering and selection summaries require JavaScript.</p></noscript>
+      {% include "core/partials/generation_jobs.html" %}
       <!-- Main Grid -->
       <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
 
@@ -23,54 +36,62 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Report Title</label>
+                <label for="drafting-mode" class="block text-sm font-medium mb-1">Drafting method</label>
+                <select id="drafting-mode" name="drafting_mode" form="generate-form" class="w-full rounded-lg border border-gray-400 px-4 py-2 bg-white dark:bg-gray-700 text-base">
+                  <option value="ai" {% if composition_form.drafting_mode.value != 'manual' %}selected{% endif %}>AI-assisted draft</option>
+                  <option value="manual" {% if composition_form.drafting_mode.value == 'manual' %}selected{% endif %}>Manual outline — no model call</option>
+                </select>
+                <p class="mt-1 text-sm">Add geological tables and a collar figure in the saved editor.</p>
+              </div>
+              <div>
+                <label for="report-title-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Report Title</label>
                 <input
                   type="text"
-                  id="report-title-input"
+                  id="report-title-input" name="report_title" form="generate-form" maxlength="256" value="{{ composition_form.report_title.value|default:'' }}"
                   placeholder="Enter report title"
                   class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
                 >
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Report Type</label>
-                <select class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400">
-                  <option>Exploration Summary</option>
-                  <option>Project Update</option>
-                  <option>Document Summary</option>
-                  <option>Tenement Overview</option>
-                  <option>Risk / Findings Summary</option>
-                  <option>Custom Report</option>
+                <label for="report_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Report Type</label>
+                <select id="report_type" name="report_type" form="generate-form" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400">
+                  <option value="exploration" {% if composition_form.report_type.value == 'exploration' %}selected{% endif %}>Exploration Summary</option>
+                  <option value="project_update" {% if composition_form.report_type.value == 'project_update' %}selected{% endif %}>Project Update</option>
+                  <option value="documents" {% if composition_form.report_type.value == 'documents' %}selected{% endif %}>Document Summary</option>
+                  <option value="tenement" {% if composition_form.report_type.value == 'tenement' %}selected{% endif %}>Tenement Overview</option>
+                  <option value="risk" {% if composition_form.report_type.value == 'risk' %}selected{% endif %}>Risk / Findings Summary</option>
+                  <option value="custom" {% if composition_form.report_type.value == 'custom' %}selected{% endif %}>Custom Report</option>
                 </select>
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project / Process</label>
-                <select id="project-select" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400">
+                <label for="project-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project / Process</label>
+                <select id="project-select" name="process_id" form="generate-form" required class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400">
                   <option value="">Select linked project or process</option>
                   {% for project in recent_projects %}
-                  <option value="{{ project.id }}">{{ project.name }}</option>
+                  <option value="{{ project.id }}" {% if composition_form.process_id.value|stringformat:'s' == project.pk|stringformat:'s' %}selected{% endif %}>{{ project.name }}</option>
                   {% endfor %}
                 </select>
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tone / Style</label>
-                <select class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400">
-                  <option>Professional</option>
-                  <option>Technical</option>
-                  <option>Executive Summary</option>
+                <label for="tone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tone / Style</label>
+                <select id="tone" name="tone" form="generate-form" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400">
+                  <option value="professional" {% if composition_form.tone.value == 'professional' %}selected{% endif %}>Professional</option>
+                  <option value="technical" {% if composition_form.tone.value == 'technical' %}selected{% endif %}>Technical</option>
+                  <option value="executive" {% if composition_form.tone.value == 'executive' %}selected{% endif %}>Executive Summary</option>
                 </select>
               </div>
             </div>
 
             <div class="mt-4">
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Instructions</label>
-              <textarea
+              <label for="instructions" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Instructions</label>
+              <textarea id="instructions" name="instructions" form="generate-form" maxlength="1000"
                 rows="4"
                 placeholder="Add any additional instructions for the report..."
                 class="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
-              ></textarea>
+              >{{ composition_form.instructions.value|default:'' }}</textarea>
             </div>
           </div>
 
@@ -78,21 +99,25 @@
           <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex items-center justify-between mb-4">
               <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Select Files from Database</h2>
-              <button class="text-sm font-medium text-cyan-600 dark:text-cyan-400 hover:text-cyan-700">
-                Browse All Files
-              </button>
+              <a href="{% url 'documents' %}" class="text-sm font-medium text-cyan-600 dark:text-cyan-400 hover:text-cyan-700">Browse All Files</a>
             </div>
 
+            <label for="source-mode" class="block text-sm font-medium mb-1">Evidence selection</label>
+            <select id="source-mode" name="source_mode" form="generate-form" class="mb-3 w-full p-2 border rounded-lg bg-white dark:bg-gray-700">
+              <option value="selected" {% if composition_form.source_mode.value == 'selected' %}selected{% endif %}>Use selected files only (up to 10)</option>
+              <option value="project" {% if composition_form.source_mode.value == 'project' %}selected{% endif %}>Use the 10 latest accessible project files</option>
+            </select>
+            <p class="mb-4 text-sm text-gray-600 dark:text-gray-300">Only files from the selected project are eligible. Source records remain attached to the draft regardless of layout options.</p>
             <!-- Search / Filters -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
               <input
                 type="text"
-                id="doc-search"
+                id="doc-search" aria-label="Search evidence files"
                 placeholder="Search files..."
                 class="md:col-span-2 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
               >
 
-              <select id="doc-type-filter" class="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400">
+              <select id="doc-type-filter" aria-label="Filter by document type" class="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400">
                 <option value="all">All Document Types</option>
                 <option value="pdf">PDF</option>
                 <option value="report">Report</option>
@@ -100,11 +125,11 @@
                 <option value="compliance">Compliance</option>
               </select>
 
-              <select class="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400">
-                <option>All Dates</option>
-                <option>Last 30 days</option>
-                <option>Last 90 days</option>
-                <option>This year</option>
+              <select id="date-filter" aria-label="Filter by upload date" class="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400">
+                <option value="all">All Dates</option>
+                <option value="30">Last 30 days</option>
+                <option value="90">Last 90 days</option>
+                <option value="year">This year</option>
               </select>
             </div>
 
@@ -112,10 +137,10 @@
             <div id="file-list" class="space-y-3 max-h-96 overflow-y-auto">
               {% for doc in all_documents %}
               <label class="flex items-start gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
-                     data-title="{{ doc.title|lower }}"
+                     data-process="{{ doc.process_id|default:'' }}" data-title="{{ doc.title|lower }}"
                      data-doctype="{{ doc.doc_type|lower }}"
                      data-created="{{ doc.created_at|date:'Y-m-d' }}">
-                <input type="checkbox" class="mt-1 rounded border-gray-300 dark:border-gray-600 text-cyan-600 doc-checkbox" value="{{ doc.id }}">
+                <input type="checkbox" class="mt-1 rounded border-gray-300 dark:border-gray-600 text-cyan-600 doc-checkbox" name="document_ids" form="generate-form" value="{{ doc.id }}" {% if doc.pk|stringformat:'s' in selected_document_ids %}checked{% endif %}>
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{{ doc.title }}</p>
                   <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -137,22 +162,22 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label class="flex items-center gap-3">
-                <input type="checkbox" class="rounded border-gray-300 dark:border-gray-600 text-cyan-600">
+                <input type="checkbox" name="include_metadata" form="generate-form" {% if composition_form.include_metadata.value %}checked{% endif %} class="rounded border-gray-300 dark:border-gray-600 text-cyan-600">
                 <span class="text-sm text-gray-700 dark:text-gray-300">Include document metadata</span>
               </label>
 
               <label class="flex items-center gap-3">
-                <input type="checkbox" class="rounded border-gray-300 dark:border-gray-600 text-cyan-600" checked>
+                <input type="checkbox" name="include_findings" form="generate-form" {% if composition_form.include_findings.value %}checked{% endif %} class="rounded border-gray-300 dark:border-gray-600 text-cyan-600">
                 <span class="text-sm text-gray-700 dark:text-gray-300">Include key findings</span>
               </label>
 
               <label class="flex items-center gap-3">
-                <input type="checkbox" class="rounded border-gray-300 dark:border-gray-600 text-cyan-600" checked>
+                <input type="checkbox" name="include_recommendations" form="generate-form" {% if composition_form.include_recommendations.value %}checked{% endif %} class="rounded border-gray-300 dark:border-gray-600 text-cyan-600">
                 <span class="text-sm text-gray-700 dark:text-gray-300">Include recommendations</span>
               </label>
 
               <label class="flex items-center gap-3">
-                <input type="checkbox" class="rounded border-gray-300 dark:border-gray-600 text-cyan-600">
+                <input type="checkbox" name="include_references" form="generate-form" {% if composition_form.include_references.value %}checked{% endif %} class="rounded border-gray-300 dark:border-gray-600 text-cyan-600">
                 <span class="text-sm text-gray-700 dark:text-gray-300">Include source references</span>
               </label>
             </div>
@@ -160,8 +185,8 @@
             <div class="mt-6 flex justify-end">
               <form id="generate-form" method="POST" action="{% url 'generate_report' %}">
                 {% csrf_token %}
-                <input type="hidden" name="process_id" id="hidden-process-id" value="">
-                <input type="hidden" name="report_title" id="hidden-report-title" value="">
+                <input type="hidden" name="composer_version" value="1">
+                <input type="hidden" id="generation-request-id" name="request_id" value="{{ generation_request_id }}">
                 <button type="submit" class="inline-flex items-center rounded-lg bg-cyan-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-cyan-700 disabled:opacity-50">
                   Generate Report
                 </button>
@@ -175,20 +200,20 @@
         <div class="space-y-6">
 
           <!-- Selected Files Summary -->
-          <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div id="composition-summary" hidden class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Selected Files</h2>
             <div class="space-y-3 text-sm text-gray-700 dark:text-gray-300">
               <div class="flex justify-between">
                 <span>Files selected</span>
-                <span class="font-semibold">1</span>
+                <span id="selected-count" class="font-semibold">0</span>
               </div>
               <div class="flex justify-between">
                 <span>Report type</span>
-                <span class="font-semibold">Exploration Summary</span>
+                <span id="summary-type" class="font-semibold">Exploration Summary</span>
               </div>
               <div class="flex justify-between">
                 <span>Project</span>
-                <span class="font-semibold">Project Name</span>
+                <span id="summary-project" class="font-semibold">No project selected</span>
               </div>
             </div>
           </div>
@@ -196,12 +221,7 @@
           <!-- Report Content -->
           <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Report Content</h2>
-            <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              <li>Overview of selected records</li>
-              <li>Summary of key findings</li>
-              <li>Important themes and issues</li>
-              <li>Recommendations based on selected files</li>
-            </ul>
+            <p class="text-sm text-gray-600 dark:text-gray-300">The report type and enabled sections set the draft outline. Its generation record preserves the selected evidence and options.</p>
           </div>
 
           <!-- Recent Reports -->
@@ -216,7 +236,7 @@
               <div class="flex gap-2">
                 <input
                   type="text"
-                  name="q"
+                  name="q" aria-label="Search saved reports"
                   value="{{ q }}"
                   placeholder="Search reports..."
                   class="flex-1 px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
@@ -255,51 +275,66 @@
     </div>
 
 <script>
-  // ── Document list filtering
-  const fileList     = document.getElementById("file-list");
-  const searchInput  = document.getElementById("doc-search");
-  const typeSelect   = document.getElementById("doc-type-filter");
-
-  function filterDocs() {
-    const query   = searchInput  ? searchInput.value.toLowerCase()  : "";
-    const docType = typeSelect   ? typeSelect.value.toLowerCase()    : "";
-    if (!fileList) return;
-    fileList.querySelectorAll("label[data-title]").forEach(function (row) {
-      const titleMatch = !query   || row.dataset.title.includes(query);
-      const typeMatch  = !docType || row.dataset.doctype === docType || docType === "all";
-      row.style.display = (titleMatch && typeMatch) ? "" : "none";
-    });
+  const form = document.getElementById("generate-form");
+  const project = document.getElementById("project-select");
+  const sourceMode = document.getElementById("source-mode");
+  const rows = [...document.querySelectorAll('#file-list label[data-process]')];
+  const search = document.getElementById("doc-search");
+  const docType = document.getElementById("doc-type-filter");
+  const dateFilter = document.getElementById("date-filter");
+  const type = document.getElementById("report_type");
+  const status = document.getElementById("composition-status");
+  document.getElementById("composition-summary").hidden = false;
+  function update() {
+    const eligible = rows.filter(row => project.value && row.dataset.process === project.value);
+    for (const row of rows) {
+      const box = row.querySelector('input');
+      const belongs = eligible.includes(row);
+      box.disabled = !belongs || sourceMode.value !== "selected";
+      const date = new Date(row.dataset.created + 'T00:00:00');
+      const now = new Date();
+      const dateOK = dateFilter.value === "all" || (dateFilter.value === "year"
+        ? date.getFullYear() === now.getFullYear() : (now - date) / 86400000 <= Number(dateFilter.value));
+      row.hidden = !(belongs && row.dataset.title.includes(search.value.toLowerCase())
+        && (docType.value === "all" || row.dataset.doctype === docType.value) && dateOK);
+      row.style.display = row.hidden ? "none" : "";
+    }
+    document.getElementById("selected-count").textContent = sourceMode.value === "selected"
+      ? eligible.filter(row => row.querySelector('input').checked).length : Math.min(10, eligible.length);
+    document.getElementById("summary-type").textContent = type.selectedOptions[0].textContent;
+    document.getElementById("summary-project").textContent = project.value
+      ? project.selectedOptions[0].textContent : "No project selected";
   }
-
-  if (searchInput) searchInput.addEventListener("input", filterDocs);
-  if (typeSelect)  typeSelect.addEventListener("change", filterDocs);
-
-  // ── Project selector
-  const projectSelect    = document.getElementById("project-select");
-  const hiddenProcessId  = document.getElementById("hidden-process-id");
-  const hiddenTitle      = document.getElementById("hidden-report-title");
-  const titleInput       = document.getElementById("report-title-input");
-  const generateForm     = document.getElementById("generate-form");
-
-  if (projectSelect && hiddenProcessId) {
-    projectSelect.addEventListener("change", function () {
-      hiddenProcessId.value = this.value;
-    });
-  }
-
-  if (generateForm) {
-    generateForm.addEventListener("submit", function (e) {
-      if (!hiddenProcessId.value) {
-        e.preventDefault();
-        alert("Please select a project before generating a report.");
-        return false;
-      }
-      // Carry the user-entered title through to the editor (may be empty and we sgould probably put in an edge case for this)
-      if (hiddenTitle && titleInput) {
-        hiddenTitle.value = titleInput.value.trim();
-      }
-    });
-  }
+  project.addEventListener('change', () => {
+    for (const row of rows) row.querySelector('input').checked = false;
+    update();
+  });
+  sourceMode.addEventListener('change', () => {
+    if (sourceMode.value !== 'selected') for (const row of rows) row.querySelector('input').checked = false;
+    update();
+  });
+  for (const control of [search, docType, dateFilter, type]) control.addEventListener('input', update);
+  for (const row of rows) row.querySelector('input').addEventListener('change', update);
+  let submitting = false;
+  form.addEventListener('submit', event => {
+    const count = Number(document.getElementById('selected-count').textContent);
+    if (submitting || (sourceMode.value === 'selected' && (count < 1 || count > 10))) {
+      event.preventDefault();
+      status.textContent = submitting ? 'Generating your draft…' : 'Select between 1 and 10 files from this project.';
+      return;
+    }
+    submitting = true;
+    status.textContent = 'Queueing your request…';
+    form.querySelector('button[type=submit]').disabled = true;
+  });
+  window.addEventListener('pageshow', event => {
+    if (event.persisted && window.crypto?.randomUUID) document.getElementById('generation-request-id').value = crypto.randomUUID();
+    status.textContent = '';
+    submitting = false;
+    form.querySelector('button[type=submit]').disabled = false;
+    update();
+  });
+  update();
 </script>
 
 {% endblock %}

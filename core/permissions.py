@@ -5,8 +5,18 @@ from functools import wraps
 
 from django.core.exceptions import PermissionDenied
 
+from .access import require_author
 from .instrument import instrument
 from .models import AuditLog, UserProfile, log_audit
+
+
+def author_required(view_func):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        require_author(request.user)
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
 
 
 @instrument
