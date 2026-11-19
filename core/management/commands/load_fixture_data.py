@@ -28,10 +28,8 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        fixture_json = options["filename"] or "generated_with_docs.json"
         fixture_dir = Path(options["directory"] or (Path(settings.BASE_DIR) / "fixtures"))
 
-        fixture_filepath = fixture_dir / fixture_json
         fixture_media = fixture_dir / "media"
 
         if not fixture_media.exists():

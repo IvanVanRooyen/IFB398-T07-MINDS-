@@ -12,10 +12,10 @@ An isolated baseline test run had 431 tests, with 424 passing, five failures and
 
 Subsequent changes centralise access checks, preserve private downloads and classification, make imports/document versions safer, add stable report series/review snapshots, connect evidence-scoped composition, add ranked passages/citation regressions, move drafting into durable jobs and support manual outlines plus geological appendices/exports.
 
-The current suite has 592 passing tests. [Verification](../VERIFICATION.md) records its scope and limitations. The implementation does not require a framework rewrite to complete its current product workflows.
+The current suite has 600 passing tests. [Verification](../VERIFICATION.md) records its scope and limitations. The implementation does not require a framework rewrite to complete its current product workflows.
 
 ## Still open
 
-A reproducible development/test release and CI, dependency/security maintenance, broad spatial/model validation, a coherent interface pass, real-model/domain evaluation, fuller report assembly, mining-mode demonstration and controlled deployment remain. Passing the current tests is not a claim that all original findings or production risks are resolved.
+Hosted CI execution, ongoing dependency/security maintenance, broad spatial/model validation, a coherent interface pass, real-model/domain evaluation, fuller report assembly, mining-mode demonstration and controlled deployment remain. Passing the current tests is not a claim that all original findings or production risks are resolved.
 
 The original application was a team capstone for OreFox; the subsequent rework builds on it. Historical intent and current executable behavior are separate evidence. Original contributions and repository history remain intact.

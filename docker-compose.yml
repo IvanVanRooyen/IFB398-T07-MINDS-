@@ -66,7 +66,9 @@ services:
 
   web:
     <<: *common
-    build: ./infra/web
+    build:
+      context: .
+      dockerfile: infra/web/Dockerfile
     env_file: .env
     environment:
       IN_DOCKER: "1"
@@ -86,7 +88,9 @@ services:
 
   report-worker:
     <<: *common
-    build: ./infra/web
+    build:
+      context: .
+      dockerfile: infra/web/Dockerfile
     env_file: .env
     environment:
       IN_DOCKER: "1"

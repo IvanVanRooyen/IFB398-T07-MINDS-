@@ -4,7 +4,7 @@ An exploration and mining knowledge system that connects geological records, tec
 
 MINDS brings the evidence behind an exploration decision into one workflow: manage project data, investigate a prospect, inspect supporting records, prepare a report and review a fixed revision. Reports can combine authored narrative, optional evidence-scoped AI drafting, geological tables and a collar-location figure.
 
-**Status:** active development. The current application has been verified with 592 automated tests and targeted browser/file-format checks. Fresh-install automation, continuous integration, broader interface work and production deployment remain in progress. There is no public demo release yet.
+**Status:** active development. The current application has been verified with 600 automated tests and targeted browser/file-format checks. A supported local profile and CI workflow cover setup, migrations, lint, tests and synthetic HTTP/worker checks. Broader interface work and production deployment remain in progress. There is no public demo release yet.
 
 [Architecture](docs/ARCHITECTURE.md) · [Development setup](docs/DEVELOPMENT.md) · [Verification](docs/VERIFICATION.md) · [Roadmap](docs/ROADMAP.md)
 
@@ -62,11 +62,11 @@ Manual drafting uses the same worker without a model call. Saved geological appe
 | Development | Docker Compose, Django test runner, Ruff |
 | Optional telemetry | OpenTelemetry, Grafana, Prometheus, Loki, Tempo, Alloy |
 
-The container's application dependency list is [infra/web/requirements.txt](infra/web/requirements.txt). The root `pyproject.toml` currently lists only a subset; dependency consolidation is planned.
+Application and development dependencies are defined in [pyproject.toml](pyproject.toml), resolved in [uv.lock](uv.lock), and installed with a frozen lock. The hash-pinned [runtime requirements](infra/web/requirements.txt) are generated from that lock. Image digests and the Python version are pinned for the supported profile.
 
 ## Local development
 
-Prerequisites: Docker Engine/Desktop with Compose v2. Ollama and an installed model are optional for manual reports.
+Use Docker Engine/Desktop with Compose v2.24 or newer. Linux/amd64 is the verified platform. Manual reports need no model or object-store service.
 
 ```bash
 git clone https://github.com/IvanVanRooyen/IFB398-T07-MINDS-.git
@@ -74,39 +74,37 @@ cd IFB398-T07-MINDS-
 cp .env.example .env
 ```
 
-Replace the secret/password placeholders in `.env`. Keep the `POSTGRES_*` and corresponding `DB_*` settings aligned. Then start the application services and their dependencies:
+Replace the secret/password placeholders, including `DEMO_PASSWORD` (at least twelve characters). Then:
 
 ```bash
-docker compose up --build web report-worker
+docker compose -f compose.dev.yml config --quiet
+docker compose -f compose.dev.yml up --build -d
+docker compose -f compose.dev.yml exec web python manage.py seed_demo
 ```
 
-The current development definition exposes the web app at `http://localhost:8000`. Migrations run in the web startup command; the worker waits for database/schema availability.
+Open **http://localhost:8000**. Log in as `demo-geologist` or `demo-reviewer` using the configured demo password. The seed supplies a clearly synthetic exploration project, linked evidence, drillholes/intervals, a real DOCX and a report with geological tables/figure. Neither account is a platform administrator. Repeat seeding preserves edits and passwords; `seed_demo --reset` replaces only the synthetic project and its records.
+
+The supported local profile runs PostgreSQL/PostGIS, Redis, the web app and a separate worker, with private filesystem-backed documents. Only the loopback web endpoint is published. A one-shot migration service gates application startup. Application code is built into the image, with no personal directories or source mounts required.
+
+AI-assisted drafting is optional and requires an explicitly configured provider/model. The default is `granite3.2:8b-instruct-fp16` through Ollama; the application does not download weights. Platform administration can be configured separately with `createsuperuser`.
+
+[Development details](docs/DEVELOPMENT.md) cover environment validation, seeding/reset, dependencies and optional services. The legacy S3/telemetry Compose definition remains separate and is not a verified production deployment.
+
+## Verification and CI
 
 ```bash
-docker compose exec web python manage.py createsuperuser
+docker compose -f compose.dev.yml --profile test run --rm checks
+docker compose -f compose.dev.yml --profile test run --rm checks sh scripts/audit.sh
+docker compose -f compose.dev.yml exec -T web python -m scripts.smoke
 ```
 
-Use the platform admin to configure an organisation and user profile. Application role and clearance determine access; platform superuser access should be reserved for administration.
+The checked-in [CI workflow](.github/workflows/ci.yml) runs on pushes and pull requests. It builds locked dependencies, checks lock/export consistency and whole-repository lint, applies migrations, checks schema drift, runs the PostGIS suite and offline evaluation, audits runtime dependencies, then checks the synthetic HTTP/worker workflow. The same commands run locally. Hosted execution begins when the workflow is pushed; no GitHub success badge is claimed from local verification.
 
-The supplied Compose configuration is a development stack. Its full storage/telemetry startup has not yet been verified as a clean-install release. It publishes infrastructure ports, and its optional Grafana configuration enables anonymous administration. Review [setup details and current limits](docs/DEVELOPMENT.md) before running it on a shared or publicly reachable host.
-
-For AI-assisted drafting, configure an available provider/model in `.env`. Model availability and hardware requirements are separate from the application. The application does not download a model automatically. The default client configuration is `granite3.2:8b-instruct-fp16`; choose a model deliberately for the evaluation environment.
-
-## Verification
-
-In a configured development environment:
-
-```bash
-docker compose exec web python manage.py test core --noinput
-docker compose exec web python manage.py makemigrations --check --dry-run
-docker compose exec web python manage.py evaluate_ai --check --output /tmp/minds-evaluation.json
-```
-
-The last verified suite, on 19 November 2026, passed **592 tests**, including real PostGIS transaction/concurrency checks. Targeted browser checks covered report editing, queue recovery, cancellation, manual drafting and review. Actual PDF/DOCX output was parsed, and PDF pages were inspected.
+The last verified suite, on 19 November 2026, passed **600 tests**, including real transaction/concurrency and seed/reset regressions. HTTP checks verify private document bytes, authenticated routes and manual drafting completed by a separate worker. Test settings use isolated files/cache and prevent real model access.
 
 The authored passage benchmark selects the annotated answer span in **8/10** answerable cases, compared with **2/10** for leading excerpts. Fourteen citation regression cases pass. These are synthetic development results, not independent benchmarks or measurements of real-model factual accuracy. [Evaluation scope and known misses](docs/ai/QUALITY.md).
 
-CI is not yet configured. [Verification details](docs/VERIFICATION.md) distinguish automated coverage, browser checks and unverified deployment/model behavior.
+[Verification details](docs/VERIFICATION.md) distinguish automated coverage, browser checks and unverified deployment/model behavior.
 
 ## Repository structure
 
@@ -128,7 +126,7 @@ docs/                   Architecture, behavior, verification and roadmap
 
 ## Current limits and next work
 
-The next milestone is a reproducible development/test environment and CI, including dependency consolidation and security updates. The following UX pass will connect project → map → prospect → evidence → report, with responsive navigation, static assets and accessible error/empty states.
+The next milestone is the end-to-end UX pass: project → map → prospect → evidence → report, with responsive navigation, static assets and accessible error/empty states.
 
 Further work includes metre-correct spatial queries and stronger relationship validation, real-model/domain evaluation, richer report sections and filters, a meaningful mining-mode example, immutable export packages and a controlled demonstration environment. Geological appendices currently use fixed schemas and bounded record counts; the collar figure is a local schematic, not a survey plan.
 

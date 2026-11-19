@@ -1,10 +1,10 @@
 # Roadmap
 
-## 1. Reproducible engineering baseline
+## 1. Reproducible engineering baseline — implemented locally
 
-Provide a minimal application Compose profile, an owned test configuration, explicit environment validation, consistent dependency installation and a maintained synthetic seed. Add CI for migrations, meaningful lint, the full PostGIS test suite and offline evaluation. Address known dependency/security and development-configuration issues before deployment.
+The supported local Compose profile, checked-in test settings, synthetic seed/reset, complete dependency lock/runtime export and CI workflow are implemented. Verification covers fresh migrations, whole-repository lint, 600 PostGIS tests, offline evaluation, runtime dependency audit and a separate-process HTTP/worker smoke check. The workflow is ready to execute on GitHub when pushed; local verification is not a hosted CI result.
 
-Acceptance: a clean checkout can boot the supported development profile and run the test suite from documented commands, with no personal directories, cached image assumptions or existing services required. CI reports the same checks on a pull request.
+Python/application/service images are pinned, local infrastructure ports are private and model access is optional. The legacy full storage/telemetry stack and production configuration remain outside this verified profile.
 
 ## 2. Complete the investigation workflow
 
