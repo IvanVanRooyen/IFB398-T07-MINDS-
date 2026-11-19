@@ -1,6 +1,6 @@
 # Architecture
 
-MINDS is a Django/GeoDjango application backed by PostgreSQL/PostGIS, S3-compatible document storage and Redis. Its browser interface uses Django templates, HTMX and MapLibre. An independent management-command worker processes report jobs from PostgreSQL.
+MINDS is a Django/GeoDjango application backed by PostgreSQL/PostGIS, private document storage and Redis. The supported local profile uses filesystem storage; S3-compatible storage remains an optional configuration. Its browser interface uses Django templates, HTMX and MapLibre. An independent management-command worker processes report jobs from PostgreSQL.
 
 ## Domain
 

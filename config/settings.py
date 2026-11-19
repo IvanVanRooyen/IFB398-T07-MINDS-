@@ -2,18 +2,24 @@ import os
 from pathlib import Path
 
 import environ
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env()
-environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+if env.bool("DJANGO_READ_ENV", default=True):
+    environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 
 SECRET_KEY = env("SECRET_KEY")
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
-ALLOWED_HOSTS = ["orefox.ivanvanrooyen.com", "localhost", "127.0.0.1"]
-CSRF_TRUSTED_ORIGINS = ["https://orefox.ivanvanrooyen.com"]
+ALLOWED_HOSTS = env.list(
+    "DJANGO_ALLOWED_HOSTS", default=["orefox.ivanvanrooyen.com", "localhost", "127.0.0.1"]
+)
+CSRF_TRUSTED_ORIGINS = env.list(
+    "DJANGO_CSRF_TRUSTED_ORIGINS", default=["https://orefox.ivanvanrooyen.com"]
+)
 
 INSTALLED_APPS = [
     "config.apps.PlatformAdminConfig",
@@ -87,7 +93,7 @@ LOGOUT_REDIRECT_URL = "/auth/login/"
 
 STATIC_URL = "static/img/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").is_dir() else []
 
 # directory for generated PDFs
 TEST_MEDIA_ROOT = Path(BASE_DIR) / "media" / ".tests"
@@ -98,9 +104,15 @@ USE_TZ = True
 # Apply timezone globally
 USE_L10N = True
 
-# MinIO storage configuration (Django 5.x STORAGES format)
-STORAGES = {
-    "default": {
+# Files remain private: downloads go through authenticated application routes.
+MEDIA_ROOT = Path(env("MEDIA_ROOT", default=str(BASE_DIR / "media")))
+MEDIA_URL = "/media/"
+DOCUMENT_STORAGE = env("DOCUMENT_STORAGE", default="s3")
+STORAGES = {"staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}}
+if DOCUMENT_STORAGE == "filesystem":
+    STORAGES["default"] = {"BACKEND": "django.core.files.storage.FileSystemStorage"}
+elif DOCUMENT_STORAGE == "s3":
+    STORAGES["default"] = {
         "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
         "OPTIONS": {
             "access_key": env("MINIO_ROOT_USER"),
@@ -111,11 +123,11 @@ STORAGES = {
             "file_overwrite": False,
             "default_acl": None,
         },
-    },
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-    },
-}
+    }
+else:
+    raise ImproperlyConfigured("DOCUMENT_STORAGE must be filesystem or s3.")
+
+ALLOW_DEMO_SEED = False
 
 # Durable report worker lease; always extended beyond the provider timeout.
 REPORT_JOB_LEASE_SECONDS = env.int("REPORT_JOB_LEASE_SECONDS", default=600)

@@ -309,7 +309,6 @@ class DashboardViewTests(_ViewTestBase):
 
         views.dashboard(self._authed_get())
 
-        _, kwargs = mock_render.call_args, mock_render.call_args.kwargs
         ctx = mock_render.call_args[0][2]
         self.assertEqual(ctx["metrics"]["project_count"], 11)
         self.assertEqual(ctx["metrics"]["document_count"], 2)

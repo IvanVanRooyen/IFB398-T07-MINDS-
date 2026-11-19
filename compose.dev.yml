@@ -1,0 +1,98 @@
+name: minds-local
+
+x-app: &app
+  build:
+    context: .
+    dockerfile: infra/web/Dockerfile
+    target: development
+  environment: &app-env
+    DJANGO_SETTINGS_MODULE: config.dev_settings
+    DJANGO_READ_ENV: "0"
+    SECRET_KEY: ${SECRET_KEY:?Copy .env.example to .env and set SECRET_KEY}
+    DEMO_PASSWORD: ${DEMO_PASSWORD:-}
+    DB_NAME: ${POSTGRES_DB:-minds_dev}
+    DB_USER: ${POSTGRES_USER:-minds}
+    DB_PASS: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    DB_HOST: db
+    DB_PORT: "5432"
+    REDIS_URL: redis://redis:6379/0
+    DOCUMENT_STORAGE: filesystem
+    MEDIA_ROOT: /data/media
+    GF_PG_READER_USER: ${GF_PG_READER_USER:-minds_grafana}
+    GF_PG_READER_PASS: ${GF_PG_READER_PASS:?Set GF_PG_READER_PASS in .env}
+    OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
+    GRANITE_BACKEND: ${GRANITE_BACKEND:-ollama}
+    GRANITE_MODEL: ${GRANITE_MODEL:-granite3.2:8b-instruct-fp16}
+    GRANITE_TIMEOUT: ${GRANITE_TIMEOUT:-120}
+    REPORT_JOB_LEASE_SECONDS: ${REPORT_JOB_LEASE_SECONDS:-600}
+  extra_hosts:
+    - host.docker.internal:host-gateway
+  volumes:
+    - media:/data/media
+
+services:
+  db:
+    image: postgis/postgis:16-3.4@sha256:44126d872ac91993766c341e369c539e8196614321765d36a6f1bab0419a5fa5
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-minds_dev}
+      POSTGRES_USER: ${POSTGRES_USER:-minds}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - db:/var/lib/postgresql/data
+  redis:
+    image: redis:7.4-alpine@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - redis:/data
+  migrate:
+    <<: *app
+    command: python manage.py migrate --noinput
+    depends_on:
+      db:
+        condition: service_healthy
+  web:
+    <<: *app
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+  report-worker:
+    <<: *app
+    command: python manage.py run_report_worker
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+  checks:
+    <<: *app
+    profiles: [test]
+    environment:
+      <<: *app-env
+      DJANGO_SETTINGS_MODULE: config.test_settings
+      TEST_REDIS_URL: redis://redis:6379/1
+    command: sh scripts/check.sh
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  db:
+  redis:
+  media:

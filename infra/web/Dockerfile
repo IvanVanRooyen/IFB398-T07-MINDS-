@@ -1,23 +1,21 @@
-FROM python:3.11-slim
+FROM python:3.11-slim-trixie@sha256:07d4824036af339fa1b6ef769cc99d9c10a141769538b52b3b597c84f7a7b535 AS application
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    UV_PROJECT_ENVIRONMENT=/opt/venv \
+    UV_PYTHON_DOWNLOADS=never \
+    PATH="/opt/venv/bin:$PATH"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    curl \
-    libpq-dev \
-    gdal-bin \
-    libgdal-dev \
-    proj-bin \
-    libproj-dev \
-    libgeos-dev \
+    gdal-bin libpq5 \
     && rm -rf /var/lib/apt/lists/*
-
+RUN python -m pip install --no-cache-dir uv==0.11.6
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY pyproject.toml uv.lock .python-version ./
+RUN uv sync --frozen --no-dev --no-install-project
 COPY . .
-
 EXPOSE 8000
-CMD ["bash", "-lc", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000", "--noreload"]
+
+FROM application AS development
+RUN uv sync --frozen --no-install-project
